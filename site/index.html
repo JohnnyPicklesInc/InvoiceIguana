@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InvoiceIguana — free invoice maker, the invoice lives in the link</title>
+  <meta name="description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server. The entire invoice is compressed into the URL itself.">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="shared/invoice.css">
+  <link rel="stylesheet" href="generator.css">
+  <script type="module" src="generator.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <h1>🦎 InvoiceIguana</h1>
+    <p>A free invoice maker where the whole invoice lives <em>inside the link</em>.
+       Type it in, share the URL — no signup, no watermark, and nothing is ever
+       uploaded or stored on a server. Need a <a href="/receipt">receipt</a> instead?
+       That's built in too.</p>
+  </header>
+
+  <main>
+    <section class="editor">
+      <div class="tabs" role="tablist">
+        <button id="tabForm" class="tab active" type="button">Type it in</button>
+        <button id="tabUpload" class="tab" type="button">Upload JSON/CSV</button>
+      </div>
+
+      <form id="form" autocomplete="off">
+        <div class="grid2">
+          <label>Your business (seller) *<input id="fSeller" type="text" placeholder="Acme Consulting" required></label>
+          <label>Invoice #<input id="fInvoiceNumber" type="text" placeholder="INV-2026-001"></label>
+        </div>
+        <div class="grid2">
+          <label>Your address<input id="fSellerAddress" type="text" placeholder="1 Main St, Springfield"></label>
+          <label>Your contact<input id="fSellerContact" type="text" placeholder="billing@acme.com"></label>
+        </div>
+        <div class="grid2">
+          <label>Issue date<input id="fIssueDate" type="text" placeholder="2026-07-01"></label>
+          <label>Due date<input id="fDueDate" type="text" placeholder="2026-07-31"></label>
+        </div>
+
+        <div class="grid2">
+          <label>Bill to (client)<input id="fBuyer" type="text" placeholder="Client Co"></label>
+          <label>Client address<input id="fBuyerAddress" type="text" placeholder="2 Oak Ave, Springfield"></label>
+        </div>
+        <label>Client contact<input id="fBuyerContact" type="text" placeholder="ap@client.com"></label>
+
+        <fieldset class="items">
+          <legend>Items</legend>
+          <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span></span></div>
+          <div id="itemRows"></div>
+          <button id="addItem" type="button" class="ghost">+ Add item</button>
+        </fieldset>
+
+        <div class="grid4">
+          <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
+          <label>Tax
+            <select id="taxPreset" class="tax-preset"></select>
+            <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label>Currency<input id="fCurrency" type="text" maxlength="3" placeholder="USD" list="currencies">
+            <datalist id="currencies">
+              <option value="USD"><option value="EUR"><option value="GBP"><option value="CAD">
+              <option value="AUD"><option value="JPY"><option value="INR"><option value="MXN">
+            </datalist>
+          </label>
+        </div>
+        <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>
+
+        <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
+        <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>
+      </form>
+
+      <div id="upload" class="upload" hidden>
+        <label id="drop" class="drop">
+          <input id="file" type="file" accept=".json,.csv,application/json,text/csv">
+          <span><strong>Choose a file</strong> or drop it here<br>
+          <small>.json or .csv — it fills the form so you can tweak it</small></span>
+        </label>
+        <details class="format">
+          <summary>File format reference</summary>
+          <p><strong>JSON</strong> — required: <code>seller</code>, <code>items</code> (each <code>name</code> + <code>price</code>, <code>qty</code> optional). Optional: <code>selleraddress</code>, <code>sellercontact</code>, <code>buyer</code>, <code>buyeraddress</code>, <code>buyercontact</code>, <code>invoicenumber</code>, <code>issuedate</code>, <code>duedate</code>, <code>currency</code>, <code>subtotal</code>, <code>discount</code>, <code>tax</code>, <code>taxlabel</code>, <code>total</code>, <code>paymentinstructions</code>, <code>notes</code>.</p>
+          <pre>{
+  "seller": "Acme Consulting",
+  "buyer": "Client Co",
+  "invoicenumber": "INV-2026-001",
+  "items": [ { "name": "Consulting hours", "qty": 10, "price": 150 } ],
+  "tax": 80
+}</pre>
+          <p><strong>CSV</strong> — metadata rows <code>key,value</code>; items <code>item,name,qty,price</code>.</p>
+          <pre>seller,Acme Consulting
+buyer,Client Co
+tax,80
+item,Consulting hours,10,150</pre>
+        </details>
+      </div>
+
+      <ul id="errors" class="errors" hidden></ul>
+      <ul id="warnings" class="warnings" hidden></ul>
+
+      <fieldset class="style">
+        <legend>Style</legend>
+        <div class="style-row">
+          <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
+            <input id="fAccent" type="color" value="#2456a6" disabled></label>
+          <label class="inline">Emoji logo <input id="fEmoji" type="text" maxlength="8" placeholder="🦎" class="emoji"></label>
+          <label class="inline"><input id="fQr" type="checkbox"> QR code on invoice</label>
+        </div>
+        <label>Logo image URL (optional — takes priority over the emoji; must be https://)
+          <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png">
+        </label>
+        <p class="linkmeta">Hosted externally, so it can break if that image ever moves, and viewing the invoice will briefly contact that server.</p>
+      </fieldset>
+
+      <div id="result" class="result" hidden>
+        <label for="link">Your invoice link</label>
+        <div class="linkrow">
+          <input id="link" type="text" readonly>
+          <button id="copy" type="button">Copy</button>
+        </div>
+        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="printBtn" href="#" role="button">print / save as PDF</a></p>
+        <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
+
+        <p class="linkmeta share-row">Share:
+          <a id="shareEmail" href="#">Email</a> ·
+          <a id="shareSms" href="#">Text</a> ·
+          <a id="shareWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        </p>
+
+        <!-- Durable link: points at GitHub Pages instead of our own hosting, so
+             it survives this site's hosting going away (see site/shared/durable-link.js). -->
+        <div id="durableSection" class="durable">
+          <label for="durableLinkInput">Durable link (survives this site going away)</label>
+          <div class="linkrow">
+            <input id="durableLinkInput" type="text" readonly>
+            <button id="durableCopy" type="button">Copy</button>
+          </div>
+          <p class="linkmeta">Points at the GitHub Pages copy of this project instead of our own hosting.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-pane">
+      <p class="preview-label">Live preview — exactly what your client sees</p>
+      <div id="preview" class="invoice">
+        <header>
+          <div class="invoice-brand">
+            <img data-f="logoImg" class="logo-img" hidden alt="">
+            <p data-f="logo" class="logo" hidden></p>
+            <h1 data-f="sellerName"></h1>
+            <p data-f="sellerAddress" hidden></p>
+            <p data-f="sellerContact" hidden></p>
+          </div>
+          <div class="invoice-meta">
+            <h2>Invoice</h2>
+            <p data-f="invoiceNumber" hidden></p>
+            <p data-f="issueDate" hidden></p>
+            <p data-f="dueDate" hidden></p>
+          </div>
+        </header>
+
+        <div class="bill-to">
+          <p class="label">Bill To</p>
+          <p data-f="buyerName" hidden></p>
+          <p data-f="buyerAddress" hidden></p>
+          <p data-f="buyerContact" hidden></p>
+        </div>
+
+        <table class="items-table">
+          <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+          <tbody data-f="items"></tbody>
+        </table>
+
+        <dl class="totals">
+          <div><dt>Subtotal</dt><dd data-f="subtotal"></dd></div>
+          <div data-f="discountRow" hidden><dt>Discount</dt><dd data-f="discount"></dd></div>
+          <div data-f="taxRow" hidden><dt data-f="taxLabel">Tax</dt><dd data-f="tax"></dd></div>
+          <div class="grand"><dt>Total Due</dt><dd data-f="total"></dd></div>
+        </dl>
+
+        <div data-f="paymentRow" class="payment-instructions" hidden>
+          <p class="label">Payment Instructions</p>
+          <p data-f="paymentInstructions"></p>
+        </div>
+
+        <p data-f="notes" class="notes" hidden></p>
+        <div data-f="qr" class="qrbox" hidden></div>
+        <p class="brand">made with InvoiceIguana 🦎 — this invoice lives entirely in the link</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <h2>How it works</h2>
+    <p>Your invoice is compressed and encoded straight into the URL — the link <em>is</em> the invoice.
+       When your client opens it, their browser decodes it locally. No database, no account, no expiry,
+       and we never see your data (the part of a URL after <code>#</code> is never sent to any server).</p>
+    <p><a href="privacy.html">Privacy</a> · <a href="https://github.com/JohnnyPicklesInc/InvoiceIguana">Open source (MIT)</a></p>
+  </footer>
+</body>
+</html>

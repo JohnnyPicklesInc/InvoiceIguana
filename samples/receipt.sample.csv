@@ -1,0 +1,13 @@
+merchant,Rat's Deli
+address,"123 Main St, Springfield"
+date,2026-07-05 14:30
+currency,USD
+tax,1.86
+tip,4.00
+payment,VISA •1234
+footer,Thanks for scurrying by!
+item,Coffee,2,3.50
+item,Everything Bagel,1,2.75
+item,Orange Juice,1,4.25
+item,Blueberry Muffin,3,2.95
+item,Side of Cheese,1,1.50

@@ -1,0 +1,105 @@
+/* Premium receipt templates — each scoped as .receipt.t-* and layered over the
+   classic styles in receipt.css. Every template defines --accent with its own
+   default; a user-chosen accent color overrides it inline. */
+
+/* ---- Modern invoice ------------------------------------------------------- */
+
+.receipt.t-inv {
+  --accent: #2456a6;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  background: #fff;
+  max-width: 430px;
+  border-top: 6px solid var(--accent);
+}
+.receipt.t-inv header h1 {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent);
+  font-size: 1.35rem;
+  text-align: left;
+}
+.receipt.t-inv header { text-align: left; }
+.receipt.t-inv .tear { border-top: 1px solid #e3e3e3; }
+.receipt.t-inv [data-f="items"] li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.receipt.t-inv .totals .grand {
+  border-top: 2px solid var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Minimal ---------------------------------------------------------------- */
+
+.receipt.t-min {
+  --accent: #111;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  background: #fff;
+  box-shadow: none;
+  border: 1px solid #e5e5e5;
+  font-size: 0.83rem;
+}
+.receipt.t-min header h1 {
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+.receipt.t-min .tear { border-top: 1px solid #eee; margin: 1.25rem 0; }
+.receipt.t-min .unit, .receipt.t-min header p,
+.receipt.t-min .payment, .receipt.t-min .brand { color: #999; }
+.receipt.t-min .totals .grand {
+  border-top: 1px solid var(--accent);
+  font-size: 0.95rem;
+}
+
+/* ---- Elegant ------------------------------------------------------------------ */
+
+.receipt.t-ele {
+  --accent: #7a5c2e;
+  font-family: Georgia, "Times New Roman", serif;
+  background: #fbf7ef;
+  max-width: 400px;
+}
+.receipt.t-ele header h1 {
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  font-weight: normal;
+  color: var(--accent);
+}
+.receipt.t-ele .tear {
+  border: none;
+  text-align: center;
+  margin: 0.9rem 0;
+}
+.receipt.t-ele .tear::after {
+  content: "❦";
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+.receipt.t-ele .totals .grand {
+  border-top: 1px double var(--accent);
+  color: var(--accent);
+}
+.receipt.t-ele .logo { font-size: 1.6rem; }
+
+/* ---- shared style hooks (all templates incl. classic) ----------------------- */
+
+.receipt .logo {
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.receipt .logo-img {
+  display: block;
+  max-width: 140px;
+  max-height: 64px;
+  margin: 0 auto 0.5rem;
+  object-fit: contain;
+}
+
+.receipt .qrbox { text-align: center; margin: 0.75rem 0; }
+.receipt .qrbox svg { width: 116px; height: 116px; }
+
+/* Accent hook for classic (no default — only applies when user sets one). */
+.receipt .totals .grand { border-top-color: var(--accent, #222); }

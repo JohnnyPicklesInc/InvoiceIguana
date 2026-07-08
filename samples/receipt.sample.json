@@ -1,0 +1,17 @@
+{
+  "merchant": "Rat's Deli",
+  "address": "123 Main St, Springfield",
+  "date": "2026-07-05 14:30",
+  "currency": "USD",
+  "items": [
+    { "name": "Coffee", "qty": 2, "price": 3.50 },
+    { "name": "Everything Bagel", "qty": 1, "price": 2.75 },
+    { "name": "Orange Juice", "qty": 1, "price": 4.25 },
+    { "name": "Blueberry Muffin", "qty": 3, "price": 2.95 },
+    { "name": "Side of Cheese", "qty": 1, "price": 1.50 }
+  ],
+  "tax": 1.86,
+  "tip": 4.00,
+  "payment": "VISA •1234",
+  "footer": "Thanks for scurrying by!"
+}

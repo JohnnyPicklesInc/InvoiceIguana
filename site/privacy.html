@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InvoiceIguana — Privacy</title>
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <section class="notice notice-left">
+    <h1>🦎 Privacy</h1>
+    <p>This page is short because there is very little to disclose.</p>
+    <p><strong>Your documents never reach us.</strong> The entire invoice or receipt is compressed
+       into the part of the link after the <code>#</code> (the URL fragment). Browsers do not send
+       fragments to servers, so neither the generator nor the viewer page ever
+       transmits your document anywhere. There is no database, no account, and nothing
+       to delete — if you have the link, you have the document; if you discard it, it's gone.</p>
+    <p><strong>Hosting.</strong> The site is served by Cloudflare Pages, which processes
+       standard connection data (like your IP address) to deliver the page, as any host does.</p>
+    <p><strong>No tracking.</strong> No cookies, no ads, no third-party scripts.
+       If we ever add privacy-friendly, cookieless page-view counting (Cloudflare Web
+       Analytics), this page will say so.</p>
+    <p><strong>One exception: logo images.</strong> An invoice or receipt can optionally reference a
+       logo image by <code>https://</code> URL instead of only an emoji. If it does, viewing
+       that document makes a normal image request to whoever hosts that logo — the same way
+       any web page's images work — which reveals your IP address and roughly when you
+       viewed it to that host. This is the one part of InvoiceIguana that isn't fully private,
+       and it only happens if the document's creator added a logo URL.</p>
+    <p><a href="/">← back to InvoiceIguana</a></p>
+  </section>
+</body>
+</html>

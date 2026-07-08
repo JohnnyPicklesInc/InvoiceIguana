@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InvoiceIguana — free receipt maker, the receipt lives in the link</title>
+  <meta name="description" content="Make a clean, professional receipt and share it as a link — no signup, no watermark, nothing stored on any server. The entire receipt is compressed into the URL itself.">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="stylesheet" href="shared/receipt.css">
+  <link rel="stylesheet" href="shared/templates.css">
+  <link rel="stylesheet" href="generator.css">
+  <script type="module" src="receipt.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <h1>🦎 InvoiceIguana — Receipts</h1>
+    <p>A free receipt maker where the whole receipt lives <em>inside the link</em>.
+       Type it in, share the URL — no signup, no watermark over your receipt,
+       and nothing is ever uploaded or stored on a server. Need an
+       <a href="/">invoice</a> instead? Same app.</p>
+  </header>
+
+  <main>
+    <section class="editor">
+      <div class="tabs" role="tablist">
+        <button id="tabForm" class="tab active" type="button">Type it in</button>
+        <button id="tabUpload" class="tab" type="button">Upload JSON/CSV</button>
+      </div>
+
+      <form id="form" autocomplete="off">
+        <div class="grid2">
+          <label>Business / merchant *<input id="fMerchant" type="text" placeholder="Rat's Deli" required></label>
+          <label>Date<input id="fDate" type="text" placeholder="2026-07-06 14:30"></label>
+        </div>
+        <div class="grid2">
+          <label>Address<input id="fAddress" type="text" placeholder="123 Main St, Springfield"></label>
+          <label>Contact (phone or email)<input id="fContact" type="text" placeholder="555-0142 or hello@ratsdeli.com"></label>
+        </div>
+
+        <fieldset class="items">
+          <legend>Items</legend>
+          <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span></span></div>
+          <div id="itemRows"></div>
+          <button id="addItem" type="button" class="ghost">+ Add item</button>
+        </fieldset>
+
+        <div class="grid2">
+          <label>Reference / receipt #<input id="fReference" type="text" placeholder="R-2024-0091"></label>
+          <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
+        </div>
+
+        <div class="grid4">
+          <label>Tax
+            <select id="taxPreset" class="tax-preset"></select>
+            <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label>Tip<input id="fTip" type="text" inputmode="decimal" placeholder="0.00"></label>
+          <label>Currency<input id="fCurrency" type="text" maxlength="3" placeholder="USD" list="currencies">
+            <datalist id="currencies">
+              <option value="USD"><option value="EUR"><option value="GBP"><option value="CAD">
+              <option value="AUD"><option value="JPY"><option value="INR"><option value="MXN">
+            </datalist>
+          </label>
+          <label>Payment<input id="fPayment" type="text" placeholder="VISA •1234"></label>
+        </div>
+        <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>
+        <label>Footer note<input id="fFooter" type="text" placeholder="Thanks for your business!"></label>
+      </form>
+
+      <div id="upload" class="upload" hidden>
+        <label id="drop" class="drop">
+          <input id="file" type="file" accept=".json,.csv,application/json,text/csv">
+          <span><strong>Choose a file</strong> or drop it here<br>
+          <small>.json or .csv — it fills the form so you can tweak it</small></span>
+        </label>
+        <details class="format">
+          <summary>File format reference</summary>
+          <p><strong>JSON</strong> — required: <code>merchant</code>, <code>items</code> (each <code>name</code> + <code>price</code>, <code>qty</code> optional). Optional: <code>address</code>, <code>contact</code>, <code>date</code>, <code>reference</code>, <code>currency</code>, <code>subtotal</code>, <code>discount</code>, <code>tax</code>, <code>tip</code>, <code>total</code>, <code>payment</code>, <code>footer</code>.</p>
+          <pre>{
+  "merchant": "Rat's Deli",
+  "items": [ { "name": "Coffee", "qty": 2, "price": 3.50 } ],
+  "tax": 0.78
+}</pre>
+          <p><strong>CSV</strong> — metadata rows <code>key,value</code>; items <code>item,name,qty,price</code>.</p>
+          <pre>merchant,Rat's Deli
+tax,0.78
+item,Coffee,2,3.50</pre>
+        </details>
+      </div>
+
+      <ul id="errors" class="errors" hidden></ul>
+      <ul id="warnings" class="warnings" hidden></ul>
+
+      <fieldset class="style">
+        <legend>Style</legend>
+        <div id="templatePicker" class="tpl-picker"></div>
+        <div class="style-row">
+          <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
+            <input id="fAccent" type="color" value="#2456a6" disabled></label>
+          <label class="inline">Emoji logo <input id="fEmoji" type="text" maxlength="8" placeholder="🦎" class="emoji"></label>
+          <label class="inline"><input id="fQr" type="checkbox"> QR code on receipt</label>
+        </div>
+        <label>Logo image URL (optional — takes priority over the emoji; must be https://)
+          <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png">
+        </label>
+        <p class="linkmeta">Hosted externally, so it can break if that image ever moves, and viewing the receipt will briefly contact that server. Falls back to the emoji logo if unset or unreachable in downloaded PNGs.</p>
+      </fieldset>
+
+      <div id="result" class="result" hidden>
+        <label for="link">Your receipt link</label>
+        <div class="linkrow">
+          <input id="link" type="text" readonly>
+          <button id="copy" type="button">Copy</button>
+        </div>
+        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="pngBtn" href="#" role="button">download PNG</a></p>
+        <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
+
+        <p class="linkmeta share-row">Share:
+          <a id="shareEmail" href="#">Email</a> ·
+          <a id="shareSms" href="#">Text</a> ·
+          <a id="shareWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        </p>
+
+        <!-- Durable link: points at GitHub Pages instead of our own hosting, so
+             it survives this site's hosting going away (see site/shared/durable-link.js). -->
+        <div id="durableSection" class="durable">
+          <label for="durableLinkInput">Durable link (survives this site going away)</label>
+          <div class="linkrow">
+            <input id="durableLinkInput" type="text" readonly>
+            <button id="durableCopy" type="button">Copy</button>
+          </div>
+          <p class="linkmeta">Points at the GitHub Pages copy of this project instead of our own hosting.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-pane">
+      <p class="preview-label">Live preview — exactly what your recipient sees</p>
+      <div id="preview" class="receipt">
+        <header>
+          <img data-f="logoImg" class="logo-img" hidden alt="">
+          <p data-f="logo" class="logo" hidden></p>
+          <h1 data-f="merchant"></h1>
+          <p data-f="address" hidden></p>
+          <p data-f="contact" hidden></p>
+          <p data-f="date" hidden></p>
+          <p data-f="reference" hidden></p>
+        </header>
+        <hr class="tear">
+        <ul data-f="items"></ul>
+        <hr class="tear">
+        <dl class="totals">
+          <div><dt>Subtotal</dt><dd data-f="subtotal"></dd></div>
+          <div data-f="discountRow" hidden><dt>Discount</dt><dd data-f="discount"></dd></div>
+          <div data-f="taxRow" hidden><dt data-f="taxLabel">Tax</dt><dd data-f="tax"></dd></div>
+          <div data-f="tipRow" hidden><dt>Tip</dt><dd data-f="tip"></dd></div>
+          <div class="grand"><dt>Total</dt><dd data-f="total"></dd></div>
+        </dl>
+        <p data-f="payment" class="payment" hidden></p>
+        <hr class="tear">
+        <footer>
+          <p data-f="footer" hidden></p>
+          <div data-f="qr" class="qrbox" hidden></div>
+          <p class="brand">made with InvoiceIguana 🦎 — this receipt lives entirely in the link</p>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <h2>How it works</h2>
+    <p>Your receipt is compressed and encoded straight into the URL — the link <em>is</em> the receipt.
+       When someone opens it, their browser decodes it locally. No database, no account, no expiry,
+       and we never see your data (the part of a URL after <code>#</code> is never sent to any server).</p>
+    <p><a href="privacy.html">Privacy</a> · <a href="https://github.com/JohnnyPicklesInc/InvoiceIguana">Open source (MIT)</a></p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,67 @@
+/* Shared receipt template styling — used by the viewer page and the
+   extension's live preview (synced from /shared, do not edit copies). */
+
+.receipt {
+  background: #fffdf7;
+  color: #222;
+  width: 100%;
+  max-width: 380px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+  font-family: "Cascadia Mono", Consolas, Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  height: fit-content;
+}
+
+.receipt header { text-align: center; }
+.receipt header h1 {
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.receipt header p { color: #777; font-size: 0.78rem; margin: 0; }
+.receipt [data-f="date"] { margin-top: 0.25rem; }
+
+.receipt .tear {
+  border: none;
+  border-top: 2px dashed #bbb;
+  margin: 1rem 0;
+}
+
+.receipt [data-f="items"] { list-style: none; margin: 0; padding: 0; }
+.receipt [data-f="items"] li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.receipt .name { overflow-wrap: anywhere; }
+.receipt .amount { white-space: nowrap; }
+.receipt .unit { color: #777; font-size: 0.75rem; }
+
+.receipt .totals { margin: 0; }
+.receipt .totals div {
+  display: flex;
+  justify-content: space-between;
+}
+.receipt .totals dd { margin: 0; }
+.receipt .totals .grand {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.35rem;
+  border-top: 1px solid #222;
+  padding-top: 0.35rem;
+}
+
+.receipt .payment {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  color: #777;
+  font-size: 0.78rem;
+}
+
+.receipt footer { text-align: center; }
+.receipt [data-f="footer"] { margin: 0 0 0.75rem; overflow-wrap: anywhere; }
+.receipt .brand { color: #777; font-size: 0.7rem; margin: 0; }
+.receipt .brand a { color: inherit; }

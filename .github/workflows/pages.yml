@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+# Publishes site/ as-is (100% static, no build step) so the durable link
+# (site/shared/durable-link.js) has somewhere that serves correct MIME
+# types -- unlike jsDelivr's GitHub CDN or raw.githubusercontent.com, both
+# of which serve .html as text/plain and won't render as a live page.
+#
+# One-time manual step this workflow depends on: repo Settings -> Pages ->
+# Build and deployment -> Source -> "GitHub Actions". Until that's set, this
+# workflow will fail at the deploy-pages step even though checkout/build
+# succeed.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

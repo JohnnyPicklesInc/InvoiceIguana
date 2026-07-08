@@ -1,0 +1,110 @@
+/* Shared invoice template styling — an A4-style formal layout, deliberately
+   not an extension of receipt.css's thermal-strip look (each vertical gets
+   its own base template, per ROADMAP.md). */
+
+.invoice {
+  --accent: #2456a6;
+  background: #fff;
+  color: #222;
+  width: 100%;
+  max-width: 640px;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+  font-family: system-ui, "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  height: fit-content;
+}
+
+.invoice header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 1.25rem;
+}
+.invoice .logo-img { max-width: 160px; max-height: 64px; margin: 0 0 0.4rem; object-fit: contain; }
+.invoice .logo { font-size: 1.8rem; margin: 0 0 0.25rem; }
+.invoice [data-f="sellerName"] { font-size: 1.2rem; margin: 0; }
+.invoice [data-f="sellerAddress"], .invoice [data-f="sellerContact"] {
+  color: #666; font-size: 0.82rem; margin: 0.15rem 0 0;
+}
+
+.invoice .invoice-meta { text-align: right; flex-shrink: 0; }
+.invoice .invoice-meta h2 {
+  margin: 0 0 0.4rem;
+  color: var(--accent);
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.invoice .invoice-meta p { margin: 0.15rem 0 0; color: #555; font-size: 0.82rem; }
+
+.invoice .bill-to { margin-top: 1.5rem; }
+.invoice .bill-to .label {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: #888;
+  margin: 0 0 0.3rem;
+}
+.invoice .bill-to p { margin: 0.1rem 0; }
+
+.invoice .items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.75rem;
+  font-size: 0.85rem;
+}
+.invoice .items-table thead th {
+  text-align: left;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: #888;
+  border-bottom: 2px solid #ddd;
+  padding: 0 0 0.5rem;
+}
+.invoice .items-table th:not(:first-child), .invoice .items-table td:not(:first-child) {
+  text-align: right;
+}
+.invoice .items-table td { padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+.invoice .item-name { overflow-wrap: anywhere; }
+
+.invoice .totals { margin: 1rem 0 0; margin-left: auto; width: 60%; }
+.invoice .totals div { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+.invoice .totals dd { margin: 0; }
+.invoice .totals .grand {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--accent);
+  border-top: 2px solid var(--accent);
+  margin-top: 0.3rem;
+  padding-top: 0.5rem;
+}
+
+.invoice .payment-instructions {
+  margin-top: 1.75rem;
+  background: #f7f8fa;
+  border-radius: 6px;
+  padding: 0.9rem 1.1rem;
+}
+.invoice .payment-instructions .label {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin: 0 0 0.3rem;
+}
+.invoice .payment-instructions p:last-child { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+
+.invoice .notes { margin-top: 1.25rem; color: #555; font-size: 0.85rem; overflow-wrap: anywhere; white-space: pre-line; }
+.invoice .qrbox { text-align: center; margin: 1.25rem 0 0; }
+.invoice .qrbox svg { width: 116px; height: 116px; }
+.invoice .brand { color: #999; font-size: 0.72rem; text-align: center; margin: 1.5rem 0 0; }
+.invoice .brand a { color: inherit; }
+
+@media print {
+  .invoice { box-shadow: none; max-width: none; }
+}
