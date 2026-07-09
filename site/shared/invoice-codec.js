@@ -12,13 +12,15 @@
  *     invoiceNumber, issueDate, dueDate, currency,
  *     items: [{name, qty, priceMinor}], subtotalMinor, discountMinor,
  *     taxMinor, taxLabel, totalMinor, paymentInstructions, notes,
- *     template, brandingOff, accent, emoji, logoUrl, qr }
+ *     template, brandingOff, accent, emoji, logoUrl, logoData, qr }
  * total = subtotal - discount + tax (no tip on an invoice). taxLabel is
  * purely descriptive — it never affects the math.
  * Optional fields are null when absent; subtotal/total are always present.
- * Style fields (and logoUrl) are validated leniently, same as the receipt
- * codec — they can't corrupt the financial record, so bad values fall back
- * to defaults/null instead of throwing.
+ * Style fields (logoUrl, logoData) are validated leniently, same as the
+ * receipt codec — they can't corrupt the financial record, so bad values
+ * fall back to defaults/null instead of throwing. logoData is a small
+ * base64 JPEG embedded directly in the link (see shared/logo-embed.js) —
+ * takes priority over logoUrl when both are set.
  *
  * Compact key registry (own namespace from the receipt codec's — payloads
  * are dispatched by docType before either is parsed, so there's no risk of
@@ -27,12 +29,12 @@
  * n buyerName, j buyerAddress, v buyerContact, r invoiceNumber,
  * d issueDate, z dueDate, c currency, i items, s subtotal, g discount,
  * x tax, h taxLabel, t total, y paymentInstructions, f notes,
- * w template, b brandingOff, k accent, e emoji, u logoUrl, q qr.
+ * w template, b brandingOff, k accent, e emoji, u logoUrl, l logoData, q qr.
  */
 import {
   VERSION, BadPayload, encoder, decoder,
   b64u, unb64u, deflateRaw, inflateRaw, isMinor,
-  ACCENT_RE, isHttpsUrl, payloadHeader,
+  ACCENT_RE, isHttpsUrl, asLogoData, payloadHeader,
 } from './wire.js';
 
 export const DOC_INVOICE = 'i';
@@ -65,6 +67,7 @@ function toCompact(inv) {
   if (inv.accent) c.k = inv.accent;
   if (inv.emoji) c.e = inv.emoji;
   if (inv.logoUrl) c.u = inv.logoUrl;
+  if (inv.logoData) c.l = inv.logoData;
   if (inv.qr) c.q = 1;
   return c;
 }
@@ -77,7 +80,8 @@ function styleFromCompact(c) {
   const emoji = typeof c.e === 'string' && c.e.trim() && c.e.length <= 8
     ? c.e.trim() : null;
   const logoUrl = isHttpsUrl(c.u) ? c.u : null;
-  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, qr: !!c.q };
+  const logoData = asLogoData(c.l);
+  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, logoData, qr: !!c.q };
 }
 
 function fromCompact(c) {

@@ -85,7 +85,7 @@ await test('fully-styled receipt round-trips exactly', async () => {
 
 await test('default-style payloads carry no style/optional keys (no-growth guard)', async () => {
   const compact = await inflateBody(sampleUrlPayload);
-  for (const k of ['w', 'b', 'k', 'e', 'q', 'o', 'r', 'g', 'h', 'u']) {
+  for (const k of ['w', 'b', 'k', 'e', 'q', 'o', 'r', 'g', 'h', 'u', 'l']) {
     ok(!(k in compact), `unexpected key "${k}" in default payload`);
   }
 });
@@ -178,6 +178,23 @@ await test('decode drops a malicious/invalid logo URL leniently, never throws', 
   strictEqual(r1.logoUrl, null);
   const r2 = await decodeReceipt(await forge({ ...base, u: 'http://example.com/logo.png' }));
   strictEqual(r2.logoUrl, null, 'non-https dropped, not thrown');
+});
+
+await test('embedded logoData round-trips through the link', async () => {
+  const { receipt, errors } = parseReceipt(JSON.stringify({
+    merchant: 'M', items: [{ name: 'a', price: 1 }],
+  }), 'json');
+  deepStrictEqual(errors, []);
+  Object.assign(receipt, { logoData: 'aGVsbG8=' });
+  strictEqual((await decodeReceipt(await encodeReceipt(receipt))).logoData, 'aGVsbG8=');
+});
+
+await test('decode drops an invalid or oversized logoData leniently, never throws', async () => {
+  const base = { m: 'M', i: [['a', 1, 100]], s: 100, t: 100 };
+  const r1 = await decodeReceipt(await forge({ ...base, l: 'not base64!!' }));
+  strictEqual(r1.logoData, null, 'non-base64 characters dropped');
+  const r2 = await decodeReceipt(await forge({ ...base, l: 'A'.repeat(7000) }));
+  strictEqual(r2.logoData, null, 'over the length cap dropped');
 });
 
 // ---- money -------------------------------------------------------------------
@@ -351,11 +368,24 @@ await test('invoice: style/logo fields decode leniently, never throw', async () 
   strictEqual(r1.emoji, null);
 });
 
+await test('invoice: embedded logoData round-trips, invalid/oversized dropped leniently', async () => {
+  const { invoice, errors } = parseInvoice(JSON.stringify({
+    seller: 'S', items: [{ name: 'a', price: 1 }],
+  }), 'json');
+  deepStrictEqual(errors, []);
+  Object.assign(invoice, { logoData: 'aGVsbG8=' });
+  strictEqual((await decodeInvoice(await encodeInvoice(invoice))).logoData, 'aGVsbG8=');
+
+  const base = { m: 'M', i: [['a', 1, 100]], s: 100, t: 100 };
+  const bad = await decodeInvoice(await forgeInvoice({ ...base, l: 'A'.repeat(7000) }));
+  strictEqual(bad.logoData, null, 'over the length cap dropped, not thrown');
+});
+
 await test('invoice: default-style payload carries no optional keys (no-growth guard)', async () => {
   const { invoice } = parseInvoice(JSON.stringify({ seller: 'S', items: [{ name: 'a', price: 1 }] }), 'json');
   const payload = await encodeInvoice(invoice);
   const compact = JSON.parse(new TextDecoder().decode(await inflateRaw(unb64u(payload.slice(2)))));
-  for (const k of ['n', 'j', 'v', 'r', 'z', 'g', 'x', 'h', 'y', 'f', 'w', 'b', 'k', 'e', 'u', 'q']) {
+  for (const k of ['n', 'j', 'v', 'r', 'z', 'g', 'x', 'h', 'y', 'f', 'w', 'b', 'k', 'e', 'u', 'l', 'q']) {
     ok(!(k in compact), `unexpected key "${k}" in default invoice payload`);
   }
 });

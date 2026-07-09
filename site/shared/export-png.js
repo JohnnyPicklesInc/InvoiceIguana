@@ -71,7 +71,11 @@ function renderToBlob(r, qrText, logoImg) {
 }
 
 export async function receiptToPngBlob(r, { qrText } = {}) {
-  const logoImg = r.logoUrl ? await loadLogoImage(r.logoUrl) : null;
+  // Embedded logo (data:) takes priority over an external URL — same order
+  // as shared/style.js — and never taints the canvas, so the CORS/tainted
+  // fallback below only matters for the external-URL case.
+  const logoSrc = r.logoData ? `data:image/jpeg;base64,${r.logoData}` : r.logoUrl;
+  const logoImg = logoSrc ? await loadLogoImage(logoSrc) : null;
   try {
     return await renderToBlob(r, qrText, logoImg);
   } catch (e) {

@@ -112,6 +112,10 @@ item,Consulting hours,10,150</pre>
           <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png">
         </label>
         <p class="linkmeta">Hosted externally, so it can break if that image ever moves, and viewing the invoice will briefly contact that server.</p>
+        <label>Upload a logo image (optional — embedded directly in the link at low resolution; unlike the URL above, nothing is ever contacted)
+          <input id="fLogoFile" type="file" accept="image/*">
+        </label>
+        <p id="logoFileStatus" class="linkmeta" hidden></p>
       </fieldset>
 
       <div id="result" class="result" hidden>

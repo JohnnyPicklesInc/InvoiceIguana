@@ -12,6 +12,7 @@ import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
 import { TEMPLATES } from './shared/templates.js';
+import { compressLogoImage } from './shared/logo-embed.js';
 
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
@@ -19,6 +20,8 @@ const URL_LENGTH_WARNING = 2000;
 let currentReceipt = null;
 let currentUrl = '';
 let activeTaxRate = null;
+let pendingLogoData = null;
+let pendingLogoError = null;
 
 // ---- item rows -----------------------------------------------------------
 
@@ -118,7 +121,35 @@ function styleFromControls() {
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
     emoji: $('fEmoji').value.trim() || null,
     qr: $('fQr').checked,
+    logoData: pendingLogoData,
   };
+}
+
+// ---- embedded logo upload ---------------------------------------------------------
+
+function updateLogoFileStatus() {
+  const status = $('logoFileStatus');
+  if (pendingLogoError) {
+    status.textContent = pendingLogoError;
+    status.hidden = false;
+  } else if (pendingLogoData) {
+    status.replaceChildren(document.createTextNode('Logo embedded in the link. '));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'ghost';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', () => {
+      pendingLogoData = null;
+      $('fLogoFile').value = '';
+      updateLogoFileStatus();
+      scheduleUpdate();
+    });
+    status.append(remove);
+    status.hidden = false;
+  } else {
+    status.hidden = true;
+    status.replaceChildren();
+  }
 }
 
 // ---- tax rate presets ------------------------------------------------------------
@@ -246,6 +277,23 @@ $('fAccent').addEventListener('input', scheduleUpdate);
 $('fEmoji').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
 $('fLogoUrl').addEventListener('input', scheduleUpdate);
+
+$('fLogoFile').addEventListener('change', async () => {
+  const file = $('fLogoFile').files[0];
+  if (!file) return;
+  pendingLogoData = null;
+  pendingLogoError = null;
+  updateLogoFileStatus();
+  const result = await compressLogoImage(file);
+  if (result.error) {
+    pendingLogoError = result.error;
+    $('fLogoFile').value = '';
+  } else {
+    pendingLogoData = result.dataB64;
+  }
+  updateLogoFileStatus();
+  scheduleUpdate();
+});
 
 $('file').addEventListener('change', () => {
   const file = $('file').files[0];

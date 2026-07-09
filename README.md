@@ -40,6 +40,14 @@ Optional: `selleraddress`, `sellercontact`, `buyer`, `buyeraddress`, `buyerconta
 externally, so it can break if that image ever moves, and viewing the invoice will
 contact that server; the generator's emoji logo avoids both trade-offs and is the
 fallback if this is unset or fails to load). `total = subtotal - discount + tax`.
+
+The generator's form also has a **logo image upload** (upload-only, not part of the
+JSON/CSV schema — like the accent color and emoji, it's a generator-UI-only style
+control). It's compressed client-side to a 64×64 JPEG at ~70% quality and embedded
+directly in the link, so — unlike `logourl` — nothing is ever contacted when the
+document is viewed. It's capped to a small size to keep links shareable; an oversized
+or very complex image gets a clear error instead of silently producing a huge link,
+and the `logourl` option remains for a larger/full-quality external logo.
 Omitted `subtotal`/`total` are computed; provided values that disagree with the
 computed ones by more than one minor unit produce a warning, not an error.
 

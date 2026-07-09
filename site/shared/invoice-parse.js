@@ -195,6 +195,7 @@ function normalize(raw, errors, warnings) {
     brandingOff: false,
     accent: null,
     emoji: null,
+    logoData: null,
     qr: false,
   };
 }

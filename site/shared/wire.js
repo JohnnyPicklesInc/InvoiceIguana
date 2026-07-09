@@ -106,6 +106,19 @@ export function isHttpsUrl(str) {
   }
 }
 
+// An embedded logo is compressed client-side to a 64x64 JPEG before this cap is
+// checked (see shared/logo-embed.js) — this ceiling is shared between that
+// encode-side check and this decode-side one so there's a single source of truth,
+// and mostly guards against a hand-crafted payload with a huge garbage string.
+export const MAX_LOGO_B64 = 6000;
+const LOGO_DATA_RE = /^[A-Za-z0-9+/]+=*$/;
+
+/** Base64 JPEG bytes, length-capped. Never throws — bad values become absent. */
+export function asLogoData(v) {
+  return typeof v === 'string' && v.length > 0 && v.length <= MAX_LOGO_B64 && LOGO_DATA_RE.test(v)
+    ? v : null;
+}
+
 // ---- upload-parsing validation helpers (shared by every doc type's parser) ----
 
 export function asOptionalString(raw, key, errors, maxLen = 200) {

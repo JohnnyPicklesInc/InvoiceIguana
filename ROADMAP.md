@@ -91,11 +91,15 @@ per visitor than subscriptions; approval risk in this niche).
   digital receipts, freelancers, sharing).
 - **Payload ceiling**: ~2,000 chars is the chat-app-safe budget (real invoices/receipts:
   ~100 items fit). Editors for prose-heavy document types need length meters.
-- **No image bytes embedded in links**: photos/logos don't fit the payload budget.
-  Emoji, initials, and accent colors remain the zero-dependency personalization
-  surface. A link *can* optionally reference an external `https://` logo image by URL
-  (bytes stay external, only the URL rides in the link) — a deliberate, disclosed
-  trade-off (see `site/privacy.html`): it can break if the image moves, and viewing the
-  document contacts that host. PNG/PDF export remains the escape hatch for shares that
-  need to be self-contained files, and silently omits the logo if the host doesn't
-  allow cross-origin canvas use.
+- **Only a bounded low-res image can be embedded in links**: a full-size photo/logo
+  doesn't fit the payload budget, but the generator can now compress an uploaded logo
+  to a small 64×64 JPEG and embed it directly (capped size, see `shared/logo-embed.js`
+  and `wire.js`'s `MAX_LOGO_B64`) — fully private, nothing contacted. Emoji, initials,
+  and accent colors remain the zero-dependency fallback. A link can *also* optionally
+  reference an external `https://` logo image by URL instead (bytes stay external,
+  only the URL rides in the link, no size cap) — a deliberate, disclosed trade-off
+  (see `site/privacy.html`): it can break if the image moves, and viewing the document
+  contacts that host. Use the embedded option for a small logo with full privacy, the
+  URL option for a larger/full-quality one. PNG/PDF export remains the escape hatch for
+  shares that need to be self-contained files, and silently omits the logo if an
+  external-URL host doesn't allow cross-origin canvas use.

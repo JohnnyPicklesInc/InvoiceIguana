@@ -18,27 +18,30 @@
  *   { merchant, address, contact, date, reference, currency,
  *     items: [{name, qty, priceMinor}], subtotalMinor, discountMinor,
  *     taxMinor, taxLabel, tipMinor, totalMinor, payment, footer,
- *     template, brandingOff, accent, emoji, logoUrl, qr }
+ *     template, brandingOff, accent, emoji, logoUrl, logoData, qr }
  * total = subtotal - discount + tax + tip. taxLabel is purely descriptive
  * (e.g. "NY Sales Tax (8.875%)") — it never affects the math.
  * Optional fields are null when absent; subtotal/total are always present.
- * Style fields (and logoUrl) are validated leniently — they can't corrupt
- * the financial record, so bad values fall back to defaults/null instead
- * of throwing. logoUrl is restricted to https: — an http: image would be
- * mixed-content-blocked on this site anyway, and it keeps the validation
- * simple (no scheme-confusion tricks like javascript:/data:).
+ * Style fields (logoUrl, logoData) are validated leniently — they can't
+ * corrupt the financial record, so bad values fall back to defaults/null
+ * instead of throwing. logoUrl is restricted to https: — an http: image
+ * would be mixed-content-blocked on this site anyway, and it keeps the
+ * validation simple (no scheme-confusion tricks like javascript:/data:).
+ * logoData is a small base64 JPEG embedded directly in the link (see
+ * shared/logo-embed.js) — takes priority over logoUrl when both are set,
+ * since it's guaranteed to render and never contacts a third party.
  *
  * Compact key registry (single source of truth — check here before adding
  * a new one): m merchant, a address, o contact, d date, r reference,
  * c currency, i items, s subtotal, g discount, x tax, h taxLabel, p tip,
  * t total, y payment, f footer, w template, b brandingOff, k accent,
- * e emoji, u logoUrl, q qr.
+ * e emoji, u logoUrl, l logoData, q qr.
  */
 import {
   VERSION, BadVersion, BadPayload, encoder, decoder,
   b64u, unb64u, deflateRaw, inflateRaw,
   currencyExponent, toMinor, fromMinor, isMinor,
-  ACCENT_RE, isHttpsUrl, payloadHeader,
+  ACCENT_RE, isHttpsUrl, asLogoData, payloadHeader,
 } from './wire.js';
 
 export {
@@ -73,6 +76,7 @@ function toCompact(r) {
   if (r.accent) c.k = r.accent;
   if (r.emoji) c.e = r.emoji;
   if (r.logoUrl) c.u = r.logoUrl;
+  if (r.logoData) c.l = r.logoData;
   if (r.qr) c.q = 1;
   return c;
 }
@@ -85,7 +89,8 @@ function styleFromCompact(c) {
   const emoji = typeof c.e === 'string' && c.e.trim() && c.e.length <= 8
     ? c.e.trim() : null;
   const logoUrl = isHttpsUrl(c.u) ? c.u : null;
-  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, qr: !!c.q };
+  const logoData = asLogoData(c.l);
+  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, logoData, qr: !!c.q };
 }
 
 function fromCompact(c) {

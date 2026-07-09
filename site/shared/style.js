@@ -15,19 +15,22 @@ export function applyDocumentStyle(root, doc, templates) {
   if (doc.accent) root.style.setProperty('--accent', `#${doc.accent}`);
   else root.style.removeProperty('--accent');
 
-  // An image logo (if set) takes priority over the emoji one.
+  // An image logo (embedded takes priority over an external URL) takes
+  // priority over the emoji one. Embedded is preferred because it's
+  // guaranteed to render and never contacts a third party.
+  const logoSrc = doc.logoData ? `data:image/jpeg;base64,${doc.logoData}` : doc.logoUrl;
   const logoImg = root.querySelector('[data-f="logoImg"]');
   if (logoImg) {
-    logoImg.hidden = !doc.logoUrl;
-    if (doc.logoUrl) {
-      logoImg.src = doc.logoUrl;
+    logoImg.hidden = !logoSrc;
+    if (logoSrc) {
+      logoImg.src = logoSrc;
       logoImg.alt = `${doc.merchant ?? doc.seller?.name ?? ''} logo`;
       logoImg.referrerPolicy = 'no-referrer';
     }
   }
   const logo = root.querySelector('[data-f="logo"]');
   if (logo) {
-    logo.hidden = doc.emoji == null || !!doc.logoUrl;
+    logo.hidden = doc.emoji == null || !!logoSrc;
     if (doc.emoji != null) logo.textContent = doc.emoji;
   }
 
