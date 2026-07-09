@@ -121,6 +121,7 @@ function styleFromControls() {
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
     emoji: $('fEmoji').value.trim() || null,
     qr: $('fQr').checked,
+    brandingOff: $('fBrandingOff').checked,
     logoData: pendingLogoData,
   };
 }
@@ -278,6 +279,7 @@ $('fAccentOn').addEventListener('change', () => {
 $('fAccent').addEventListener('input', scheduleUpdate);
 $('fEmoji').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
+$('fBrandingOff').addEventListener('change', scheduleUpdate);
 $('fLogoUrl').addEventListener('input', scheduleUpdate);
 
 $('fLogoFile').addEventListener('change', async () => {
