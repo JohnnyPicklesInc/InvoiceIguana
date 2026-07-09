@@ -262,6 +262,8 @@ function switchTab(which) {
   $('upload').hidden = which !== 'upload';
 }
 
+$('docTypeNav').addEventListener('change', (e) => { location.href = e.target.value; });
+
 $('tabForm').addEventListener('click', () => switchTab('form'));
 $('tabUpload').addEventListener('click', () => switchTab('upload'));
 

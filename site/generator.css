@@ -20,6 +20,26 @@ body {
 .hero h1 { margin: 0; font-size: 2rem; }
 .hero p { color: #555; margin: 0.75rem 0 0; line-height: 1.5; }
 
+.type-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #444;
+}
+.type-switch select {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #b6ad9b;
+  border-radius: 6px;
+  background: #fffdf7;
+  color: #222;
+}
+
 main {
   display: flex;
   flex-wrap: wrap;
