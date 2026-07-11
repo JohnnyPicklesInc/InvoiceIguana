@@ -13,6 +13,7 @@ import { shareLinks } from './shared/share-links.js';
 import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
 import { TEMPLATES } from './shared/templates.js';
 import { compressLogoImage } from './shared/logo-embed.js';
+import { isHttpsUrl } from './shared/wire.js';
 
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
@@ -64,7 +65,6 @@ function rawFromForm() {
   if (val('fTip')) raw.tip = val('fTip');
   if (val('fPayment')) raw.payment = val('fPayment');
   if (val('fFooter')) raw.footer = val('fFooter');
-  if (val('fLogoUrl')) raw.logourl = val('fLogoUrl');
   for (const row of $('itemRows').children) {
     const name = row.querySelector('.i-name').value.trim();
     const qty = row.querySelector('.i-qty').value.trim();
@@ -122,11 +122,38 @@ function styleFromControls() {
     emoji: $('fEmoji').value.trim() || null,
     qr: $('fQr').checked,
     brandingOff: $('fBrandingOff').checked,
+    // The generator never sets an external logoUrl anymore — a URL pasted into
+    // fLogoUrl is downloaded and embedded via pendingLogoData instead (see
+    // embedLogoFromUrl below), so nothing is ever contacted when the document
+    // is later viewed. logoUrl stays decodable for backward compatibility with
+    // links made before this changed (or uploaded JSON that still sets it).
+    logoUrl: null,
     logoData: pendingLogoData,
   };
 }
 
-// ---- embedded logo upload ---------------------------------------------------------
+// ---- embedded logo (paste a URL or choose a file — both end up embedded) ----------
+
+/** Fetches an image URL client-side and runs it through the same compressor as a
+ *  file upload, so a pasted URL and a picked file behave identically: nothing is
+ *  ever contacted when the resulting document is later viewed. */
+async function embedLogoFromUrl(url) {
+  pendingLogoData = null;
+  pendingLogoError = null;
+  $('logoFileStatus').textContent = 'Downloading…';
+  $('logoFileStatus').hidden = false;
+  try {
+    const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const result = await compressLogoImage(await res.blob());
+    if (result.error) pendingLogoError = result.error;
+    else pendingLogoData = result.dataB64;
+  } catch {
+    pendingLogoError = "Couldn't download that image (its host may not allow this) — try downloading it yourself and uploading the file instead.";
+  }
+  updateLogoFileStatus();
+  scheduleUpdate();
+}
 
 function updateLogoFileStatus() {
   const status = $('logoFileStatus');
@@ -142,6 +169,7 @@ function updateLogoFileStatus() {
     remove.addEventListener('click', () => {
       pendingLogoData = null;
       $('fLogoFile').value = '';
+      $('fLogoUrl').value = '';
       updateLogoFileStatus();
       scheduleUpdate();
     });
@@ -250,6 +278,7 @@ async function handleFile(file) {
     return;
   }
   fillFormFromReceipt(receipt);
+  if (receipt.logoUrl) embedLogoFromUrl(receipt.logoUrl);
   switchTab('form');
   update();
 }
@@ -280,7 +309,24 @@ $('fAccent').addEventListener('input', scheduleUpdate);
 $('fEmoji').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
 $('fBrandingOff').addEventListener('change', scheduleUpdate);
-$('fLogoUrl').addEventListener('input', scheduleUpdate);
+
+$('fLogoUrl').addEventListener('change', () => {
+  const url = $('fLogoUrl').value.trim();
+  if (!url) {
+    pendingLogoData = null;
+    pendingLogoError = null;
+    updateLogoFileStatus();
+    scheduleUpdate();
+    return;
+  }
+  if (!isHttpsUrl(url)) {
+    pendingLogoData = null;
+    pendingLogoError = 'Logo URL must start with https://';
+    updateLogoFileStatus();
+    return;
+  }
+  embedLogoFromUrl(url);
+});
 
 $('fLogoFile').addEventListener('change', async () => {
   const file = $('fLogoFile').files[0];

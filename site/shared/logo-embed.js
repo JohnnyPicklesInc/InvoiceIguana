@@ -1,11 +1,12 @@
 /**
- * Compresses a user-picked image file to a tiny embeddable logo: 64x64,
- * contain-fit over a white background, JPEG at ~70% quality. The result is
- * small enough to ride directly in the link (see wire.js's MAX_LOGO_B64 and
- * codec.js/invoice-codec.js's "l" compact key) instead of only supporting an
- * externally-hosted logo URL — nothing is ever contacted for this option.
- * Browser-only module (canvas, createImageBitmap) — not imported by the Node
- * selftest, same as export-png.js.
+ * Compresses a picked or downloaded image (a File from the file input, or a
+ * Blob fetched from a pasted URL — see generator.js/receipt.js's
+ * embedLogoFromUrl) to a tiny embeddable logo: 64x64, contain-fit over a
+ * white background, JPEG at ~70% quality. The result is small enough to ride
+ * directly in the link (see wire.js's MAX_LOGO_B64 and codec.js/
+ * invoice-codec.js's "l" compact key) — nothing is ever contacted once the
+ * document is generated. Browser-only module (canvas, createImageBitmap) —
+ * not imported by the Node selftest, same as export-png.js.
  */
 import { MAX_LOGO_B64 } from './wire.js';
 
@@ -23,18 +24,18 @@ function bytesToBase64(bytes) {
 
 /** Returns { dataB64 } on success, or { error } with a user-facing message. */
 export async function compressLogoImage(file) {
-  if (!file.type.startsWith('image/')) {
-    return { error: 'That file doesn\'t look like an image.' };
-  }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return { error: 'That image file is too large to process (max 20 MB).' };
+    return { error: 'That image is too large to process (max 20 MB).' };
   }
 
+  // Decode is the real "is this actually an image" check — a fetched Blob's
+  // .type comes from the server's Content-Type header, which isn't always
+  // set correctly, so it can't be trusted the way a picked File's type can.
   let bitmap;
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    return { error: "Couldn't read that image file — try a different one." };
+    return { error: "Couldn't read that as an image — try a different file or URL." };
   }
 
   const canvas = document.createElement('canvas');
@@ -54,7 +55,7 @@ export async function compressLogoImage(file) {
   const dataB64 = bytesToBase64(new Uint8Array(await blob.arrayBuffer()));
 
   if (dataB64.length > MAX_LOGO_B64) {
-    return { error: 'That image is still too large even at low resolution — try a simpler image, or use the logo URL option instead.' };
+    return { error: 'That image is still too large even at low resolution — try a simpler image.' };
   }
   return { dataB64 };
 }

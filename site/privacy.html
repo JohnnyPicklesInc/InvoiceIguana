@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InvoiceIguana — Privacy</title>
+  <meta name="description" content="InvoiceIguana's privacy policy: invoices and receipts live entirely in the link and are never sent to or stored on any server.">
+  <link rel="canonical" href="https://invoiceiguana.com/privacy">
+  <meta name="theme-color" content="#3d3427">
   <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
   <link rel="stylesheet" href="viewer.css">
 </head>
 <body>
@@ -21,15 +25,14 @@
     <p><strong>No tracking.</strong> No cookies, no ads, no third-party scripts.
        If we ever add privacy-friendly, cookieless page-view counting (Cloudflare Web
        Analytics), this page will say so.</p>
-    <p><strong>One exception: logo images.</strong> An invoice or receipt can optionally reference a
-       logo image by <code>https://</code> URL instead of only an emoji. If it does, viewing
-       that document makes a normal image request to whoever hosts that logo — the same way
-       any web page's images work — which reveals your IP address and roughly when you
-       viewed it to that host. This is the one part of InvoiceIguana that isn't fully private,
-       and it only happens if the document's creator added a logo URL. There's also an
-       <strong>upload a logo image</strong> option in the generator that embeds a small,
-       low-resolution copy directly in the link instead — that one contacts no one, ever,
-       since the image bytes travel inside the link itself just like the rest of the document.</p>
+    <p><strong>Logo images.</strong> The generator's logo field (paste a URL or choose a
+       file — either way) downloads the image once and embeds a small, low-resolution
+       copy directly in the link, so viewing the document never contacts anyone.
+       Links made before this changed can still carry a plain <code>https://</code> logo
+       URL instead — those still work, and viewing one of those makes a normal image
+       request to whoever hosts that logo (the same way any web page's images work,
+       revealing your IP address and roughly when you viewed it to that host). That's
+       the one case that isn't fully private, and it only affects older links.</p>
     <p><a href="/">← back to InvoiceIguana</a></p>
   </section>
 </body>

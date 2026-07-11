@@ -5,7 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InvoiceIguana — free invoice maker, the invoice lives in the link</title>
   <meta name="description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server. The entire invoice is compressed into the URL itself.">
+  <link rel="canonical" href="https://invoiceiguana.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InvoiceIguana">
+  <meta property="og:url" content="https://invoiceiguana.com/">
+  <meta property="og:title" content="InvoiceIguana — free invoice maker, the invoice lives in the link">
+  <meta property="og:description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server. The entire invoice is compressed into the URL itself.">
+  <meta property="og:image" content="https://invoiceiguana.com/icons/icon512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="InvoiceIguana — free invoice maker, the invoice lives in the link">
+  <meta name="twitter:description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server.">
+  <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
+  <meta name="theme-color" content="#3d3427">
   <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="shared/invoice.css">
   <link rel="stylesheet" href="generator.css">
@@ -114,13 +127,9 @@ item,Consulting hours,10,150</pre>
           <label class="inline"><input id="fQr" type="checkbox"> QR code on invoice</label>
           <label class="inline"><input id="fBrandingOff" type="checkbox"> Hide "made with InvoiceIguana"</label>
         </div>
-        <label>Logo image URL (optional — takes priority over the emoji; must be https://)
-          <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png">
-        </label>
-        <p class="linkmeta">Hosted externally, so it can break if that image ever moves, and viewing the invoice will briefly contact that server.</p>
-        <label>Upload a logo image (optional — embedded directly in the link at low resolution; unlike the URL above, nothing is ever contacted)
-          <input id="fLogoFile" type="file" accept="image/*">
-        </label>
+        <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
+        <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
+        <p class="linkmeta">Optional — takes priority over the emoji. Either way it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the invoice is later viewed.</p>
         <p id="logoFileStatus" class="linkmeta" hidden></p>
       </fieldset>
 

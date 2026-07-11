@@ -36,18 +36,20 @@ Required: `seller`, `items` (each needs `name` + `price`; `qty` defaults to 1).
 Optional: `selleraddress`, `sellercontact`, `buyer`, `buyeraddress`, `buyercontact`,
 `invoicenumber`, `issuedate`, `duedate`, `currency` (3-letter code, default `USD`),
 `subtotal`, `discount`, `tax`, `taxlabel` (purely descriptive — never affects the math),
-`total`, `paymentinstructions`, `notes`, `logourl` (an `https://` image URL — hosted
-externally, so it can break if that image ever moves, and viewing the invoice will
-contact that server; the generator's emoji logo avoids both trade-offs and is the
-fallback if this is unset or fails to load). `total = subtotal - discount + tax`.
+`total`, `paymentinstructions`, `notes`, `logourl` (an `https://` image URL, kept for
+backward compatibility with older links — see below). `total = subtotal - discount + tax`.
 
-The generator's form also has a **logo image upload** (upload-only, not part of the
-JSON/CSV schema — like the accent color and emoji, it's a generator-UI-only style
-control). It's compressed client-side to a 64×64 JPEG at ~70% quality and embedded
-directly in the link, so — unlike `logourl` — nothing is ever contacted when the
-document is viewed. It's capped to a small size to keep links shareable; an oversized
-or very complex image gets a clear error instead of silently producing a huge link,
-and the `logourl` option remains for a larger/full-quality external logo.
+The generator's form has one combined **logo image** field (upload-only, not part of
+the JSON/CSV schema — like the accent color and emoji, it's a generator-UI-only style
+control): paste an image URL or choose a file, either way it's downloaded once,
+compressed client-side to a 64×64 JPEG at ~70% quality, and embedded directly in the
+link — nothing is ever contacted when the document is later viewed. It's capped to a
+small size to keep links shareable; an oversized/very complex image, or a URL that
+can't be downloaded client-side (some hosts block cross-origin fetches), gets a clear
+error instead of silently producing a huge link or a broken one. Uploading a JSON/CSV
+file with the raw `logourl` key still works and is auto-embedded the same way; the
+plain external-reference form only survives for decoding links made before this
+changed.
 Omitted `subtotal`/`total` are computed; provided values that disagree with the
 computed ones by more than one minor unit produce a warning, not an error.
 
@@ -122,9 +124,12 @@ npm run icons            # regenerate the icons (site + extension)
 npm run deploy           # wrangler pages deploy site
 ```
 
-The site is 100% static — GitHub Pages or any static host works just as well. After
-choosing the production host, update the URL in `extension/background.js` and the
-`PAGES_BASE` in `site/shared/durable-link.js` if you use those.
+The site is 100% static — GitHub Pages or any static host works just as well. Production
+domain is `invoiceiguana.com` (set as the Cloudflare Pages custom domain); it's already
+baked into `extension/background.js`, `site/robots.txt`, `site/sitemap.xml`, and the
+canonical/Open Graph tags in `site/index.html`, `site/receipt.html`, and
+`site/privacy.html`. `PAGES_BASE` in `site/shared/durable-link.js` is separate — it
+points at the GitHub Pages mirror used for the durable link, not the primary domain.
 
 Planned additions (see [ROADMAP.md](ROADMAP.md)): estimates/quotes as a third document
 type inside InvoiceIguana.
