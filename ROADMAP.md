@@ -96,9 +96,9 @@ per visitor than subscriptions; approval risk in this niche).
   choose a file) downloads it once and compresses it to a small 64×64 JPEG before
   embedding it directly (capped size, see `shared/logo-embed.js` and `wire.js`'s
   `MAX_LOGO_B64`) — fully private, nothing contacted, no matter which of the two ways
-  the image came in. Emoji, initials, and accent colors remain the zero-dependency
-  fallback if there's no logo, or if a pasted URL can't be downloaded client-side (some
-  hosts block cross-origin fetches — the generator surfaces a clear error rather than
+  the image came in. Accent color remains the zero-dependency fallback if there's no
+  logo, or if a pasted URL can't be downloaded client-side (some hosts block
+  cross-origin fetches — the generator surfaces a clear error rather than
   falling back to an external reference). The codec can still *decode* the older
   plain-external-URL form for backward compatibility (see `site/privacy.html`) — that's
   the one case that isn't fully private, and it only affects links made before this

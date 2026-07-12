@@ -5,7 +5,7 @@
  * calls; the invoice never leaves the browser.
  */
 import { parseInvoice } from './shared/invoice-parse.js';
-import { encodeInvoice } from './shared/invoice-codec.js';
+import { encodeInvoice, decodeInvoice } from './shared/invoice-codec.js';
 import { fromMinor } from './shared/codec.js';
 import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQrInto } from './shared/qr.js';
@@ -101,12 +101,49 @@ function fillFormFromInvoice(inv) {
   }
 }
 
+/** Restores style choices too — used only by the edit link (see loadFromHash),
+ *  not by JSON/CSV upload, which deliberately leaves style at its defaults. */
+function restoreStyleControls(inv) {
+  $('fAccentOn').checked = !!inv.accent;
+  $('fAccent').value = inv.accent ? `#${inv.accent}` : '#2456a6';
+  $('fAccent').disabled = !inv.accent;
+  $('fQr').checked = !!inv.qr;
+  $('fBrandingOff').checked = !!inv.brandingOff;
+  if (inv.logoData) {
+    pendingLogoData = inv.logoData;
+    updateLogoFileStatus();
+  } else if (inv.logoUrl) {
+    embedLogoFromUrl(inv.logoUrl);
+  }
+}
+
+/** If the page was opened as an edit link (this page's own URL with a payload
+ *  in the hash — see the "edit link" in the result panel), decode it and
+ *  fill in the whole form, style included, so editing can continue. Returns
+ *  whether it actually loaded anything, so boot() knows whether to fall back
+ *  to its usual empty-form defaults. */
+async function loadFromHash() {
+  const payload = location.hash.slice(1);
+  if (!payload) return false;
+  try {
+    const invoice = await decodeInvoice(payload);
+    fillFormFromInvoice(invoice);
+    restoreStyleControls(invoice);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ---- style controls (no template picker — InvoiceIguana has one template for v1) --
 
 function styleFromControls() {
   return {
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
-    emoji: $('fEmoji').value.trim() || null,
+    // No emoji key here on purpose — the generator no longer offers a way to
+    // set one, so this leaves whatever was already on the invoice (null for
+    // a fresh document, or a decoded value from an edit link) untouched
+    // rather than clobbering it. Still fully decodable for old links.
     qr: $('fQr').checked,
     brandingOff: $('fBrandingOff').checked,
     // The generator never sets an external logoUrl anymore — a URL pasted into
@@ -232,6 +269,7 @@ async function update() {
   const payload = await encodeInvoice(invoice);
   currentUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}r#${payload}`;
   $('durableLinkInput').value = durableLink(payload);
+  $('editLinkInput').value = `${location.origin}/#${payload}`;
 
   renderInvoiceInto($('preview'), invoice);
   const qrEl = $('preview').querySelector('[data-f="qr"]');
@@ -291,7 +329,6 @@ $('fAccentOn').addEventListener('change', () => {
   scheduleUpdate();
 });
 $('fAccent').addEventListener('input', scheduleUpdate);
-$('fEmoji').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
 $('fBrandingOff').addEventListener('change', scheduleUpdate);
 
@@ -362,6 +399,12 @@ $('durableCopy').addEventListener('click', async () => {
   setTimeout(() => { $('durableCopy').textContent = 'Copy'; }, 1200);
 });
 
+$('editLinkCopy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('editLinkInput').value);
+  $('editLinkCopy').textContent = 'Copied!';
+  setTimeout(() => { $('editLinkCopy').textContent = 'Copy'; }, 1200);
+});
+
 $('taxPreset').addEventListener('change', () => {
   const val = $('taxPreset').value;
   if (val === '') {
@@ -402,12 +445,15 @@ $('manageRates').addEventListener('click', () => {
 // ---- boot ---------------------------------------------------------------------------
 
 refreshTaxPresets();
-addItemRow();
-const today = new Date();
-const dueDate = new Date(today);
-dueDate.setDate(dueDate.getDate() + 30);
-const pad = (n) => String(n).padStart(2, '0');
-const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-$('fIssueDate').value = fmt(today);
-$('fDueDate').value = fmt(dueDate);
+const loadedFromEditLink = await loadFromHash();
+if (!loadedFromEditLink) {
+  addItemRow();
+  const today = new Date();
+  const dueDate = new Date(today);
+  dueDate.setDate(dueDate.getDate() + 30);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  $('fIssueDate').value = fmt(today);
+  $('fDueDate').value = fmt(dueDate);
+}
 update();

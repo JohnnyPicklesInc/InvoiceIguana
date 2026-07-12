@@ -115,13 +115,12 @@ item,Coffee,2,3.50</pre>
         <div class="style-row">
           <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
             <input id="fAccent" type="color" value="#2456a6" disabled></label>
-          <label class="inline">Emoji logo <input id="fEmoji" type="text" maxlength="8" placeholder="🦎" class="emoji"></label>
           <label class="inline"><input id="fQr" type="checkbox"> QR code on receipt</label>
           <label class="inline"><input id="fBrandingOff" type="checkbox"> Hide "made with InvoiceIguana"</label>
         </div>
         <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
         <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
-        <p class="linkmeta">Optional — takes priority over the emoji. Either way it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the receipt is later viewed.</p>
+        <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the receipt is later viewed.</p>
         <p id="logoFileStatus" class="linkmeta" hidden></p>
       </fieldset>
 
@@ -149,6 +148,18 @@ item,Coffee,2,3.50</pre>
             <button id="durableCopy" type="button">Copy</button>
           </div>
           <p class="linkmeta">Points at the GitHub Pages copy of this project instead of our own hosting.</p>
+        </div>
+
+        <!-- Edit link: reopens this exact form (data + style) instead of the
+             read-only viewer, by pointing back at this same page. Reuses the
+             identical payload — see loadFromHash() in receipt.js. -->
+        <div id="editLinkSection" class="durable">
+          <label for="editLinkInput">Edit link (reopens this form to keep tweaking)</label>
+          <div class="linkrow">
+            <input id="editLinkInput" type="text" readonly>
+            <button id="editLinkCopy" type="button">Copy</button>
+          </div>
+          <p class="linkmeta">Save this to pick up editing later, or use it as a starting template for a similar receipt.</p>
         </div>
       </div>
     </section>

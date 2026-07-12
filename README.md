@@ -5,12 +5,16 @@ it in (or upload JSON/CSV), share the link — no signup, no watermark, no serve
 storage, no database. The link *is* the document.
 
 - **Invoice generator** (`/`): a web page — form editor with live preview, or JSON/CSV
-  upload. Works on phones. Pick an accent color, emoji or logo, QR code; print/save as PDF.
+  upload. Works on phones. Pick an accent color, logo, QR code; print/save as PDF.
 - **Receipt generator** (`/receipt`): the same idea for receipts — thermal-style
   templates, tax presets, PNG export.
 - **Viewer** (`/r#<payload>`): decodes the URL hash fragment and renders whichever
   document type the link contains in the recipient's browser. The fragment is never
   sent to any server.
+- **Edit link**: the result panel also shows an edit link — the same payload, but
+  pointing back at the generator (`/#<payload>` or `/receipt#<payload>`) instead of the
+  viewer. Opening it reloads the whole form, style choices included, so you can pick up
+  editing later or start a new document from an existing one as a template.
 - **Chrome extension** (`extension/`): an optional thin shortcut that opens the web app.
 
 ## How a link works
@@ -24,9 +28,10 @@ reserved for a wider family: `q` quote/estimate, `c` card, `p` recipe). The docu
 normalized (money as integer minor units), mapped to short keys, compressed with the
 browser's native `CompressionStream('deflate-raw')`, and base64url-encoded. A typical
 invoice or receipt is a few hundred characters of URL; ~100 realistic line items still
-fit under the ~2,000-character chat-app-safe budget. Styling (accent color, emoji, logo
-URL, QR flag) rides in the payload only when non-default, so plain documents stay
-minimal.
+fit under the ~2,000-character chat-app-safe budget. Styling (accent color, logo, QR
+flag) rides in the payload only when non-default, so plain documents stay minimal. An
+`emoji` style key still exists in the codec purely for decoding links made before the
+generator's emoji-logo option was removed — there's no way to set a new one.
 
 ## File formats (upload path)
 
@@ -40,8 +45,8 @@ Optional: `selleraddress`, `sellercontact`, `buyer`, `buyeraddress`, `buyerconta
 backward compatibility with older links — see below). `total = subtotal - discount + tax`.
 
 The generator's form has one combined **logo image** field (upload-only, not part of
-the JSON/CSV schema — like the accent color and emoji, it's a generator-UI-only style
-control): paste an image URL or choose a file, either way it's downloaded once,
+the JSON/CSV schema — like the accent color, it's a generator-UI-only style control):
+paste an image URL or choose a file, either way it's downloaded once,
 compressed client-side to a 64×64 JPEG at ~70% quality, and embedded directly in the
 link — nothing is ever contacted when the document is later viewed. It's capped to a
 small size to keep links shareable; an oversized/very complex image, or a URL that

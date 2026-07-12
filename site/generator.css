@@ -148,7 +148,6 @@ legend { font-size: 0.8rem; font-weight: 700; color: #555; padding: 0 0.3rem; }
 .tpl:has(input:checked) { border-color: #3d3427; background: #efe9da; font-weight: 700; }
 .style-row { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 0.7rem; align-items: center; }
 .inline { display: flex !important; align-items: center; gap: 0.4rem; margin-top: 0 !important; font-weight: 500 !important; }
-.inline input[type="text"].emoji { width: 4.5rem; margin-top: 0; }
 input[type="color"] { border: none; background: none; width: 2rem; height: 1.6rem; padding: 0; cursor: pointer; }
 
 /* upload */

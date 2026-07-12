@@ -4,7 +4,7 @@
  * No network calls; the receipt never leaves the browser.
  */
 import { parseReceipt } from './shared/parse.js';
-import { encodeReceipt, fromMinor } from './shared/codec.js';
+import { encodeReceipt, decodeReceipt, fromMinor } from './shared/codec.js';
 import { renderReceiptInto } from './shared/render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
@@ -95,6 +95,43 @@ function fillFormFromReceipt(r) {
   }
 }
 
+/** Restores style choices too — used only by the edit link (see loadFromHash),
+ *  not by JSON/CSV upload, which deliberately leaves style at its defaults.
+ *  Must run after buildTemplatePicker() so the template radios exist. */
+function restoreStyleControls(r) {
+  const radio = document.querySelector(`input[name="template"][value="${r.template}"]`);
+  if (radio) radio.checked = true;
+  $('fAccentOn').checked = !!r.accent;
+  $('fAccent').value = r.accent ? `#${r.accent}` : '#2456a6';
+  $('fAccent').disabled = !r.accent;
+  $('fQr').checked = !!r.qr;
+  $('fBrandingOff').checked = !!r.brandingOff;
+  if (r.logoData) {
+    pendingLogoData = r.logoData;
+    updateLogoFileStatus();
+  } else if (r.logoUrl) {
+    embedLogoFromUrl(r.logoUrl);
+  }
+}
+
+/** If the page was opened as an edit link (this page's own URL with a payload
+ *  in the hash — see the "edit link" in the result panel), decode it and
+ *  fill in the whole form, style included, so editing can continue. Returns
+ *  whether it actually loaded anything, so boot() knows whether to fall back
+ *  to its usual empty-form defaults. */
+async function loadFromHash() {
+  const payload = location.hash.slice(1);
+  if (!payload) return false;
+  try {
+    const receipt = await decodeReceipt(payload);
+    fillFormFromReceipt(receipt);
+    restoreStyleControls(receipt);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ---- style controls ------------------------------------------------------------
 
 function buildTemplatePicker() {
@@ -119,7 +156,10 @@ function styleFromControls() {
   return {
     template: document.querySelector('input[name="template"]:checked')?.value ?? 'classic',
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
-    emoji: $('fEmoji').value.trim() || null,
+    // No emoji key here on purpose — the generator no longer offers a way to
+    // set one, so this leaves whatever was already on the receipt (null for
+    // a fresh document, or a decoded value from an edit link) untouched
+    // rather than clobbering it. Still fully decodable for old links.
     qr: $('fQr').checked,
     brandingOff: $('fBrandingOff').checked,
     // The generator never sets an external logoUrl anymore — a URL pasted into
@@ -247,6 +287,7 @@ async function update() {
   const payload = await encodeReceipt(receipt);
   currentUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}r#${payload}`;
   $('durableLinkInput').value = durableLink(payload);
+  $('editLinkInput').value = `${location.origin}/receipt#${payload}`;
 
   renderReceiptInto($('preview'), receipt);
   const qrEl = $('preview').querySelector('[data-f="qr"]');
@@ -306,7 +347,6 @@ $('fAccentOn').addEventListener('change', () => {
   scheduleUpdate();
 });
 $('fAccent').addEventListener('input', scheduleUpdate);
-$('fEmoji').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
 $('fBrandingOff').addEventListener('change', scheduleUpdate);
 
@@ -376,6 +416,12 @@ $('durableCopy').addEventListener('click', async () => {
   setTimeout(() => { $('durableCopy').textContent = 'Copy'; }, 1200);
 });
 
+$('editLinkCopy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('editLinkInput').value);
+  $('editLinkCopy').textContent = 'Copied!';
+  setTimeout(() => { $('editLinkCopy').textContent = 'Copy'; }, 1200);
+});
+
 $('taxPreset').addEventListener('change', () => {
   const val = $('taxPreset').value;
   if (val === '') {
@@ -417,9 +463,12 @@ $('manageRates').addEventListener('click', () => {
 
 buildTemplatePicker();
 refreshTaxPresets();
-addItemRow();
-addItemRow();
-const now = new Date();
-const pad = (n) => String(n).padStart(2, '0');
-$('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+const loadedFromEditLink = await loadFromHash();
+if (!loadedFromEditLink) {
+  addItemRow();
+  addItemRow();
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
 update();
