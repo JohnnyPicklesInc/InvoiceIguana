@@ -11,7 +11,7 @@
  *
  * NOT pinned to a specific historical release: this always points at
  * whatever `.github/workflows/pages.yml` currently has deployed (on every
- * push to main), not a frozen snapshot. True per-release pinning on Pages
+ * push to master), not a frozen snapshot. True per-release pinning on Pages
  * would need a versioned-snapshot publishing scheme (accumulating a folder
  * per tag) — more infrastructure than this project needs right now. What
  * actually keeps old links working is the codec's own backward-compatibility
