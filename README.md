@@ -141,4 +141,6 @@ type inside InvoiceIguana.
 
 ## License
 
-MIT
+Proprietary — all rights reserved. This is not an open source project; the
+`qrcodegen.js` exception above is a vendored third-party dependency under its own
+MIT license, not a statement about InvoiceIguana itself.

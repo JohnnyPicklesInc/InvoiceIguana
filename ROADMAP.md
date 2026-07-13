@@ -74,7 +74,7 @@ per visitor than subscriptions; approval risk in this niche).
    .html as text/plain, so it wouldn't actually render as a live page). Selftest stays
    green throughout (33/33 as of this writing).
 2. **Phase 2: deploy + launch** — Cloudflare Pages, GitHub Pages, Cloudflare Web
-   Analytics, Show HN (the codec/architecture story), Product Hunt, open-source repo.
+   Analytics, Show HN (the codec/architecture story), Product Hunt.
 3. **Phase 3: quotes/estimates** — a third document type inside InvoiceIguana, its own
    feature page and launch moment.
 4. **Phase 4: contact cards** — vCard + QR story, mobile-first marketing.
