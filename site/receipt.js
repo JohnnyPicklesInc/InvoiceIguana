@@ -285,8 +285,10 @@ async function update() {
   currentReceipt = receipt;
 
   const payload = await encodeReceipt(receipt);
-  currentUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}r#${payload}`;
-  $('durableLinkInput').value = durableLink(payload);
+  // The shared link always points at the durable GitHub Pages host, so it
+  // survives our own hosting going away (see shared/durable-link.js). The edit
+  // link stays on the current host so in-place editing works wherever you are.
+  currentUrl = durableLink(payload);
   $('editLinkInput').value = `${location.origin}/receipt#${payload}`;
 
   renderReceiptInto($('preview'), receipt);
@@ -408,12 +410,6 @@ $('copy').addEventListener('click', async () => {
 $('pngBtn').addEventListener('click', (e) => {
   e.preventDefault();
   if (currentReceipt) downloadReceiptPng(currentReceipt, { qrText: currentUrl });
-});
-
-$('durableCopy').addEventListener('click', async () => {
-  await navigator.clipboard.writeText($('durableLinkInput').value);
-  $('durableCopy').textContent = 'Copied!';
-  setTimeout(() => { $('durableCopy').textContent = 'Copy'; }, 1200);
 });
 
 $('editLinkCopy').addEventListener('click', async () => {

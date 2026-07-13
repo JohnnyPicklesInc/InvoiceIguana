@@ -9,6 +9,7 @@ import { encodeInvoice, decodeInvoice } from './shared/invoice-codec.js';
 import { fromMinor } from './shared/codec.js';
 import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQrInto } from './shared/qr.js';
+import { TEMPLATES } from './shared/invoice-templates.js';
 import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
@@ -104,6 +105,9 @@ function fillFormFromInvoice(inv) {
 /** Restores style choices too — used only by the edit link (see loadFromHash),
  *  not by JSON/CSV upload, which deliberately leaves style at its defaults. */
 function restoreStyleControls(inv) {
+  // Must run after buildTemplatePicker() so the template radios exist.
+  const radio = document.querySelector(`input[name="template"][value="${inv.template}"]`);
+  if (radio) radio.checked = true;
   $('fAccentOn').checked = !!inv.accent;
   $('fAccent').value = inv.accent ? `#${inv.accent}` : '#2456a6';
   $('fAccent').disabled = !inv.accent;
@@ -135,10 +139,30 @@ async function loadFromHash() {
   }
 }
 
-// ---- style controls (no template picker — InvoiceIguana has one template for v1) --
+// ---- style controls --------------------------------------------------------------
+
+/** Populates the template picker from the registry (mirrors receipt.js). */
+function buildTemplatePicker() {
+  const picker = $('templatePicker');
+  for (const [id, tpl] of Object.entries(TEMPLATES)) {
+    const label = document.createElement('label');
+    label.className = 'tpl';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'template';
+    radio.value = id;
+    radio.checked = id === 'classic';
+    radio.addEventListener('change', scheduleUpdate);
+    const span = document.createElement('span');
+    span.textContent = tpl.label;
+    label.append(radio, span);
+    picker.append(label);
+  }
+}
 
 function styleFromControls() {
   return {
+    template: document.querySelector('input[name="template"]:checked')?.value ?? 'classic',
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
     // No emoji key here on purpose — the generator no longer offers a way to
     // set one, so this leaves whatever was already on the invoice (null for
@@ -267,8 +291,10 @@ async function update() {
   currentInvoice = invoice;
 
   const payload = await encodeInvoice(invoice);
-  currentUrl = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}r#${payload}`;
-  $('durableLinkInput').value = durableLink(payload);
+  // The shared link always points at the durable GitHub Pages host, so it
+  // survives our own hosting going away (see shared/durable-link.js). The edit
+  // link stays on the current host so in-place editing works wherever you are.
+  currentUrl = durableLink(payload);
   $('editLinkInput').value = `${location.origin}/#${payload}`;
 
   renderInvoiceInto($('preview'), invoice);
@@ -393,12 +419,6 @@ $('printBtn').addEventListener('click', (e) => {
   print();
 });
 
-$('durableCopy').addEventListener('click', async () => {
-  await navigator.clipboard.writeText($('durableLinkInput').value);
-  $('durableCopy').textContent = 'Copied!';
-  setTimeout(() => { $('durableCopy').textContent = 'Copy'; }, 1200);
-});
-
 $('editLinkCopy').addEventListener('click', async () => {
   await navigator.clipboard.writeText($('editLinkInput').value);
   $('editLinkCopy').textContent = 'Copied!';
@@ -445,6 +465,7 @@ $('manageRates').addEventListener('click', () => {
 // ---- boot ---------------------------------------------------------------------------
 
 refreshTaxPresets();
+buildTemplatePicker();
 const loadedFromEditLink = await loadFromHash();
 if (!loadedFromEditLink) {
   addItemRow();

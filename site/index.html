@@ -120,6 +120,7 @@ item,Consulting hours,10,150</pre>
 
       <fieldset class="style">
         <legend>Style</legend>
+        <div id="templatePicker" class="tpl-picker"></div>
         <div class="style-row">
           <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
             <input id="fAccent" type="color" value="#2456a6" disabled></label>
@@ -146,17 +147,6 @@ item,Consulting hours,10,150</pre>
           <a id="shareSms" href="#">Text</a> ·
           <a id="shareWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
         </p>
-
-        <!-- Durable link: points at GitHub Pages instead of our own hosting, so
-             it survives this site's hosting going away (see site/shared/durable-link.js). -->
-        <div id="durableSection" class="durable">
-          <label for="durableLinkInput">Durable link (survives this site going away)</label>
-          <div class="linkrow">
-            <input id="durableLinkInput" type="text" readonly>
-            <button id="durableCopy" type="button">Copy</button>
-          </div>
-          <p class="linkmeta">Points at the GitHub Pages copy of this project instead of our own hosting.</p>
-        </div>
 
         <!-- Edit link: reopens this exact form (data + style) instead of the
              read-only viewer, by pointing back at this same page. Reuses the

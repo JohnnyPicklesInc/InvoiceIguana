@@ -105,6 +105,99 @@
 .invoice .brand { color: #999; font-size: 0.72rem; text-align: center; margin: 1.5rem 0 0; }
 .invoice .brand a { color: inherit; }
 
+/* ---- Premium invoice templates -------------------------------------------
+   Each is scoped as .invoice.t-* and layered over the classic styles above.
+   Every template sets its own default --accent; a user-chosen accent color
+   still overrides it inline (see applyDocumentStyle). */
+
+/* ---- Modern: a full-width accent header band, soft and rounded ------------ */
+.invoice.t-modern {
+  --accent: #2456a6;
+  padding-top: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.invoice.t-modern header {
+  background: var(--accent);
+  border-bottom: none;
+  margin: 0 -3rem 0.5rem;
+  padding: 2rem 3rem 1.75rem;
+  align-items: center;
+}
+.invoice.t-modern [data-f="sellerName"] { color: #fff; }
+.invoice.t-modern [data-f="sellerAddress"],
+.invoice.t-modern [data-f="sellerContact"] { color: rgba(255, 255, 255, 0.82); }
+.invoice.t-modern .invoice-meta h2 { color: #fff; }
+.invoice.t-modern .invoice-meta p { color: rgba(255, 255, 255, 0.82); }
+.invoice.t-modern .items-table thead th {
+  background: #f4f6fa;
+  border-bottom: none;
+  padding: 0.5rem 0.6rem;
+  color: var(--accent);
+}
+.invoice.t-modern .items-table td { padding: 0.55rem 0.6rem; }
+.invoice.t-modern .totals .grand { border-top-width: 3px; }
+
+/* ---- Minimal: hairlines, muted color, lots of air ------------------------- */
+.invoice.t-minimal {
+  --accent: #111;
+  box-shadow: none;
+  border: 1px solid #ececec;
+  color: #333;
+}
+.invoice.t-minimal header {
+  border-bottom: 1px solid #ececec;
+  padding-bottom: 1rem;
+}
+.invoice.t-minimal .invoice-meta h2 {
+  color: #111;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+.invoice.t-minimal .items-table thead th { border-bottom: 1px solid #ececec; }
+.invoice.t-minimal .items-table td { border-bottom: 1px solid #f4f4f4; }
+.invoice.t-minimal .payment-instructions { background: #fafafa; }
+.invoice.t-minimal .totals .grand {
+  border-top: 1px solid #111;
+  color: #111;
+  font-weight: 600;
+}
+
+/* ---- Bold: dark serif header block, high contrast ------------------------- */
+.invoice.t-bold {
+  --accent: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  padding-top: 0;
+}
+.invoice.t-bold header {
+  background: #111;
+  border-bottom: none;
+  margin: 0 -3rem 0.75rem;
+  padding: 2.25rem 3rem 2rem;
+}
+.invoice.t-bold [data-f="sellerName"] { color: #fff; font-size: 1.4rem; }
+.invoice.t-bold [data-f="sellerAddress"],
+.invoice.t-bold [data-f="sellerContact"] { color: #bbb; }
+.invoice.t-bold .invoice-meta h2 {
+  color: #fff;
+  font-size: 1.7rem;
+  letter-spacing: 0.08em;
+}
+.invoice.t-bold .invoice-meta p { color: #bbb; }
+.invoice.t-bold .items-table thead th {
+  color: #111;
+  border-bottom: 2px solid #111;
+}
+.invoice.t-bold .totals .grand {
+  border-top: 2px solid #111;
+  color: #111;
+  font-size: 1.2rem;
+}
+
 @media print {
   .invoice { box-shadow: none; max-width: none; }
+  /* Header bands and accents must survive print's default no-background rule. */
+  .invoice.t-modern header,
+  .invoice.t-bold header,
+  .invoice.t-modern .items-table thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

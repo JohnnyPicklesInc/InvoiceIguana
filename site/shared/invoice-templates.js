@@ -1,8 +1,16 @@
 /**
- * Invoice template registry — mirrors shared/templates.js's structure for
- * the invoice document type. One template for v1 (matches "everything else
- * carries over" scope); more can be added the same way receipt's were.
+ * Invoice template registry — the single source for the generator's template
+ * picker, the renderer's class mapping, and (like receipt's) any CSS sanity
+ * check. Template ids ride in the link (compact key `w`); ids absent from
+ * this registry render as classic, so old links and newer generators stay
+ * forward compatible.
+ *
+ * Each className is layered over the base .invoice styles in
+ * shared/invoice.css the same way receipt's templates layer over receipt.css.
  */
 export const TEMPLATES = {
   classic: { label: 'Classic', className: '' },
+  modern: { label: 'Modern', className: 't-modern' },
+  minimal: { label: 'Minimal', className: 't-minimal' },
+  bold: { label: 'Bold', className: 't-bold' },
 };
