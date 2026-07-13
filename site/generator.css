@@ -51,7 +51,7 @@ main {
   margin: 0 auto;
 }
 
-.editor { flex: 1 1 460px; max-width: 520px; }
+.editor { flex: 1 1 460px; max-width: 520px; min-width: 0; }
 .preview-pane { flex: 0 1 400px; }
 .preview-label { color: #666; font-size: 0.82rem; text-align: center; margin: 0 0 0.75rem; }
 

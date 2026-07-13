@@ -17,6 +17,7 @@ import {
 } from '../site/shared/codec.js';
 import { parseReceipt, splitCsvLine } from '../site/shared/parse.js';
 import { TEMPLATES } from '../site/shared/templates.js';
+import { TEMPLATES as INVOICE_TEMPLATES } from '../site/shared/invoice-templates.js';
 import { encodeInvoice, decodeInvoice, DOC_INVOICE } from '../site/shared/invoice-codec.js';
 import { parseInvoice } from '../site/shared/invoice-parse.js';
 
@@ -294,6 +295,14 @@ await test('every non-classic template has CSS in templates.css', () => {
   for (const [id, tpl] of Object.entries(TEMPLATES)) {
     if (!tpl.className) continue;
     ok(css.includes(`.receipt.${tpl.className}`), `missing CSS for template "${id}" (.receipt.${tpl.className})`);
+  }
+});
+
+await test('every non-classic invoice template has CSS in invoice.css', () => {
+  const css = readFileSync(join(root, 'site', 'shared', 'invoice.css'), 'utf8');
+  for (const [id, tpl] of Object.entries(INVOICE_TEMPLATES)) {
+    if (!tpl.className) continue;
+    ok(css.includes(`.invoice.${tpl.className}`), `missing CSS for template "${id}" (.invoice.${tpl.className})`);
   }
 });
 

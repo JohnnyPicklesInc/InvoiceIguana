@@ -53,8 +53,8 @@ async function main() {
       renderReceiptInto($('receipt'), receipt);
       const qrEl = $('receipt').querySelector('[data-f="qr"]');
       qrEl.hidden = !receipt.qr;
-      if (receipt.qr) renderQrInto(qrEl, location.href);
-      wireShareLinks(location.href, receipt.merchant);
+      if (receipt.qr) renderQrInto(qrEl, durableLink(payload));
+      wireShareLinks(durableLink(payload), receipt.merchant);
       current = receipt;
       currentDocType = docType;
       show('receipt');
@@ -64,8 +64,8 @@ async function main() {
       renderInvoiceInto($('invoice'), invoice);
       const qrEl = $('invoice').querySelector('[data-f="qr"]');
       qrEl.hidden = !invoice.qr;
-      if (invoice.qr) renderQrInto(qrEl, location.href);
-      wireShareLinks(location.href, invoice.seller.name);
+      if (invoice.qr) renderQrInto(qrEl, durableLink(payload));
+      wireShareLinks(durableLink(payload), invoice.seller.name);
       current = invoice;
       currentDocType = docType;
       show('invoice');
@@ -88,20 +88,7 @@ function wireShareLinks(link, name) {
 
 $('printBtn').addEventListener('click', () => print());
 $('downloadPng').addEventListener('click', () => {
-  if (current && currentDocType === DOC_RECEIPT) downloadReceiptPng(current, { qrText: location.href });
-});
-
-$('durableBtn').addEventListener('click', async () => {
-  if (!current) return;
-  const label = $('durableBtn').textContent;
-  try {
-    await navigator.clipboard.writeText(durableLink(currentPayload));
-    $('durableBtn').textContent = 'Copied!';
-  } catch {
-    $('durableBtn').textContent = 'Failed — try again';
-  } finally {
-    setTimeout(() => { $('durableBtn').textContent = label; }, 1500);
-  }
+  if (current && currentDocType === DOC_RECEIPT) downloadReceiptPng(current, { qrText: durableLink(currentPayload) });
 });
 
 addEventListener('hashchange', main);
