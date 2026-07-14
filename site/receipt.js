@@ -257,6 +257,10 @@ function refreshTaxPresets() {
   flat.value = '';
   flat.textContent = 'Flat amount';
   select.append(flat);
+  const pct = document.createElement('option');
+  pct.value = 'pct';
+  pct.textContent = 'Percentage (%)';
+  select.append(pct);
   loadRates().forEach((rate, i) => {
     const opt = document.createElement('option');
     opt.value = String(i);
@@ -444,15 +448,38 @@ $('editLinkCopy').addEventListener('click', async () => {
   setTimeout(() => { $('editLinkCopy').textContent = 'Copy'; }, 1200);
 });
 
-$('taxPreset').addEventListener('change', () => {
+/** Reflects the tax dropdown into UI state: activeTaxRate drives the computed
+ *  tax in update(); a null rate means "flat amount typed directly into fTax". */
+function applyTaxMode() {
   const val = $('taxPreset').value;
-  if (val === '') {
+  const pctInput = $('fTaxPercent');
+  if (val === 'pct') {
+    // Inline percentage: type a % and it's applied to the subtotal, no need to
+    // save a named rate first.
+    pctInput.hidden = false;
+    $('fTax').readOnly = true;
+    const rate = Number(pctInput.value);
+    activeTaxRate = pctInput.value.trim() && Number.isFinite(rate) && rate >= 0
+      ? { name: 'Tax', rate } : null;
+    if (!activeTaxRate) $('fTax').value = '';
+  } else if (val === '') {
+    pctInput.hidden = true;
     activeTaxRate = null;
     $('fTax').readOnly = false;
   } else {
+    pctInput.hidden = true;
     activeTaxRate = loadRates()[Number(val)] ?? null;
     $('fTax').readOnly = !!activeTaxRate;
   }
+}
+
+$('taxPreset').addEventListener('change', () => {
+  applyTaxMode();
+  scheduleUpdate();
+});
+
+$('fTaxPercent').addEventListener('input', () => {
+  applyTaxMode();
   scheduleUpdate();
 });
 
