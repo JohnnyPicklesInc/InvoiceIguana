@@ -282,6 +282,10 @@ async function embedLogoFromUrl(url) {
 
 function updateLogoFileStatus() {
   const status = $('logoFileStatus');
+  // Reveal the collapsed "Add a logo" panel when there's a logo (or an error)
+  // to report, so its status/Remove control isn't hidden after an edit-link load.
+  const details = status.closest('details');
+  if (details && (pendingLogoError || pendingLogoData)) details.open = true;
   if (pendingLogoError) {
     status.textContent = pendingLogoError;
     status.hidden = false;

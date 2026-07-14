@@ -85,17 +85,31 @@ form textarea { resize: vertical; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.8rem; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 0.8rem; }
 
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 0.8rem; }
 .tax-preset { font-size: 0.82rem; padding: 0.4rem 0.5rem; }
 .tax-preset + input { margin-top: 0.35rem; }
 
-fieldset {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  margin: 1.1rem 0 0;
-  padding: 0.6rem 0.9rem 0.9rem;
-  background: var(--surface-2);
+/* Grouped form sections — a small header + divider replaces the old wall of
+   inputs and the boxed fieldsets, so the form reads as scannable groups. */
+.form-section { margin-top: 1.5rem; }
+.form-section:first-child { margin-top: 0.25rem; }
+.section-head {
+  margin: 0 0 0.7rem;
+  padding-bottom: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
 }
-legend { font-size: 0.76rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0.3rem; }
+.form-section > label:first-of-type, .form-section > .grid2, .form-section > .grid3 { margin-top: 0; }
+
+/* Optional logo, tucked behind a toggle to keep the Style section short. */
+.logo-details { margin-top: 0.9rem; }
+.logo-details summary { cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--brand-ink); }
+@media (prefers-color-scheme: dark) { .logo-details summary { color: var(--brand); } }
+.logo-details[open] summary { margin-bottom: 0.2rem; }
 
 .item-head, .item-row {
   display: grid;
@@ -242,5 +256,6 @@ input[type="checkbox"] { accent-color: var(--brand); }
 
 @media (max-width: 560px) {
   .grid4 { grid-template-columns: 1fr 1fr; }
+  .grid3 { grid-template-columns: 1fr 1fr; }
   .preview-pane { position: static; }
 }

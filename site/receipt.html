@@ -54,41 +54,52 @@
       </div>
 
       <form id="form" autocomplete="off">
-        <div class="grid2">
-          <label>Business / merchant *<input id="fMerchant" type="text" placeholder="Rat's Deli" required></label>
-          <label>Date<input id="fDate" type="text" placeholder="2026-07-06 14:30"></label>
-        </div>
-        <div class="grid2">
-          <label>Address<input id="fAddress" type="text" placeholder="123 Main St, Springfield"></label>
-          <label>Contact (phone or email)<input id="fContact" type="text" placeholder="555-0142 or hello@ratsdeli.com"></label>
-        </div>
+        <section class="form-section">
+          <h3 class="section-head">Business</h3>
+          <label>Business / merchant<input id="fMerchant" type="text" placeholder="Rat's Deli"></label>
+          <div class="grid2">
+            <label>Address<input id="fAddress" type="text" placeholder="123 Main St, Springfield"></label>
+            <label>Contact (phone or email)<input id="fContact" type="text" placeholder="555-0142 or hello@ratsdeli.com"></label>
+          </div>
+        </section>
 
-        <fieldset class="items">
-          <legend>Items</legend>
+        <section class="form-section">
+          <h3 class="section-head">Receipt details</h3>
+          <div class="grid3">
+            <label>Date<input id="fDate" type="text" placeholder="2026-07-06 14:30"></label>
+            <label>Reference / receipt #<input id="fReference" type="text" placeholder="R-2024-0091"></label>
+            <label>Payment<input id="fPayment" type="text" placeholder="VISA •1234"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Items</h3>
           <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span>Disc.</span><span></span><span></span></div>
           <div id="itemRows"></div>
           <button id="addItem" type="button" class="ghost">+ Add item</button>
-        </fieldset>
+        </section>
 
-        <div class="grid2">
-          <label>Reference / receipt #<input id="fReference" type="text" placeholder="R-2024-0091"></label>
-          <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
-        </div>
+        <section class="form-section">
+          <h3 class="section-head">Totals</h3>
+          <div class="grid4">
+            <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
+            <label>Tax
+              <select id="taxPreset" class="tax-preset">
+                <option value="">Flat amount</option>
+                <option value="pct">Percentage (%)</option>
+              </select>
+              <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
+              <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
+            </label>
+            <label>Tip<input id="fTip" type="text" inputmode="decimal" placeholder="0.00"></label>
+            <label>Currency<select id="fCurrency"></select></label>
+          </div>
+        </section>
 
-        <div class="grid4">
-          <label>Tax
-            <select id="taxPreset" class="tax-preset">
-              <option value="">Flat amount</option>
-              <option value="pct">Percentage (%)</option>
-            </select>
-            <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
-            <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
-          </label>
-          <label>Tip<input id="fTip" type="text" inputmode="decimal" placeholder="0.00"></label>
-          <label>Currency<select id="fCurrency"></select></label>
-          <label>Payment<input id="fPayment" type="text" placeholder="VISA •1234"></label>
-        </div>
-        <label>Footer note<input id="fFooter" type="text" placeholder="Thanks for your business!"></label>
+        <section class="form-section">
+          <h3 class="section-head">Footer</h3>
+          <label>Footer note<input id="fFooter" type="text" placeholder="Thanks for your business!"></label>
+        </section>
       </form>
 
       <div id="upload" class="upload" hidden>
@@ -115,8 +126,8 @@ item,Coffee,2,3.50</pre>
       <ul id="errors" class="errors" hidden></ul>
       <ul id="warnings" class="warnings" hidden></ul>
 
-      <fieldset class="style">
-        <legend>Style</legend>
+      <section class="form-section style">
+        <h3 class="section-head">Style</h3>
         <div id="templatePicker" class="tpl-picker"></div>
         <div class="style-row">
           <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
@@ -124,11 +135,14 @@ item,Coffee,2,3.50</pre>
           <label class="inline"><input id="fQr" type="checkbox"> QR code on receipt</label>
           <label class="inline"><input id="fBrandingOff" type="checkbox"> Hide "made with InvoiceIguana"</label>
         </div>
-        <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
-        <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
-        <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the receipt is later viewed.</p>
-        <p id="logoFileStatus" class="linkmeta" hidden></p>
-      </fieldset>
+        <details class="logo-details">
+          <summary>Add a logo</summary>
+          <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
+          <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
+          <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the receipt is later viewed.</p>
+          <p id="logoFileStatus" class="linkmeta" hidden></p>
+        </details>
+      </section>
 
       <div id="result" class="result" hidden>
         <label for="link">Your receipt link</label>

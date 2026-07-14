@@ -66,47 +66,61 @@
       </div>
 
       <form id="form" autocomplete="off">
-        <div class="grid2">
-          <label>Your business (seller) *<input id="fSeller" type="text" placeholder="Acme Consulting" required></label>
-          <label>Invoice #<input id="fInvoiceNumber" type="text" placeholder="INV-2026-001"></label>
-        </div>
-        <div class="grid2">
-          <label>Your address<input id="fSellerAddress" type="text" placeholder="1 Main St, Springfield"></label>
-          <label>Your contact<input id="fSellerContact" type="text" placeholder="billing@acme.com"></label>
-        </div>
-        <div class="grid2">
-          <label>Issue date<input id="fIssueDate" type="text" placeholder="2026-07-01"></label>
-          <label>Due date<input id="fDueDate" type="text" placeholder="2026-07-31"></label>
-        </div>
+        <section class="form-section">
+          <h3 class="section-head">Your business</h3>
+          <label>Business name<input id="fSeller" type="text" placeholder="Acme Consulting"></label>
+          <div class="grid2">
+            <label>Address<input id="fSellerAddress" type="text" placeholder="1 Main St, Springfield"></label>
+            <label>Contact<input id="fSellerContact" type="text" placeholder="billing@acme.com"></label>
+          </div>
+        </section>
 
-        <div class="grid2">
-          <label>Bill to (client)<input id="fBuyer" type="text" placeholder="Client Co"></label>
-          <label>Client address<input id="fBuyerAddress" type="text" placeholder="2 Oak Ave, Springfield"></label>
-        </div>
-        <label>Client contact<input id="fBuyerContact" type="text" placeholder="ap@client.com"></label>
+        <section class="form-section">
+          <h3 class="section-head">Bill to</h3>
+          <label>Client<input id="fBuyer" type="text" placeholder="Client Co"></label>
+          <div class="grid2">
+            <label>Client address<input id="fBuyerAddress" type="text" placeholder="2 Oak Ave, Springfield"></label>
+            <label>Client contact<input id="fBuyerContact" type="text" placeholder="ap@client.com"></label>
+          </div>
+        </section>
 
-        <fieldset class="items">
-          <legend>Items</legend>
+        <section class="form-section">
+          <h3 class="section-head">Invoice details</h3>
+          <div class="grid3">
+            <label>Invoice #<input id="fInvoiceNumber" type="text" placeholder="INV-2026-001"></label>
+            <label>Issue date<input id="fIssueDate" type="text" placeholder="2026-07-01"></label>
+            <label>Due date<input id="fDueDate" type="text" placeholder="2026-07-31"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Items</h3>
           <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span>Disc.</span><span></span><span></span></div>
           <div id="itemRows"></div>
           <button id="addItem" type="button" class="ghost">+ Add item</button>
-        </fieldset>
+        </section>
 
-        <div class="grid4">
-          <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
-          <label>Tax
-            <select id="taxPreset" class="tax-preset">
-              <option value="">Flat amount</option>
-              <option value="pct">Percentage (%)</option>
-            </select>
-            <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
-            <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
-          </label>
-          <label>Currency<select id="fCurrency"></select></label>
-        </div>
+        <section class="form-section">
+          <h3 class="section-head">Totals</h3>
+          <div class="grid3">
+            <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
+            <label>Tax
+              <select id="taxPreset" class="tax-preset">
+                <option value="">Flat amount</option>
+                <option value="pct">Percentage (%)</option>
+              </select>
+              <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
+              <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
+            </label>
+            <label>Currency<select id="fCurrency"></select></label>
+          </div>
+        </section>
 
-        <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
-        <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>
+        <section class="form-section">
+          <h3 class="section-head">Payment &amp; notes</h3>
+          <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
+          <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>
+        </section>
       </form>
 
       <div id="upload" class="upload" hidden>
@@ -136,8 +150,8 @@ item,Consulting hours,10,150</pre>
       <ul id="errors" class="errors" hidden></ul>
       <ul id="warnings" class="warnings" hidden></ul>
 
-      <fieldset class="style">
-        <legend>Style</legend>
+      <section class="form-section style">
+        <h3 class="section-head">Style</h3>
         <div id="templatePicker" class="tpl-picker"></div>
         <div class="style-row">
           <label class="inline"><input id="fAccentOn" type="checkbox"> Accent color
@@ -187,11 +201,14 @@ item,Consulting hours,10,150</pre>
           </div>
         </div>
 
-        <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
-        <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
-        <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the invoice is later viewed.</p>
-        <p id="logoFileStatus" class="linkmeta" hidden></p>
-      </fieldset>
+        <details class="logo-details">
+          <summary>Add a logo</summary>
+          <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
+          <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
+          <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the invoice is later viewed.</p>
+          <p id="logoFileStatus" class="linkmeta" hidden></p>
+        </details>
+      </section>
 
       <div id="result" class="result" hidden>
         <label for="link">Your invoice link</label>
