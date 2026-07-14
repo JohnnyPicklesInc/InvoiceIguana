@@ -10,7 +10,7 @@
 import { money } from './render.js';
 import { applyDocumentStyle } from './style.js';
 import { TEMPLATES } from './invoice-templates.js';
-import { lineNetMinor } from './invoice-math.js';
+import { lineNetMinor } from './line-math.js';
 
 // Composable layout knobs → CSS classes (see the `.invoice.<class>` rules in
 // invoice.css). The neutral default of each knob maps to no class, so preset

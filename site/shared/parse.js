@@ -13,6 +13,7 @@
 
 import { toMinor, currencyExponent } from './codec.js';
 import { asOptionalString, asOptionalMoney, asOptionalHttpsUrl } from './wire.js';
+import { lineNetMinor } from './line-math.js';
 
 const META_KEYS = ['merchant', 'address', 'contact', 'date', 'reference', 'currency',
   'discount', 'tax', 'taxlabel', 'tip', 'subtotal', 'total', 'payment', 'footer', 'logourl'];
@@ -145,21 +146,24 @@ function normalize(raw, errors, warnings) {
       } catch {
         errors.push(`${where}: item price is not a number (got "${it.price}")`);
       }
+      const discount = itemDiscount(it, currency, where, errors);
       if (name && priceMinor != null && Number.isSafeInteger(qty) && qty > 0) {
-        items.push({ name, qty, priceMinor });
+        items.push({ name, qty, priceMinor, discount });
       }
     });
   }
 
-  const discountMinor = asOptionalMoney(raw, 'discount', currency, errors);
-  const taxMinor = asOptionalMoney(raw, 'tax', currency, errors);
-  const tipMinor = asOptionalMoney(raw, 'tip', currency, errors);
+  // A 0 discount/tax/tip is treated as "none" so it neither renders a $0.00
+  // line nor bloats the link with a g:0 / x:0 / p:0 key.
+  const discountMinor = asOptionalMoney(raw, 'discount', currency, errors) || null;
+  const taxMinor = asOptionalMoney(raw, 'tax', currency, errors) || null;
+  const tipMinor = asOptionalMoney(raw, 'tip', currency, errors) || null;
   const givenSubtotal = asOptionalMoney(raw, 'subtotal', currency, errors);
   const givenTotal = asOptionalMoney(raw, 'total', currency, errors);
 
   if (errors.length) return null;
 
-  const computedSubtotal = items.reduce((sum, it) => sum + it.qty * it.priceMinor, 0);
+  const computedSubtotal = items.reduce((sum, it) => sum + lineNetMinor(it), 0);
   const subtotalMinor = givenSubtotal ?? computedSubtotal;
   if (givenSubtotal != null && Math.abs(givenSubtotal - computedSubtotal) > 1) {
     warnings.push(`Subtotal ${fmt(givenSubtotal, currency)} doesn't match the sum of items ${fmt(computedSubtotal, currency)}`);
@@ -181,7 +185,8 @@ function normalize(raw, errors, warnings) {
     subtotalMinor,
     discountMinor,
     taxMinor,
-    taxLabel,
+    // Drop an orphan tax label when there's no tax, so it can't ride in the link.
+    taxLabel: taxMinor != null ? taxLabel : null,
     tipMinor,
     totalMinor,
     payment,
@@ -197,6 +202,30 @@ function normalize(raw, errors, warnings) {
     logoData: null,
     qr: false,
   };
+}
+
+/** Reads an optional per-line discount from a raw item. `discount` is the
+ *  value and `discounttype` picks the unit ('percent' by default, or
+ *  'amount'/'amt'/'$' for a flat currency amount). Returns {kind, value} | null. */
+function itemDiscount(it, currency, where, errors) {
+  const rawVal = it.discount;
+  if (rawVal == null || rawVal === '') return null;
+  const num = Number(String(rawVal).trim());
+  if (!Number.isFinite(num) || num < 0) {
+    errors.push(`${where}: discount must be a non-negative number (got "${rawVal}")`);
+    return null;
+  }
+  if (num === 0) return null; // 0 discount == no discount
+  const type = String(it.discounttype ?? 'percent').trim().toLowerCase();
+  if (type === 'amount' || type === 'amt' || type === '$') {
+    try {
+      return { kind: 'amt', value: toMinor(num, currency) };
+    } catch {
+      errors.push(`${where}: discount amount is out of range (got "${rawVal}")`);
+      return null;
+    }
+  }
+  return { kind: 'pct', value: num };
 }
 
 function fmt(minor, currency) {

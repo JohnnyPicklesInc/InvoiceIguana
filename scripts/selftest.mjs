@@ -145,6 +145,29 @@ await test('taxLabel round-trips and never affects the math', async () => {
   deepStrictEqual(await decodeReceipt(await encodeReceipt(receipt)), receipt);
 });
 
+await test('receipt: per-line discounts, hide-zero tax/discount/tip, and round-trip', async () => {
+  const { receipt, errors } = parseReceipt(JSON.stringify({
+    merchant: 'Cafe',
+    items: [
+      { name: 'Latte', qty: 2, price: '5', discount: '10', discounttype: 'percent' }, // 10 - 10% = 9.00
+      { name: 'Muffin', price: '4', discount: '1', discounttype: 'amount' },           // 4 - 1 = 3.00
+    ],
+    tax: 0, discount: 0, tip: 0, // all zero -> treated as none
+  }), 'json');
+  deepStrictEqual(errors, []);
+  deepStrictEqual(receipt.items[0].discount, { kind: 'pct', value: 10 });
+  deepStrictEqual(receipt.items[1].discount, { kind: 'amt', value: 100 });
+  strictEqual(receipt.subtotalMinor, 900 + 300, 'subtotal sums net line amounts');
+  strictEqual(receipt.discountMinor, null);
+  strictEqual(receipt.taxMinor, null);
+  strictEqual(receipt.tipMinor, null);
+  deepStrictEqual(await decodeReceipt(await encodeReceipt(receipt)), receipt);
+
+  // Old 3-element item links still decode, with discount null.
+  const legacy = await decodeReceipt(await forge({ m: 'M', i: [['a', 1, 100]], s: 100, t: 100 }));
+  strictEqual(legacy.items[0].discount, null);
+});
+
 // ---- logo URL ----------------------------------------------------------------
 
 await test('isHttpsUrl accepts https:, rejects everything else', () => {
@@ -239,7 +262,7 @@ await test('CSV: quoted fields, "" escapes, qty-optional item rows', () => {
   deepStrictEqual(splitCsvLine('footer,"He said ""hi"""'), ['footer', 'He said "hi"']);
   const { receipt, errors } = parseReceipt('merchant,M\nitem,Solo,4.20', 'csv');
   deepStrictEqual(errors, []);
-  deepStrictEqual(receipt.items[0], { name: 'Solo', qty: 1, priceMinor: 420 });
+  deepStrictEqual(receipt.items[0], { name: 'Solo', qty: 1, priceMinor: 420, discount: null });
 });
 
 await test('CSV: unknown row type reports its line number', () => {

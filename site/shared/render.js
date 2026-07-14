@@ -9,6 +9,7 @@
 import { fromMinor } from './codec.js';
 import { TEMPLATES } from './templates.js';
 import { applyDocumentStyle } from './style.js';
+import { lineNetMinor } from './line-math.js';
 
 export function money(minor, currency) {
   try {
@@ -32,9 +33,11 @@ export function renderReceiptInto(root, r) {
     el.hidden = value == null;
     if (value != null) el.textContent = value;
   };
+  // Hide a totals row when its amount is zero as well as absent (a $0.00 tax or
+  // tip is the same as none), matching the discount row below.
   const setOptionalMoney = (rowF, cellF, minor) => {
-    $(rowF).hidden = minor == null;
-    if (minor != null) $(cellF).textContent = money(minor, r.currency);
+    $(rowF).hidden = !minor;
+    if (minor) $(cellF).textContent = money(minor, r.currency);
   };
 
   applyReceiptStyle(root, r);
@@ -54,20 +57,30 @@ export function renderReceiptInto(root, r) {
     name.textContent = it.qty > 1 ? `${it.name} ×${it.qty}` : it.name;
     const amount = document.createElement('span');
     amount.className = 'amount';
-    amount.textContent = money(it.qty * it.priceMinor, r.currency);
+    // Amount is the net (discounted) line total so the subtotal sums amounts.
+    amount.textContent = money(lineNetMinor(it), r.currency);
     if (it.qty > 1) {
       const unit = document.createElement('span');
       unit.className = 'unit';
       unit.textContent = ` (@ ${money(it.priceMinor, r.currency)})`;
       name.append(unit);
     }
+    if (it.discount) {
+      const disc = document.createElement('span');
+      disc.className = 'disc';
+      disc.textContent = it.discount.kind === 'pct'
+        ? ` — ${it.discount.value}% off`
+        : ` — ${money(it.discount.value, r.currency)} off`;
+      name.append(disc);
+    }
     li.append(name, amount);
     list.append(li);
   }
 
   $('subtotal').textContent = money(r.subtotalMinor, r.currency);
-  $('discountRow').hidden = r.discountMinor == null;
-  if (r.discountMinor != null) $('discount').textContent = `-${money(r.discountMinor, r.currency)}`;
+  // Zero discount == no discount — don't clutter the totals with a -$0.00 line.
+  $('discountRow').hidden = !r.discountMinor;
+  if (r.discountMinor) $('discount').textContent = `-${money(r.discountMinor, r.currency)}`;
   const taxLabelEl = $('taxLabel');
   if (taxLabelEl) taxLabelEl.textContent = r.taxLabel || 'Tax';
   setOptionalMoney('taxRow', 'tax', r.taxMinor);

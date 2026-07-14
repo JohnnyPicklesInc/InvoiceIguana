@@ -39,6 +39,7 @@
 .receipt .name { overflow-wrap: anywhere; }
 .receipt .amount { white-space: nowrap; }
 .receipt .unit { color: #777; font-size: 0.75rem; }
+.receipt .disc { color: #777; font-size: 0.75rem; }
 
 .receipt .totals { margin: 0; }
 .receipt .totals div {

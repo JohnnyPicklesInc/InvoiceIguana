@@ -19,7 +19,7 @@
 
 import { toMinor, currencyExponent } from './codec.js';
 import { asOptionalString, asOptionalMoney, asOptionalHttpsUrl } from './wire.js';
-import { lineNetMinor } from './invoice-math.js';
+import { lineNetMinor } from './line-math.js';
 
 const META_KEYS = ['seller', 'selleraddress', 'sellercontact', 'buyer', 'buyeraddress',
   'buyercontact', 'invoicenumber', 'issuedate', 'duedate', 'currency', 'discount', 'tax',

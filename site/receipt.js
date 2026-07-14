@@ -27,7 +27,7 @@ let pendingLogoError = null;
 
 // ---- item rows -----------------------------------------------------------
 
-function addItemRow(name = '', qty = '', price = '') {
+function addItemRow(name = '', qty = '', price = '', disc = '', discType = 'pct') {
   const row = document.createElement('div');
   row.className = 'item-row';
   const mk = (cls, placeholder, value, mode) => {
@@ -40,6 +40,18 @@ function addItemRow(name = '', qty = '', price = '') {
     input.addEventListener('input', scheduleUpdate);
     return input;
   };
+  // Per-line discount: a value plus a %/$ unit toggle. Empty value = no discount.
+  const discTypeSel = document.createElement('select');
+  discTypeSel.className = 'i-disctype';
+  discTypeSel.title = 'Discount as a percentage or a flat amount';
+  for (const [value, label] of [['pct', '%'], ['amt', '$']]) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    discTypeSel.append(opt);
+  }
+  discTypeSel.value = discType;
+  discTypeSel.addEventListener('change', scheduleUpdate);
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'ghost remove';
@@ -47,7 +59,8 @@ function addItemRow(name = '', qty = '', price = '') {
   remove.title = 'Remove item';
   remove.addEventListener('click', () => { row.remove(); scheduleUpdate(); });
   row.append(mk('i-name', 'Coffee', name), mk('i-qty', '1', qty, 'numeric'),
-    mk('i-price', '3.50', price, 'decimal'), remove);
+    mk('i-price', '3.50', price, 'decimal'), mk('i-disc', '0', disc, 'decimal'),
+    discTypeSel, remove);
   $('itemRows').append(row);
 }
 
@@ -70,8 +83,14 @@ function rawFromForm() {
     const name = row.querySelector('.i-name').value.trim();
     const qty = row.querySelector('.i-qty').value.trim();
     const price = row.querySelector('.i-price').value.trim();
-    if (!name && !qty && !price) continue; // skip fully empty rows
-    raw.items.push({ name, qty: qty || 1, price });
+    const disc = row.querySelector('.i-disc').value.trim();
+    if (!name && !qty && !price && !disc) continue; // skip fully empty rows
+    const item = { name, qty: qty || 1, price };
+    if (disc) {
+      item.discount = disc;
+      item.discounttype = row.querySelector('.i-disctype').value === 'amt' ? 'amount' : 'percent';
+    }
+    raw.items.push(item);
   }
   return raw;
 }
@@ -92,7 +111,11 @@ function fillFormFromReceipt(r) {
   $('fLogoUrl').value = r.logoUrl ?? '';
   $('itemRows').replaceChildren();
   for (const it of r.items) {
-    addItemRow(it.name, it.qty === 1 ? '' : String(it.qty), String(fromMinor(it.priceMinor, r.currency)));
+    const discValue = it.discount
+      ? (it.discount.kind === 'amt' ? String(fromMinor(it.discount.value, r.currency)) : String(it.discount.value))
+      : '';
+    addItemRow(it.name, it.qty === 1 ? '' : String(it.qty),
+      String(fromMinor(it.priceMinor, r.currency)), discValue, it.discount?.kind ?? 'pct');
   }
 }
 
