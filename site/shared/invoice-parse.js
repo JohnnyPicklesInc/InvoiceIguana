@@ -173,10 +173,10 @@ function normalize(raw, errors, warnings, lenient = false) {
     });
   }
 
-  // A 0 discount is treated as "no discount" so it neither renders a -$0.00
-  // line nor bloats the link with a g:0 key.
+  // A 0 discount/tax is treated as "none" so it neither renders a $0.00 line
+  // nor bloats the link with a g:0 / x:0 key.
   const discountMinor = asOptionalMoney(raw, 'discount', currency, sink) || null;
-  const taxMinor = asOptionalMoney(raw, 'tax', currency, sink);
+  const taxMinor = asOptionalMoney(raw, 'tax', currency, sink) || null;
   const givenSubtotal = asOptionalMoney(raw, 'subtotal', currency, sink);
   const givenTotal = asOptionalMoney(raw, 'total', currency, sink);
 
@@ -204,7 +204,8 @@ function normalize(raw, errors, warnings, lenient = false) {
     subtotalMinor,
     discountMinor,
     taxMinor,
-    taxLabel,
+    // Drop an orphan tax label when there's no tax, so it can't ride in the link.
+    taxLabel: taxMinor != null ? taxLabel : null,
     totalMinor,
     paymentInstructions,
     notes,

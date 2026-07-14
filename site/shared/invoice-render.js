@@ -97,8 +97,10 @@ export function renderInvoiceInto(root, inv) {
   if (inv.discountMinor) $('discount').textContent = `-${money(inv.discountMinor, inv.currency)}`;
   const taxLabelEl = $('taxLabel');
   if (taxLabelEl) taxLabelEl.textContent = inv.taxLabel || 'Tax';
-  $('taxRow').hidden = inv.taxMinor == null;
-  if (inv.taxMinor != null) $('tax').textContent = money(inv.taxMinor, inv.currency);
+  // Like discount: a zero tax is the same as no tax — hide the row (falsy
+  // covers both null and 0).
+  $('taxRow').hidden = !inv.taxMinor;
+  if (inv.taxMinor) $('tax').textContent = money(inv.taxMinor, inv.currency);
   $('total').textContent = money(inv.totalMinor, inv.currency);
 
   $('paymentRow').hidden = inv.paymentInstructions == null;
