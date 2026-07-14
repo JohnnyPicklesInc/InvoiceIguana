@@ -75,13 +75,15 @@
         <div class="grid4">
           <label>Discount<input id="fDiscount" type="text" inputmode="decimal" placeholder="0.00"></label>
           <label>Tax
-            <select id="taxPreset" class="tax-preset"></select>
+            <select id="taxPreset" class="tax-preset">
+              <option value="">Flat amount</option>
+              <option value="pct">Percentage (%)</option>
+            </select>
             <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
             <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
           </label>
           <label>Currency<select id="fCurrency"></select></label>
         </div>
-        <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>
 
         <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
         <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>

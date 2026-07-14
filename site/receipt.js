@@ -10,7 +10,6 @@ import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
 import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
-import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
 import { TEMPLATES } from './shared/templates.js';
 import { CURRENCIES } from './shared/currencies.js';
 import { compressLogoImage } from './shared/logo-embed.js';
@@ -270,29 +269,6 @@ function updateLogoFileStatus() {
   }
 }
 
-// ---- tax rate presets ------------------------------------------------------------
-
-function refreshTaxPresets() {
-  const select = $('taxPreset');
-  const prevValue = select.value;
-  select.replaceChildren();
-  const flat = document.createElement('option');
-  flat.value = '';
-  flat.textContent = 'Flat amount';
-  select.append(flat);
-  const pct = document.createElement('option');
-  pct.value = 'pct';
-  pct.textContent = 'Percentage (%)';
-  select.append(pct);
-  loadRates().forEach((rate, i) => {
-    const opt = document.createElement('option');
-    opt.value = String(i);
-    opt.textContent = `${rate.name} — ${rate.rate}%`;
-    select.append(opt);
-  });
-  select.value = [...select.options].some((o) => o.value === prevValue) ? prevValue : '';
-}
-
 // ---- main update loop ------------------------------------------------------------
 
 function setList(id, entries) {
@@ -477,22 +453,18 @@ function applyTaxMode() {
   const val = $('taxPreset').value;
   const pctInput = $('fTaxPercent');
   if (val === 'pct') {
-    // Inline percentage: type a % and it's applied to the subtotal, no need to
-    // save a named rate first.
+    // Inline percentage: type a % and it's applied to the subtotal.
     pctInput.hidden = false;
     $('fTax').readOnly = true;
     const rate = Number(pctInput.value);
     activeTaxRate = pctInput.value.trim() && Number.isFinite(rate) && rate >= 0
       ? { name: 'Tax', rate } : null;
     if (!activeTaxRate) $('fTax').value = '';
-  } else if (val === '') {
+  } else {
+    // Flat amount typed directly into fTax.
     pctInput.hidden = true;
     activeTaxRate = null;
     $('fTax').readOnly = false;
-  } else {
-    pctInput.hidden = true;
-    activeTaxRate = loadRates()[Number(val)] ?? null;
-    $('fTax').readOnly = !!activeTaxRate;
   }
 }
 
@@ -506,36 +478,10 @@ $('fTaxPercent').addEventListener('input', () => {
   scheduleUpdate();
 });
 
-$('manageRates').addEventListener('click', () => {
-  const rates = loadRates();
-  const list = rates.length
-    ? rates.map((r, i) => `${i + 1}. ${r.name} — ${r.rate}%`).join('\n')
-    : '(no saved rates yet)';
-  const choice = prompt(`Saved tax rates:\n${list}\n\nType a number to delete that rate, or "new" to add one:`);
-  if (choice == null) return;
-  const trimmed = choice.trim().toLowerCase();
-  if (trimmed === 'new') {
-    const name = prompt('Name this tax rate (e.g. "NY Sales Tax"):');
-    if (!name) return;
-    const rateStr = prompt('Rate as a percentage (e.g. 8.875 for 8.875%):');
-    const rate = Number(rateStr);
-    if (!Number.isFinite(rate) || rate < 0) {
-      if (rateStr != null) alert('Enter a valid percentage.');
-      return;
-    }
-    saveRate(name.trim(), rate);
-  } else {
-    const idx = Number(trimmed) - 1;
-    if (Number.isInteger(idx) && idx >= 0 && idx < rates.length) removeRate(idx);
-  }
-  refreshTaxPresets();
-});
-
 // ---- boot ---------------------------------------------------------------------------
 
 buildTemplatePicker();
 buildCurrencyPicker();
-refreshTaxPresets();
 const loadedFromEditLink = await loadFromHash();
 if (!loadedFromEditLink) {
   addItemRow();

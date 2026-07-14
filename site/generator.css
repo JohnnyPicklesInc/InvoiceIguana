@@ -98,7 +98,6 @@ form textarea { resize: vertical; }
   background: #fffdf7;
 }
 .tax-preset + input { margin-top: 0.35rem; }
-#manageRates { margin-top: 0.8rem; }
 
 fieldset {
   border: 1px solid #cfc7b4;

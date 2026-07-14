@@ -69,7 +69,10 @@
 
         <div class="grid4">
           <label>Tax
-            <select id="taxPreset" class="tax-preset"></select>
+            <select id="taxPreset" class="tax-preset">
+              <option value="">Flat amount</option>
+              <option value="pct">Percentage (%)</option>
+            </select>
             <input id="fTaxPercent" type="text" inputmode="decimal" placeholder="e.g. 8.875" hidden>
             <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
           </label>
@@ -77,7 +80,6 @@
           <label>Currency<select id="fCurrency"></select></label>
           <label>Payment<input id="fPayment" type="text" placeholder="VISA •1234"></label>
         </div>
-        <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>
         <label>Footer note<input id="fFooter" type="text" placeholder="Thanks for your business!"></label>
       </form>
 
