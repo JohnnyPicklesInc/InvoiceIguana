@@ -1,0 +1,325 @@
+/* InvoiceIguana design system — shared tokens + page chrome + marketing
+   components. Linked by index, receipt, privacy, and the SEO landing pages.
+   The invoice/receipt documents themselves are styled separately (paper-facing:
+   shared/invoice.css, shared/receipt.css) and intentionally stay light.
+
+   Everything lives in this file (no inline styles) so it satisfies the strict
+   CSP in _headers (style-src 'self'). Dark mode is automatic via
+   prefers-color-scheme — no toggle, no JS. */
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f2f5f1;
+  --surface: #ffffff;
+  --surface-2: #edf1ec;
+  --text: #16211b;
+  --muted: #5c6a62;
+  --border: #e1e7e1;
+
+  /* Iguana brand — a fresh green fading to teal for the wordmark + primary CTA. */
+  --brand: #12a06a;
+  --brand-2: #0c9488;
+  --brand-ink: #0a6b49;
+  --on-brand: #ffffff;
+
+  --danger: #c0392b;
+  --err-bg: #fbe6e4;
+  --err-border: #e6a9a3;
+  --err-ink: #9a2b1e;
+  --warn-bg: #fdf4d8;
+  --warn-border: #e6cd85;
+  --warn-ink: #856410;
+
+  --ring: rgba(18, 160, 106, 0.30);
+  --shadow: 0 1px 2px rgba(16, 33, 27, 0.05), 0 6px 20px rgba(16, 33, 27, 0.06);
+  --shadow-lg: 0 16px 44px rgba(9, 60, 40, 0.13);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --maxw: 1060px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "Cascadia Mono", ui-monospace, Consolas, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1311;
+    --surface: #171d19;
+    --surface-2: #1e2621;
+    --text: #e8ede9;
+    --muted: #9aa79f;
+    --border: #29322c;
+
+    --brand: #2fc08a;
+    --brand-2: #2bb6ac;
+    --brand-ink: #7fe0bd;
+
+    --err-bg: #3a1f1c;
+    --err-border: #6d3a33;
+    --err-ink: #f0b3ab;
+    --warn-bg: #33290f;
+    --warn-border: #5f4d1e;
+    --warn-ink: #e9cf8e;
+
+    --ring: rgba(47, 192, 138, 0.32);
+    --shadow: none;
+    --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+/* The `hidden` attribute must always win — otherwise author `display` rules
+   (e.g. inputs set to display:block, totals rows to display:flex) override the
+   UA `[hidden]{display:none}` and leak hidden controls/rows into view. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--brand-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+@media (prefers-color-scheme: dark) { a { color: var(--brand); } }
+
+/* ---- site header ---------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem clamp(1rem, 4vw, 2rem);
+  padding-top: calc(0.7rem + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.wordmark:hover { text-decoration: none; }
+.wordmark .lizard { font-size: 1.3rem; -webkit-text-fill-color: initial; }
+.wordmark .name {
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.site-header nav { display: flex; align-items: center; gap: 1.1rem; }
+.site-header nav a { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+.site-header nav a:hover { color: var(--text); text-decoration: none; }
+
+/* Document-type switch lives in the header on the app pages. */
+.type-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.type-switch select {
+  min-width: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0.32rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* ---- buttons -------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.62rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.15s, border-color 0.15s, background 0.15s;
+}
+.btn:hover { text-decoration: none; border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); }
+
+.btn-primary {
+  border: none;
+  color: var(--on-brand);
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand) 32%, transparent);
+}
+.btn-primary:hover { filter: brightness(1.07); }
+
+.btn-lg { padding: 0.85rem 1.7rem; font-size: 1.02rem; border-radius: 11px; }
+
+/* ---- hero + marketing sections -------------------------------------------- */
+
+.hero {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 3.6rem) 1.25rem 1.25rem;
+  text-align: center;
+}
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 5.4vw, 2.7rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+.hero .grad {
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tagline {
+  color: var(--muted);
+  font-size: clamp(1rem, 2.4vw, 1.16rem);
+  line-height: 1.55;
+  max-width: 46ch;
+  margin: 1rem auto 0;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center; margin-top: 1.5rem; }
+.reassure {
+  margin: 1.1rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.reassure b { color: var(--brand-ink); font-weight: 700; }
+@media (prefers-color-scheme: dark) { .reassure b { color: var(--brand); } }
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 1.5rem) 3rem;
+}
+.page h1 { font-size: clamp(1.7rem, 4.4vw, 2.2rem); letter-spacing: -0.025em; margin: 0.5rem 0 0.4rem; }
+.page h2 { font-size: 1.4rem; letter-spacing: -0.01em; margin: 2.4rem 0 0.8rem; }
+.page h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+.page p { color: var(--text); }
+.page .lede { color: var(--muted); font-size: 1.08rem; }
+
+/* feature grid — reflows 3→1 with no media query */
+.features {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 1.8rem 0;
+}
+.feature {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.3rem;
+  box-shadow: var(--shadow);
+}
+.feature .ico { font-size: 1.5rem; line-height: 1; }
+.feature h3 { margin: 0.6rem 0 0.3rem; font-size: 1.02rem; }
+.feature p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* how-it-works steps */
+.steps { margin: 1.2rem 0; padding: 0; list-style: none; counter-reset: step; }
+.steps li {
+  position: relative;
+  padding: 0.2rem 0 1.1rem 3rem;
+  counter-increment: step;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0; top: 0;
+  width: 2rem; height: 2rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  font-weight: 700; font-size: 0.9rem;
+  color: var(--on-brand);
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+}
+.steps li b { display: block; margin-bottom: 0.15rem; }
+
+/* FAQ — native details/summary, no JS */
+.faq details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 0.2rem 1rem;
+  margin: 0.6rem 0;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.7rem 0;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; float: right; color: var(--muted); font-weight: 400; }
+.faq details[open] summary::after { content: "–"; }
+.faq details[open] summary { color: var(--brand-ink); }
+@media (prefers-color-scheme: dark) { .faq details[open] summary { color: var(--brand); } }
+.faq details p { margin: 0 0 0.9rem; color: var(--muted); }
+
+.section-cta { text-align: center; margin: 2.6rem 0 1rem; }
+
+/* ---- site footer ---------------------------------------------------------- */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  margin-top: 2rem;
+}
+.footer-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2.2rem clamp(1rem, 4vw, 2rem) calc(2.2rem + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 1.6rem 2rem;
+  grid-template-columns: 1.4fr repeat(auto-fit, minmax(140px, 1fr));
+}
+.footer-brand .wordmark { font-size: 1.05rem; }
+.footer-brand p { color: var(--muted); font-size: 0.88rem; margin: 0.5rem 0 0; max-width: 32ch; }
+.footer-col h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+.footer-col a { display: block; color: var(--text); font-size: 0.9rem; padding: 0.18rem 0; }
+.footer-col a:hover { color: var(--brand-ink); text-decoration: none; }
+@media (prefers-color-scheme: dark) { .footer-col a:hover { color: var(--brand); } }
+.footer-legal {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem) 2rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}

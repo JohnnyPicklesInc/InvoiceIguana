@@ -1,51 +1,52 @@
-/* Viewer page chrome — the receipt itself is styled by shared/receipt.css
-   and shared/templates.css. */
-
-* { box-sizing: border-box; }
+/* Viewer page chrome (r.html) — tokens come from theme.css. The document
+   itself is styled by shared/receipt.css, shared/invoice.css, and
+   shared/templates.css. */
 
 body {
-  margin: 0;
-  background: #e8e4da;
-  font-family: "Cascadia Mono", Consolas, Menlo, monospace;
-  color: #222;
   display: flex;
   justify-content: center;
   padding: 2rem 1rem 4rem;
-  min-height: 100vh;
 }
 
-.stage { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.stage { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
 .actions button, .actions a {
-  border: 1px solid #a89f8d;
-  border-radius: 6px;
-  background: #fffdf7;
-  color: #3d3427;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
   font: inherit;
-  font-size: 0.78rem;
-  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 0.95rem;
   cursor: pointer;
   text-decoration: none;
-  display: inline-block;
+  transition: border-color 0.15s, background 0.15s;
 }
-.actions button:hover, .actions a:hover { background: #f4f1e8; }
+.actions button:hover, .actions a:hover {
+  border-color: color-mix(in srgb, var(--brand) 45%, var(--border));
+  text-decoration: none;
+}
 
 .notice {
-  background: #fffdf7;
-  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 440px;
   padding: 2rem;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   text-align: center;
   height: fit-content;
 }
 .notice-left { text-align: left; max-width: 560px; }
-.notice h1 { font-size: 1.3rem; margin: 0 0 0.75rem; }
-.notice p { margin: 0.5rem 0 0; color: #444; font-size: 0.9rem; }
-.notice a { color: inherit; }
+.notice h1 { font-size: 1.4rem; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+.notice p { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.94rem; }
+.notice a { color: var(--brand-ink); }
+@media (prefers-color-scheme: dark) { .notice a { color: var(--brand); } }
 
 @media print {
   body { background: #fff; padding: 0; }
-  .receipt { box-shadow: none; max-width: none; border: none; }
+  .receipt, .invoice { box-shadow: none; max-width: none; border: none; }
   .actions { display: none; }
 }

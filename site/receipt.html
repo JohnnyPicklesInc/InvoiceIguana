@@ -16,27 +16,35 @@
   <meta name="twitter:title" content="InvoiceIguana — free receipt maker, the receipt lives in the link">
   <meta name="twitter:description" content="Make a clean, professional receipt and share it as a link — no signup, no watermark, nothing stored on any server.">
   <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
-  <meta name="theme-color" content="#3d3427">
+  <meta name="theme-color" content="#12a06a">
   <link rel="icon" href="icons/icon48.png">
   <link rel="apple-touch-icon" href="icons/icon192.png">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="shared/receipt.css">
   <link rel="stylesheet" href="shared/templates.css">
   <link rel="stylesheet" href="generator.css">
   <script type="module" src="receipt.js"></script>
 </head>
 <body>
-  <header class="hero">
-    <h1>🦎 InvoiceIguana — Receipts</h1>
-    <label class="type-switch">Document type
-      <select id="docTypeNav">
-        <option value="/">Invoice</option>
-        <option value="/receipt" selected>Receipt</option>
-      </select>
-    </label>
-    <p>A free receipt maker where the whole receipt lives <em>inside the link</em>.
-       Type it in, share the URL — no signup, no watermark over your receipt,
-       and nothing is ever uploaded or stored on a server.</p>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <label class="type-switch">Document
+        <select id="docTypeNav">
+          <option value="/">Invoice</option>
+          <option value="/receipt" selected>Receipt</option>
+        </select>
+      </label>
+      <a href="/free-invoice-generator">Guide</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
   </header>
+
+  <div class="app-intro">
+    <p>A free receipt maker where the whole receipt lives <em>inside the link</em>. Type it in,
+       share the URL — no signup, no watermark over your receipt, and nothing is ever uploaded or
+       stored on a server.</p>
+  </div>
 
   <main>
     <section class="editor">
@@ -184,12 +192,55 @@ item,Coffee,2,3.50</pre>
     </section>
   </main>
 
-  <footer class="page-footer">
-    <h2>How it works</h2>
-    <p>Your receipt is compressed and encoded straight into the URL — the link <em>is</em> the receipt.
-       When someone opens it, their browser decodes it locally. No database, no account, no expiry,
-       and we never see your data (the part of a URL after <code>#</code> is never sent to any server).</p>
-    <p><a href="privacy.html">Privacy</a></p>
+  <section class="page">
+    <h2>A receipt that <span class="grad">lives in a link</span></h2>
+    <p class="lede">Fill in the form and InvoiceIguana compresses the whole receipt into the URL
+       itself. Share that link however you like — when someone opens it, their browser rebuilds the
+       receipt locally. Nothing to sign up for, nothing stored.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">🧾</div>
+        <h3>Thermal-style templates</h3>
+        <p>Clean receipt layouts with your logo, an accent color, tax, tip, per-line discounts, and a QR
+           code — with a live preview as you type.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔒</div>
+        <h3>Nothing leaves your browser</h3>
+        <p>Everything after the <code>#</code> in a URL is never sent to a server, so your receipts stay
+           entirely on your device.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">📎</div>
+        <h3>Share or save anywhere</h3>
+        <p>Copy the link, export a PNG, or print / save as PDF. There's no account and no expiry — the
+           link is all you need to keep.</p>
+      </div>
+    </div>
+    <p class="section-cta"><a class="btn btn-primary btn-lg" href="/free-invoice-generator">See how it works →</a></p>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice &amp; receipt maker where the whole document lives in the link — no signup,
+           no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/free-invoice-generator">Free invoice guide</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/free-invoice-generator#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+    <p class="footer-legal">Your receipt is compressed into the URL itself — the part after
+       <code>#</code> is never sent to any server.</p>
   </footer>
 </body>
 </html>

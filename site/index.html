@@ -16,27 +16,47 @@
   <meta name="twitter:title" content="InvoiceIguana — free invoice maker, the invoice lives in the link">
   <meta name="twitter:description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server.">
   <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
-  <meta name="theme-color" content="#3d3427">
+  <meta name="theme-color" content="#12a06a">
   <link rel="icon" href="icons/icon48.png">
   <link rel="apple-touch-icon" href="icons/icon192.png">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="shared/invoice.css">
   <link rel="stylesheet" href="generator.css">
   <script type="module" src="generator.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "InvoiceIguana",
+    "url": "https://invoiceiguana.com/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Free invoice and receipt maker where the whole document is compressed into a shareable link — no signup, no watermark, nothing stored on any server.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
 </head>
 <body>
-  <header class="hero">
-    <h1>🦎 InvoiceIguana</h1>
-    <label class="type-switch">Document type
-      <select id="docTypeNav">
-        <option value="/" selected>Invoice</option>
-        <option value="/receipt">Receipt</option>
-      </select>
-    </label>
-    <p>A free invoice maker where the whole invoice lives <em>inside the link</em>.
-       Type it in, share the URL — no signup, no watermark, and nothing is ever
-       uploaded or stored on a server.</p>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <label class="type-switch">Document
+        <select id="docTypeNav">
+          <option value="/" selected>Invoice</option>
+          <option value="/receipt">Receipt</option>
+        </select>
+      </label>
+      <a href="/free-invoice-generator">Guide</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
   </header>
+
+  <div class="app-intro">
+    <p>A free invoice maker where the whole invoice lives <em>inside the link</em>. Type
+       it in, share the URL — no signup, no watermark, and nothing is ever uploaded or
+       stored on a server.</p>
+  </div>
 
   <main>
     <section class="editor">
@@ -252,12 +272,55 @@ item,Consulting hours,10,150</pre>
     </section>
   </main>
 
-  <footer class="page-footer">
-    <h2>How it works</h2>
-    <p>Your invoice is compressed and encoded straight into the URL — the link <em>is</em> the invoice.
-       When your client opens it, their browser decodes it locally. No database, no account, no expiry,
-       and we never see your data (the part of a URL after <code>#</code> is never sent to any server).</p>
-    <p><a href="privacy.html">Privacy</a></p>
+  <section class="page">
+    <h2>An invoice that <span class="grad">lives in a link</span></h2>
+    <p class="lede">Fill in the form, and InvoiceIguana compresses the whole invoice into the URL
+       itself. Share that link by email, text, or chat — when your client opens it, their browser
+       rebuilds the invoice locally. There's nothing to sign up for and nothing to store.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="ico">🔗</div>
+        <h3>The link is the invoice</h3>
+        <p>No database, no account, no expiry. The document is encoded straight into the URL, so the link
+           is all you (or your client) ever need to keep.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔒</div>
+        <h3>Nothing leaves your browser</h3>
+        <p>Everything after the <code>#</code> in a URL is never sent to a server. We literally cannot see
+           your invoices — there's nothing on our end to leak.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🎨</div>
+        <h3>Polished, print-ready</h3>
+        <p>Multiple templates, an accent color, your logo, a QR code, per-line discounts, and print / save
+           as PDF — with a live preview of exactly what your client sees.</p>
+      </div>
+    </div>
+    <p class="section-cta"><a class="btn btn-primary btn-lg" href="/free-invoice-generator">See how it works →</a></p>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice &amp; receipt maker where the whole document lives in the link — no signup,
+           no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/free-invoice-generator">Free invoice guide</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/free-invoice-generator#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+    <p class="footer-legal">Your invoice is compressed into the URL itself — the part after
+       <code>#</code> is never sent to any server.</p>
   </footer>
 </body>
 </html>
