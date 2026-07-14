@@ -71,6 +71,7 @@
 }
 .invoice .items-table td { padding: 0.5rem 0; border-bottom: 1px solid #eee; }
 .invoice .item-name { overflow-wrap: anywhere; }
+.invoice .item-disc { font-size: 0.82em; color: #888; margin-top: 0.1rem; }
 
 /* Totals span the full width by default so the label sits at the far left and
    the amount at the far right (each row is a space-between flex). The Custom

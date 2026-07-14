@@ -10,7 +10,8 @@
  * Normalized invoice shape (all money in integer minor units, e.g. cents):
  *   { seller: {name, address, contact}, buyer: {name, address, contact},
  *     invoiceNumber, issueDate, dueDate, currency,
- *     items: [{name, qty, priceMinor}], subtotalMinor, discountMinor,
+ *     items: [{name, qty, priceMinor, discount}], subtotalMinor, discountMinor,
+ *     (item.discount is {kind:'pct'|'amt', value} | null — a per-line discount)
  *     taxMinor, taxLabel, totalMinor, paymentInstructions, notes,
  *     template, brandingOff, accent, emoji, logoUrl, logoData, qr }
  * total = subtotal - discount + tax (no tip on an invoice). taxLabel is
@@ -61,7 +62,14 @@ function toCompact(inv) {
   // still encodes so its link exists immediately. Absent seller name simply
   // omits `m`; an empty item list encodes as `i: []`.
   if (inv.seller?.name) c.m = inv.seller.name;
-  c.i = inv.items.map((it) => [it.name, it.qty, it.priceMinor]);
+  // Item tuple is [name, qty, priceMinor] with an optional 4th element
+  // [kind, value] for a per-line discount (kind 0 = percent, 1 = flat minor).
+  // Old 3-element links (no line discount) still decode unchanged.
+  c.i = inv.items.map((it) => {
+    const t = [it.name, it.qty, it.priceMinor];
+    if (it.discount) t.push([it.discount.kind === 'pct' ? 0 : 1, it.discount.value]);
+    return t;
+  });
   if (inv.seller.address) c.a = inv.seller.address;
   if (inv.seller.contact) c.o = inv.seller.contact;
   if (inv.buyer?.name) c.n = inv.buyer.name;
@@ -124,12 +132,22 @@ function fromCompact(c) {
   if (c.m != null && typeof c.m !== 'string') throw new BadPayload('Bad seller name');
   if (c.i != null && !Array.isArray(c.i)) throw new BadPayload('Bad line items');
   const items = (Array.isArray(c.i) ? c.i : []).map((it, idx) => {
-    if (!Array.isArray(it) || it.length !== 3) throw new BadPayload(`Bad line item ${idx + 1}`);
-    const [name, qty, priceMinor] = it;
+    if (!Array.isArray(it) || it.length < 3 || it.length > 4) throw new BadPayload(`Bad line item ${idx + 1}`);
+    const [name, qty, priceMinor, disc] = it;
     if (typeof name !== 'string' || !name) throw new BadPayload(`Bad name in item ${idx + 1}`);
     if (!Number.isSafeInteger(qty) || qty <= 0) throw new BadPayload(`Bad quantity in item ${idx + 1}`);
     if (!isMinor(priceMinor)) throw new BadPayload(`Bad price in item ${idx + 1}`);
-    return { name, qty, priceMinor };
+    let discount = null;
+    if (disc != null) {
+      if (!Array.isArray(disc) || disc.length !== 2) throw new BadPayload(`Bad discount in item ${idx + 1}`);
+      const [k, v] = disc;
+      if ((k !== 0 && k !== 1) || typeof v !== 'number' || !Number.isFinite(v) || v < 0) {
+        throw new BadPayload(`Bad discount in item ${idx + 1}`);
+      }
+      if (k === 1 && !isMinor(v)) throw new BadPayload(`Bad discount in item ${idx + 1}`);
+      discount = { kind: k === 0 ? 'pct' : 'amt', value: v };
+    }
+    return { name, qty, priceMinor, discount };
   });
   if (!isMinor(c.s)) throw new BadPayload('Bad subtotal');
   if (!isMinor(c.t)) throw new BadPayload('Bad total');

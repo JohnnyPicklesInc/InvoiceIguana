@@ -67,7 +67,7 @@
 
         <fieldset class="items">
           <legend>Items</legend>
-          <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span></span></div>
+          <div class="item-head"><span>Item</span><span>Qty</span><span>Price</span><span>Disc.</span><span></span><span></span></div>
           <div id="itemRows"></div>
           <button id="addItem" type="button" class="ghost">+ Add item</button>
         </fieldset>
@@ -95,7 +95,7 @@
         </label>
         <details class="format">
           <summary>File format reference</summary>
-          <p><strong>JSON</strong> — required: <code>seller</code>, <code>items</code> (each <code>name</code> + <code>price</code>, <code>qty</code> optional). Optional: <code>selleraddress</code>, <code>sellercontact</code>, <code>buyer</code>, <code>buyeraddress</code>, <code>buyercontact</code>, <code>invoicenumber</code>, <code>issuedate</code>, <code>duedate</code>, <code>currency</code>, <code>subtotal</code>, <code>discount</code>, <code>tax</code>, <code>taxlabel</code>, <code>total</code>, <code>paymentinstructions</code>, <code>notes</code>.</p>
+          <p><strong>JSON</strong> — required: <code>seller</code>, <code>items</code> (each <code>name</code> + <code>price</code>; <code>qty</code> optional; optional per-line <code>discount</code> with <code>discounttype</code> of <code>percent</code> or <code>amount</code>). Optional: <code>selleraddress</code>, <code>sellercontact</code>, <code>buyer</code>, <code>buyeraddress</code>, <code>buyercontact</code>, <code>invoicenumber</code>, <code>issuedate</code>, <code>duedate</code>, <code>currency</code>, <code>subtotal</code>, <code>discount</code>, <code>tax</code>, <code>taxlabel</code>, <code>total</code>, <code>paymentinstructions</code>, <code>notes</code>.</p>
           <pre>{
   "seller": "Acme Consulting",
   "buyer": "Client Co",

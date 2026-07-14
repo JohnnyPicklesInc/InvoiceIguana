@@ -10,6 +10,7 @@
 import { money } from './render.js';
 import { applyDocumentStyle } from './style.js';
 import { TEMPLATES } from './invoice-templates.js';
+import { lineNetMinor } from './invoice-math.js';
 
 // Composable layout knobs → CSS classes (see the `.invoice.<class>` rules in
 // invoice.css). The neutral default of each knob maps to no class, so preset
@@ -66,6 +67,16 @@ export function renderInvoiceInto(root, inv) {
     const nameTd = document.createElement('td');
     nameTd.className = 'item-name';
     nameTd.textContent = it.name;
+    // A per-line discount is noted under the name; the Amount column shows the
+    // net (discounted) line total, so the subtotal always sums the amounts.
+    if (it.discount) {
+      const note = document.createElement('div');
+      note.className = 'item-disc';
+      note.textContent = it.discount.kind === 'pct'
+        ? `${it.discount.value}% off`
+        : `${money(it.discount.value, inv.currency)} off`;
+      nameTd.append(note);
+    }
     const qtyTd = document.createElement('td');
     qtyTd.className = 'item-qty';
     qtyTd.textContent = String(it.qty);
@@ -74,14 +85,16 @@ export function renderInvoiceInto(root, inv) {
     priceTd.textContent = money(it.priceMinor, inv.currency);
     const amountTd = document.createElement('td');
     amountTd.className = 'item-amount';
-    amountTd.textContent = money(it.qty * it.priceMinor, inv.currency);
+    amountTd.textContent = money(lineNetMinor(it), inv.currency);
     tr.append(nameTd, qtyTd, priceTd, amountTd);
     tbody.append(tr);
   }
 
   $('subtotal').textContent = money(inv.subtotalMinor, inv.currency);
-  $('discountRow').hidden = inv.discountMinor == null;
-  if (inv.discountMinor != null) $('discount').textContent = `-${money(inv.discountMinor, inv.currency)}`;
+  // A zero discount is the same as no discount — don't clutter the totals with
+  // a "-$0.00" line (falsy covers both null and 0).
+  $('discountRow').hidden = !inv.discountMinor;
+  if (inv.discountMinor) $('discount').textContent = `-${money(inv.discountMinor, inv.currency)}`;
   const taxLabelEl = $('taxLabel');
   if (taxLabelEl) taxLabelEl.textContent = inv.taxLabel || 'Tax';
   $('taxRow').hidden = inv.taxMinor == null;

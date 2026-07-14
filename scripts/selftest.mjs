@@ -378,7 +378,7 @@ await test('invoice: lenient mode requires nothing and coerces partial items', (
     'json', { lenient: true },
   ).invoice;
   strictEqual(partial.items.length, 2);
-  deepStrictEqual(partial.items[0], { name: 'Design work', qty: 1, priceMinor: 0 });
+  deepStrictEqual(partial.items[0], { name: 'Design work', qty: 1, priceMinor: 0, discount: null });
   strictEqual(partial.items[1].name, 'Item');
   strictEqual(partial.items[1].priceMinor, 0);
 
@@ -411,6 +411,40 @@ await test('invoice: seller name and items are optional — a barely-started inv
 
   // A present-but-wrong-type seller name is still corruption and fails closed.
   await expectThrow(decodeInvoice(await forgeInvoice({ m: 42, i: [], s: 0, t: 0 })), BadPayload);
+});
+
+await test('invoice: per-line discounts (% and flat) apply to the line and round-trip', async () => {
+  const { invoice, errors } = parseInvoice(JSON.stringify({
+    seller: 'Acme',
+    items: [
+      { name: 'Design', qty: 2, price: '100', discount: '10', discounttype: 'percent' }, // 200 - 10% = 180
+      { name: 'Hosting', price: '50', discount: '15', discounttype: 'amount' },           // 50 - 15 = 35
+      { name: 'Support', price: '25' },                                                   // 25
+    ],
+  }), 'json');
+  deepStrictEqual(errors, []);
+  deepStrictEqual(invoice.items[0].discount, { kind: 'pct', value: 10 });
+  deepStrictEqual(invoice.items[1].discount, { kind: 'amt', value: 1500 });
+  strictEqual(invoice.items[2].discount, null);
+  strictEqual(invoice.subtotalMinor, 18000 + 3500 + 2500, 'subtotal sums net line amounts');
+  // Full round-trip through the link preserves each line discount exactly.
+  deepStrictEqual(await decodeInvoice(await encodeInvoice(invoice)), invoice);
+
+  // A flat discount larger than the line is clamped so the line never goes negative.
+  const clamped = parseInvoice(JSON.stringify({
+    seller: 'A', items: [{ name: 'x', price: '10', discount: '999', discounttype: 'amount' }],
+  }), 'json').invoice;
+  strictEqual(clamped.subtotalMinor, 0);
+
+  // Old 3-element item links (no discount) still decode, with discount null.
+  const legacy = await decodeInvoice(await forgeInvoice({ m: 'M', i: [['a', 1, 100]], s: 100, t: 100 }));
+  strictEqual(legacy.items[0].discount, null);
+
+  // A corrupt line-discount tuple fails closed.
+  await expectThrow(
+    decodeInvoice(await forgeInvoice({ m: 'M', i: [['a', 1, 100, [5, 10]]], s: 100, t: 100 })),
+    BadPayload,
+  );
 });
 
 await test('invoice: style/logo fields decode leniently, never throw', async () => {
