@@ -71,7 +71,7 @@ main {
 
 /* form */
 form label, .upload label { display: block; font-size: 0.8rem; font-weight: 600; color: #444; margin-top: 0.7rem; }
-form input[type="text"], form input[type="url"], form textarea {
+form input[type="text"], form input[type="url"], form textarea, #fCurrency {
   display: block;
   width: 100%;
   margin-top: 0.25rem;
@@ -149,6 +149,18 @@ legend { font-size: 0.8rem; font-weight: 700; color: #555; padding: 0 0.3rem; }
 .style-row { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 0.7rem; align-items: center; }
 .inline { display: flex !important; align-items: center; gap: 0.4rem; margin-top: 0 !important; font-weight: 500 !important; }
 input[type="color"] { border: none; background: none; width: 2rem; height: 1.6rem; padding: 0; cursor: pointer; }
+
+/* custom-formatting panel (shown only for the "Custom…" template) */
+.custom-panel {
+  margin-top: 0.8rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed #b6ad9b;
+  border-radius: 8px;
+  background: #fffdf7;
+}
+.custom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.7rem 1rem; }
+.custom-grid label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; font-weight: 600; margin: 0; }
+.custom-grid select { font: inherit; padding: 0.3rem 0.4rem; border: 1px solid #b6ad9b; border-radius: 6px; background: #fff; }
 
 /* upload */
 .drop {

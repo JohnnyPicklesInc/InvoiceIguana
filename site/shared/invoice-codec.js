@@ -29,7 +29,10 @@
  * n buyerName, j buyerAddress, v buyerContact, r invoiceNumber,
  * d issueDate, z dueDate, c currency, i items, s subtotal, g discount,
  * x tax, h taxLabel, t total, y paymentInstructions, f notes,
- * w template, b brandingOff, k accent, e emoji, u logoUrl, l logoData, q qr.
+ * w template, b brandingOff, k accent, e emoji, u logoUrl, l logoData, q qr,
+ * cf customFormat { f font, t totalsLayout, b tableStyle, d density,
+ * h headerLayout } — only present for the "custom" template's non-default
+ * knobs; every value is validated against a fixed allow-list on the way in.
  */
 import {
   VERSION, BadPayload, encoder, decoder,
@@ -41,11 +44,24 @@ export const DOC_INVOICE = 'i';
 
 const DEFAULT_CURRENCY = 'USD';
 
+// Custom-formatting knobs (only meaningful for the "custom" template). Each
+// entry is [normalized field, compact key, allow-list, default]. The default
+// is the first allow-list value; anything off-list decodes back to it.
+const CUSTOM_FORMAT = [
+  ['font', 'f', ['sans', 'serif', 'mono']],
+  ['totalsLayout', 't', ['wide', 'compact']],
+  ['tableStyle', 'b', ['lines', 'zebra', 'plain']],
+  ['density', 'd', ['comfortable', 'compact']],
+  ['headerLayout', 'h', ['default', 'center', 'swap']],
+];
+
 function toCompact(inv) {
-  const c = {
-    m: inv.seller.name,
-    i: inv.items.map((it) => [it.name, it.qty, it.priceMinor]),
-  };
+  const c = {};
+  // Seller name and line items are both optional — a barely-started invoice
+  // still encodes so its link exists immediately. Absent seller name simply
+  // omits `m`; an empty item list encodes as `i: []`.
+  if (inv.seller?.name) c.m = inv.seller.name;
+  c.i = inv.items.map((it) => [it.name, it.qty, it.priceMinor]);
   if (inv.seller.address) c.a = inv.seller.address;
   if (inv.seller.contact) c.o = inv.seller.contact;
   if (inv.buyer?.name) c.n = inv.buyer.name;
@@ -69,6 +85,15 @@ function toCompact(inv) {
   if (inv.logoUrl) c.u = inv.logoUrl;
   if (inv.logoData) c.l = inv.logoData;
   if (inv.qr) c.q = 1;
+  // Only the custom template carries formatting knobs, and only their
+  // non-default values — presets stay byte-for-byte as before.
+  if (inv.template === 'custom') {
+    const cf = {};
+    for (const [field, key, allowed] of CUSTOM_FORMAT) {
+      if (inv[field] && inv[field] !== allowed[0]) cf[key] = inv[field];
+    }
+    if (Object.keys(cf).length) c.cf = cf;
+  }
   return c;
 }
 
@@ -81,16 +106,24 @@ function styleFromCompact(c) {
     ? c.e.trim() : null;
   const logoUrl = isHttpsUrl(c.u) ? c.u : null;
   const logoData = asLogoData(c.l);
-  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, logoData, qr: !!c.q };
+  const cf = c.cf && typeof c.cf === 'object' && !Array.isArray(c.cf) ? c.cf : {};
+  const custom = {};
+  for (const [field, key, allowed] of CUSTOM_FORMAT) {
+    custom[field] = allowed.includes(cf[key]) ? cf[key] : allowed[0];
+  }
+  return { template, brandingOff: !!c.b, accent, emoji, logoUrl, logoData, qr: !!c.q, ...custom };
 }
 
 function fromCompact(c) {
   if (typeof c !== 'object' || c === null || Array.isArray(c)) {
     throw new BadPayload('Payload is not an invoice object');
   }
-  if (typeof c.m !== 'string' || !c.m) throw new BadPayload('Missing seller name');
-  if (!Array.isArray(c.i) || c.i.length === 0) throw new BadPayload('Missing line items');
-  const items = c.i.map((it, idx) => {
+  // Seller name and items are optional (see toCompact), but a present value of
+  // the wrong type is still corruption and fails closed rather than being
+  // silently reinterpreted.
+  if (c.m != null && typeof c.m !== 'string') throw new BadPayload('Bad seller name');
+  if (c.i != null && !Array.isArray(c.i)) throw new BadPayload('Bad line items');
+  const items = (Array.isArray(c.i) ? c.i : []).map((it, idx) => {
     if (!Array.isArray(it) || it.length !== 3) throw new BadPayload(`Bad line item ${idx + 1}`);
     const [name, qty, priceMinor] = it;
     if (typeof name !== 'string' || !name) throw new BadPayload(`Bad name in item ${idx + 1}`);
@@ -106,7 +139,7 @@ function fromCompact(c) {
     if (c[k] != null && typeof c[k] !== 'string') throw new BadPayload(`Bad field "${k}"`);
   }
   return {
-    seller: { name: c.m, address: c.a ?? null, contact: c.o ?? null },
+    seller: { name: c.m ?? null, address: c.a ?? null, contact: c.o ?? null },
     buyer: { name: c.n ?? null, address: c.j ?? null, contact: c.v ?? null },
     invoiceNumber: c.r ?? null,
     issueDate: c.d ?? null,

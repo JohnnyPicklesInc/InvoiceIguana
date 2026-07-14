@@ -11,6 +11,30 @@ import { money } from './render.js';
 import { applyDocumentStyle } from './style.js';
 import { TEMPLATES } from './invoice-templates.js';
 
+// Composable layout knobs → CSS classes (see the `.invoice.<class>` rules in
+// invoice.css). The neutral default of each knob maps to no class, so preset
+// templates that never leave the defaults get no extra classes. Every class a
+// knob can add is listed so we can clear them all before re-applying.
+const LAYOUT_KNOBS = {
+  font: { serif: 'f-serif', mono: 'f-mono' },
+  totalsLayout: { compact: 'tot-compact' },
+  tableStyle: { zebra: 'tbl-zebra', plain: 'tbl-plain' },
+  density: { compact: 'den-compact' },
+  headerLayout: { center: 'hdr-center', swap: 'hdr-swap' },
+};
+const ALL_KNOB_CLASSES = Object.values(LAYOUT_KNOBS).flatMap((m) => Object.values(m));
+
+/** Invoice-specific formatting classes (the "custom" template's knobs). Kept
+ *  here rather than in the shared applyDocumentStyle since they're layout, not
+ *  document-agnostic branding. */
+function applyInvoiceLayout(root, inv) {
+  root.classList.remove(...ALL_KNOB_CLASSES);
+  for (const [knob, map] of Object.entries(LAYOUT_KNOBS)) {
+    const cls = map[inv[knob]];
+    if (cls) root.classList.add(cls);
+  }
+}
+
 export function renderInvoiceInto(root, inv) {
   const $ = (f) => root.querySelector(`[data-f="${f}"]`);
 
@@ -21,8 +45,9 @@ export function renderInvoiceInto(root, inv) {
   };
 
   applyDocumentStyle(root, inv, TEMPLATES);
+  applyInvoiceLayout(root, inv);
 
-  $('sellerName').textContent = inv.seller.name;
+  $('sellerName').textContent = inv.seller.name ?? '';
   setOptional('sellerAddress', inv.seller.address);
   setOptional('sellerContact', inv.seller.contact);
 

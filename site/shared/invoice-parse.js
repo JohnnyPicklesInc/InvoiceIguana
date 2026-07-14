@@ -3,9 +3,15 @@
  * the invoice shape — accepts friendly JSON or CSV, normalizes both to the
  * same internal invoice object used by shared/invoice-codec.js.
  *
- * parseInvoice(text, format) -> { invoice, errors, warnings }
+ * parseInvoice(text, format, opts) -> { invoice, errors, warnings }
  *   - format: 'json' | 'csv'
- *   - errors:   string[] — invoice is null if any
+ *   - opts.lenient: when true, nothing is required and partial line items are
+ *       coerced (missing name/price/qty filled with neutral defaults) so the
+ *       generator can render a live preview of a half-filled form. Blocking
+ *       errors are suppressed, so `errors` comes back empty — callers that
+ *       need real validation must call without this flag (the upload path
+ *       always does).
+ *   - errors:   string[] — invoice is null if any (always empty when lenient)
  *   - warnings: string[] — non-blocking (e.g. provided total ≠ computed total)
  *
  * Standards-only: runs in the browser and under Node for selftests.
@@ -18,16 +24,17 @@ const META_KEYS = ['seller', 'selleraddress', 'sellercontact', 'buyer', 'buyerad
   'buyercontact', 'invoicenumber', 'issuedate', 'duedate', 'currency', 'discount', 'tax',
   'taxlabel', 'subtotal', 'total', 'paymentinstructions', 'notes', 'logourl'];
 
-export function parseInvoice(text, format) {
+export function parseInvoice(text, format, opts = {}) {
   const errors = [];
   const warnings = [];
   let raw;
   try {
     raw = format === 'csv' ? csvToRaw(text) : jsonToRaw(text);
   } catch (e) {
+    if (opts.lenient) return { invoice: null, errors: [], warnings };
     return { invoice: null, errors: [e.message], warnings };
   }
-  const invoice = normalize(raw, errors, warnings);
+  const invoice = normalize(raw, errors, warnings, opts.lenient === true);
   return { invoice: errors.length ? null : invoice, errors, warnings };
 }
 
@@ -101,64 +108,73 @@ function csvToRaw(text) {
 
 // ---- normalization -------------------------------------------------------------
 
-function normalize(raw, errors, warnings) {
-  const sellerName = asOptionalString(raw, 'seller', errors);
-  if (raw.seller == null || raw.seller === '') errors.push('"seller" is required');
-  const sellerAddress = asOptionalString(raw, 'selleraddress', errors);
-  const sellerContact = asOptionalString(raw, 'sellercontact', errors, 100);
+function normalize(raw, errors, warnings, lenient = false) {
+  // In lenient mode every blocking check is routed to this throwaway sink
+  // instead of `errors`, so partial input still yields a renderable invoice.
+  // In strict mode sink === errors, so behavior is unchanged.
+  const sink = lenient ? [] : errors;
 
-  const buyerName = asOptionalString(raw, 'buyer', errors);
-  const buyerAddress = asOptionalString(raw, 'buyeraddress', errors);
-  const buyerContact = asOptionalString(raw, 'buyercontact', errors, 100);
+  const sellerName = asOptionalString(raw, 'seller', sink);
+  if (raw.seller == null || raw.seller === '') sink.push('"seller" is required');
+  const sellerAddress = asOptionalString(raw, 'selleraddress', sink);
+  const sellerContact = asOptionalString(raw, 'sellercontact', sink, 100);
 
-  const invoiceNumber = asOptionalString(raw, 'invoicenumber', errors, 60);
-  const issueDate = asOptionalString(raw, 'issuedate', errors, 60);
-  const dueDate = asOptionalString(raw, 'duedate', errors, 60);
-  const paymentInstructions = asOptionalString(raw, 'paymentinstructions', errors, 300);
-  const notes = asOptionalString(raw, 'notes', errors);
-  const taxLabel = asOptionalString(raw, 'taxlabel', errors, 40);
-  const logoUrl = asOptionalHttpsUrl(raw, 'logourl', errors);
+  const buyerName = asOptionalString(raw, 'buyer', sink);
+  const buyerAddress = asOptionalString(raw, 'buyeraddress', sink);
+  const buyerContact = asOptionalString(raw, 'buyercontact', sink, 100);
 
-  let currency = asOptionalString(raw, 'currency', errors) || 'USD';
+  const invoiceNumber = asOptionalString(raw, 'invoicenumber', sink, 60);
+  const issueDate = asOptionalString(raw, 'issuedate', sink, 60);
+  const dueDate = asOptionalString(raw, 'duedate', sink, 60);
+  const paymentInstructions = asOptionalString(raw, 'paymentinstructions', sink, 300);
+  const notes = asOptionalString(raw, 'notes', sink);
+  const taxLabel = asOptionalString(raw, 'taxlabel', sink, 40);
+  const logoUrl = asOptionalHttpsUrl(raw, 'logourl', sink);
+
+  let currency = asOptionalString(raw, 'currency', sink) || 'USD';
   currency = currency.toUpperCase();
   if (!/^[A-Z]{3}$/.test(currency)) {
-    errors.push(`"currency" must be a 3-letter code like USD (got "${currency}")`);
+    sink.push(`"currency" must be a 3-letter code like USD (got "${currency}")`);
     currency = 'USD';
   }
 
   const items = [];
   if (!Array.isArray(raw.items) || raw.items.length === 0) {
-    errors.push('At least one line item is required');
+    sink.push('At least one line item is required');
   } else {
     raw.items.forEach((it, idx) => {
       const where = it && it.line ? `Line ${it.line}` : `Item ${idx + 1}`;
       if (typeof it !== 'object' || it === null) {
-        errors.push(`${where}: not a valid item`);
+        sink.push(`${where}: not a valid item`);
         return;
       }
       const name = typeof it.name === 'string' ? it.name.trim() : '';
-      if (!name) errors.push(`${where}: item name is required`);
-      else if (name.length > 100) errors.push(`${where}: item name too long (max 100 characters)`);
+      if (!name) sink.push(`${where}: item name is required`);
+      else if (name.length > 100) sink.push(`${where}: item name too long (max 100 characters)`);
       const qty = it.qty == null || it.qty === '' ? 1 : Number(String(it.qty).trim());
-      if (!Number.isSafeInteger(qty) || qty <= 0) {
-        errors.push(`${where}: quantity must be a positive whole number (got "${it.qty}")`);
+      const qtyOk = Number.isSafeInteger(qty) && qty > 0;
+      if (!qtyOk) {
+        sink.push(`${where}: quantity must be a positive whole number (got "${it.qty}")`);
       }
       let priceMinor = null;
       try {
         priceMinor = toMinor(it.price, currency);
       } catch {
-        errors.push(`${where}: item price is not a number (got "${it.price}")`);
+        sink.push(`${where}: item price is not a number (got "${it.price}")`);
       }
-      if (name && priceMinor != null && Number.isSafeInteger(qty) && qty > 0) {
+      if (lenient) {
+        // Show the row as it's being typed, filling gaps with neutral defaults.
+        items.push({ name: name || 'Item', qty: qtyOk ? qty : 1, priceMinor: priceMinor ?? 0 });
+      } else if (name && priceMinor != null && qtyOk) {
         items.push({ name, qty, priceMinor });
       }
     });
   }
 
-  const discountMinor = asOptionalMoney(raw, 'discount', currency, errors);
-  const taxMinor = asOptionalMoney(raw, 'tax', currency, errors);
-  const givenSubtotal = asOptionalMoney(raw, 'subtotal', currency, errors);
-  const givenTotal = asOptionalMoney(raw, 'total', currency, errors);
+  const discountMinor = asOptionalMoney(raw, 'discount', currency, sink);
+  const taxMinor = asOptionalMoney(raw, 'tax', currency, sink);
+  const givenSubtotal = asOptionalMoney(raw, 'subtotal', currency, sink);
+  const givenTotal = asOptionalMoney(raw, 'total', currency, sink);
 
   if (errors.length) return null;
 
@@ -197,6 +213,14 @@ function normalize(raw, errors, warnings) {
     emoji: null,
     logoData: null,
     qr: false,
+    // Custom-template formatting knobs default to their neutral value (must
+    // match the codec's decode defaults so a round-trip is exact). They only
+    // affect rendering when the "custom" template is selected.
+    font: 'sans',
+    totalsLayout: 'wide',
+    tableStyle: 'lines',
+    density: 'comfortable',
+    headerLayout: 'default',
   };
 }
 

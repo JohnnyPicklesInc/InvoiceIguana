@@ -362,11 +362,55 @@ await test('invoice: total = subtotal - discount + tax (no tip)', () => {
   strictEqual(invoice.totalMinor, 153000);
 });
 
+await test('invoice: lenient mode requires nothing and coerces partial items', () => {
+  // Empty form: no seller, no items — strict fails, lenient still renders.
+  strictEqual(parseInvoice('{}', 'json').invoice, null);
+  const empty = parseInvoice('{}', 'json', { lenient: true });
+  deepStrictEqual(empty.errors, [], 'lenient never reports blocking errors');
+  ok(empty.invoice, 'lenient yields an invoice with no input');
+  strictEqual(empty.invoice.seller.name, null);
+  strictEqual(empty.invoice.items.length, 0);
+  strictEqual(empty.invoice.totalMinor, 0);
+
+  // Half-typed item (name only, no price/qty) is shown with neutral defaults.
+  const partial = parseInvoice(
+    JSON.stringify({ items: [{ name: 'Design work' }, { name: '', price: 'oops' }] }),
+    'json', { lenient: true },
+  ).invoice;
+  strictEqual(partial.items.length, 2);
+  deepStrictEqual(partial.items[0], { name: 'Design work', qty: 1, priceMinor: 0 });
+  strictEqual(partial.items[1].name, 'Item');
+  strictEqual(partial.items[1].priceMinor, 0);
+
+  // Lenient must never weaken the strict path used for encoding.
+  strictEqual(parseInvoice(JSON.stringify({ items: [{ name: 'x' }] }), 'json').invoice, null);
+});
+
 await test('invoice: money strictness — corrupted tax/discount throw (they are money)', async () => {
   const base = { m: 'M', i: [['a', 1, 100]], s: 100, t: 100 };
   await expectThrow(decodeInvoice(await forgeInvoice({ ...base, g: 'nope' })), BadPayload);
   await expectThrow(decodeInvoice(await forgeInvoice({ ...base, x: 'nope' })), BadPayload);
   await expectThrow(decodeInvoice(await forgeInvoice({ ...base, i: 'not-an-array' })), BadPayload);
+});
+
+await test('invoice: seller name and items are optional — a barely-started invoice round-trips', async () => {
+  // A lenient parse of a seller-only form must produce an encodable invoice
+  // (no line items) whose link decodes back to the same thing.
+  const sellerOnly = parseInvoice(JSON.stringify({ seller: 'Acme' }), 'json', { lenient: true }).invoice;
+  strictEqual(sellerOnly.items.length, 0);
+  const back = await decodeInvoice(await encodeInvoice(sellerOnly));
+  strictEqual(back.seller.name, 'Acme');
+  strictEqual(back.items.length, 0);
+  strictEqual(back.totalMinor, 0);
+
+  // And an items-only invoice (no seller name) survives the round-trip too.
+  const itemsOnly = parseInvoice(JSON.stringify({ items: [{ name: 'Design', price: '10' }] }), 'json', { lenient: true }).invoice;
+  const back2 = await decodeInvoice(await encodeInvoice(itemsOnly));
+  strictEqual(back2.seller.name, null);
+  strictEqual(back2.items[0].name, 'Design');
+
+  // A present-but-wrong-type seller name is still corruption and fails closed.
+  await expectThrow(decodeInvoice(await forgeInvoice({ m: 42, i: [], s: 0, t: 0 })), BadPayload);
 });
 
 await test('invoice: style/logo fields decode leniently, never throw', async () => {
@@ -394,9 +438,38 @@ await test('invoice: default-style payload carries no optional keys (no-growth g
   const { invoice } = parseInvoice(JSON.stringify({ seller: 'S', items: [{ name: 'a', price: 1 }] }), 'json');
   const payload = await encodeInvoice(invoice);
   const compact = JSON.parse(new TextDecoder().decode(await inflateRaw(unb64u(payload.slice(2)))));
-  for (const k of ['n', 'j', 'v', 'r', 'z', 'g', 'x', 'h', 'y', 'f', 'w', 'b', 'k', 'e', 'u', 'l', 'q']) {
+  for (const k of ['n', 'j', 'v', 'r', 'z', 'g', 'x', 'h', 'y', 'f', 'w', 'b', 'k', 'e', 'u', 'l', 'q', 'cf']) {
     ok(!(k in compact), `unexpected key "${k}" in default invoice payload`);
   }
+});
+
+await test('invoice: custom-template formatting knobs round-trip; presets carry none', async () => {
+  const { invoice } = parseInvoice(JSON.stringify({ seller: 'S', items: [{ name: 'a', price: 1 }] }), 'json');
+  strictEqual(invoice.totalsLayout, 'wide', 'totals default to full-width for every template');
+
+  // A non-custom template must never encode a cf block, even if knobs are set.
+  Object.assign(invoice, { template: 'modern', totalsLayout: 'compact', font: 'serif' });
+  const modernCompact = JSON.parse(new TextDecoder().decode(await inflateRaw(unb64u((await encodeInvoice(invoice)).slice(2)))));
+  ok(!('cf' in modernCompact), 'preset template drops custom knobs');
+
+  // The custom template round-trips every non-default knob and validates the rest.
+  Object.assign(invoice, {
+    template: 'custom', font: 'mono', totalsLayout: 'compact',
+    tableStyle: 'zebra', density: 'compact', headerLayout: 'center',
+  });
+  const decoded = await decodeInvoice(await encodeInvoice(invoice));
+  strictEqual(decoded.template, 'custom');
+  strictEqual(decoded.font, 'mono');
+  strictEqual(decoded.totalsLayout, 'compact');
+  strictEqual(decoded.tableStyle, 'zebra');
+  strictEqual(decoded.density, 'compact');
+  strictEqual(decoded.headerLayout, 'center');
+
+  // Off-list junk decodes back to the neutral default, never throws.
+  const forged = await forgeInvoice({ m: 'M', i: [['a', 1, 100]], s: 100, t: 100, w: 'custom', cf: { f: 'comic-sans', t: 5 } });
+  const safe = await decodeInvoice(forged);
+  strictEqual(safe.font, 'sans');
+  strictEqual(safe.totalsLayout, 'wide');
 });
 
 await test('invoice: pinned v1 fixture keeps decoding (old-link regression guard)', async () => {

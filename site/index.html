@@ -78,12 +78,7 @@
             <select id="taxPreset" class="tax-preset"></select>
             <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
           </label>
-          <label>Currency<input id="fCurrency" type="text" maxlength="3" placeholder="USD" list="currencies">
-            <datalist id="currencies">
-              <option value="USD"><option value="EUR"><option value="GBP"><option value="CAD">
-              <option value="AUD"><option value="JPY"><option value="INR"><option value="MXN">
-            </datalist>
-          </label>
+          <label>Currency<select id="fCurrency"></select></label>
         </div>
         <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>
 
@@ -127,6 +122,48 @@ item,Consulting hours,10,150</pre>
           <label class="inline"><input id="fQr" type="checkbox"> QR code on invoice</label>
           <label class="inline"><input id="fBrandingOff" type="checkbox"> Hide "made with InvoiceIguana"</label>
         </div>
+
+        <!-- Custom formatting: only shown when the "Custom…" template is picked
+             (toggled in generator.js). Each control maps to a composable CSS
+             knob class via the renderer; the choices ride in the link. -->
+        <div id="customPanel" class="custom-panel" hidden>
+          <div class="custom-grid">
+            <label>Font
+              <select id="cFont">
+                <option value="sans">Sans-serif</option>
+                <option value="serif">Serif</option>
+                <option value="mono">Monospace</option>
+              </select>
+            </label>
+            <label>Totals
+              <select id="cTotals">
+                <option value="wide">Wide — label left, amount right</option>
+                <option value="compact">Compact block (right)</option>
+              </select>
+            </label>
+            <label>Table rows
+              <select id="cTable">
+                <option value="lines">Ruled lines</option>
+                <option value="zebra">Zebra striped</option>
+                <option value="plain">Plain</option>
+              </select>
+            </label>
+            <label>Density
+              <select id="cDensity">
+                <option value="comfortable">Comfortable</option>
+                <option value="compact">Compact</option>
+              </select>
+            </label>
+            <label>Header
+              <select id="cHeader">
+                <option value="default">Business left, title right</option>
+                <option value="center">Centered</option>
+                <option value="swap">Business right, title left</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
         <label>Logo image URL <input id="fLogoUrl" type="url" placeholder="https://yoursite.com/logo.png"></label>
         <label>or upload a file <input id="fLogoFile" type="file" accept="image/*"></label>
         <p class="linkmeta">Optional — it's downloaded once and embedded directly in the link at low resolution, so nothing is ever contacted when the invoice is later viewed.</p>

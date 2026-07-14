@@ -73,12 +73,7 @@
             <input id="fTax" type="text" inputmode="decimal" placeholder="0.00">
           </label>
           <label>Tip<input id="fTip" type="text" inputmode="decimal" placeholder="0.00"></label>
-          <label>Currency<input id="fCurrency" type="text" maxlength="3" placeholder="USD" list="currencies">
-            <datalist id="currencies">
-              <option value="USD"><option value="EUR"><option value="GBP"><option value="CAD">
-              <option value="AUD"><option value="JPY"><option value="INR"><option value="MXN">
-            </datalist>
-          </label>
+          <label>Currency<select id="fCurrency"></select></label>
           <label>Payment<input id="fPayment" type="text" placeholder="VISA •1234"></label>
         </div>
         <button id="manageRates" type="button" class="ghost">Manage tax rates…</button>

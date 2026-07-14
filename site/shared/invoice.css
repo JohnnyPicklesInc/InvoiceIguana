@@ -72,7 +72,10 @@
 .invoice .items-table td { padding: 0.5rem 0; border-bottom: 1px solid #eee; }
 .invoice .item-name { overflow-wrap: anywhere; }
 
-.invoice .totals { margin: 1rem 0 0; margin-left: auto; width: 60%; }
+/* Totals span the full width by default so the label sits at the far left and
+   the amount at the far right (each row is a space-between flex). The Custom
+   template's "Compact" knob (.tot-compact) pulls it back into a narrow block. */
+.invoice .totals { margin: 1rem 0 0; width: 100%; }
 .invoice .totals div { display: flex; justify-content: space-between; padding: 0.25rem 0; }
 .invoice .totals dd { margin: 0; }
 .invoice .totals .grand {
@@ -194,10 +197,108 @@
   font-size: 1.2rem;
 }
 
+/* ---- Corporate: formal centered letterhead, serif, understated ------------ */
+.invoice.t-corp {
+  --accent: #1f3a5f;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.invoice.t-corp header {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid var(--accent);
+  gap: 0.5rem;
+}
+.invoice.t-corp .invoice-brand { order: 1; }
+.invoice.t-corp .invoice-meta { text-align: center; }
+.invoice.t-corp .invoice-meta h2 { letter-spacing: 0.18em; font-weight: normal; }
+.invoice.t-corp [data-f="sellerName"] { font-size: 1.35rem; }
+.invoice.t-corp .bill-to { text-align: center; }
+.invoice.t-corp .totals .grand { border-top-width: 1px; }
+
+/* ---- Compact: dense, fits more line items per page ------------------------- */
+.invoice.t-compact {
+  font-size: 0.8rem;
+  padding: 1.75rem 2rem;
+}
+.invoice.t-compact header { padding-bottom: 0.75rem; gap: 1rem; }
+.invoice.t-compact .bill-to { margin-top: 0.9rem; }
+.invoice.t-compact .items-table { margin-top: 1rem; font-size: 0.78rem; }
+.invoice.t-compact .items-table td { padding: 0.3rem 0; }
+.invoice.t-compact .totals { margin-top: 0.6rem; }
+.invoice.t-compact .totals div { padding: 0.15rem 0; }
+.invoice.t-compact .payment-instructions { margin-top: 1rem; padding: 0.6rem 0.8rem; }
+
+/* ---- Creative: bold color blocks, playful, rounded ------------------------- */
+.invoice.t-creative {
+  --accent: #e0447b;
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  padding-top: 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.invoice.t-creative header {
+  background: var(--accent);
+  border-bottom: none;
+  margin: 0 -3rem 0.75rem;
+  padding: 2rem 3rem;
+  align-items: center;
+}
+.invoice.t-creative [data-f="sellerName"] { color: #fff; }
+.invoice.t-creative [data-f="sellerAddress"],
+.invoice.t-creative [data-f="sellerContact"] { color: rgba(255, 255, 255, 0.85); }
+.invoice.t-creative .invoice-meta h2 { color: #fff; }
+.invoice.t-creative .invoice-meta p { color: rgba(255, 255, 255, 0.85); }
+.invoice.t-creative .items-table thead th { color: var(--accent); }
+.invoice.t-creative .totals .grand {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* ---- Custom: neutral base the formatting knobs below layer over ------------ */
+.invoice.t-custom { --accent: #2456a6; }
+
+/* ---- Composable formatting knobs (custom template) ------------------------
+   Each knob's neutral default maps to no class (see LAYOUT_KNOBS in
+   invoice-render.js), so these only ever apply when a non-default is chosen. */
+
+/* Font */
+.invoice.f-serif { font-family: Georgia, "Times New Roman", serif; }
+.invoice.f-mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+/* Totals: full-width (label left, amount right) is the default for every
+   template; `compact` restores the classic narrow block floated to the right. */
+.invoice.tot-compact .totals { width: 60%; margin-left: auto; }
+
+/* Table rows */
+.invoice.tbl-zebra .items-table td { border-bottom: none; }
+.invoice.tbl-zebra .items-table tbody tr:nth-child(even) { background: #f6f7f9; }
+.invoice.tbl-plain .items-table td { border-bottom: none; }
+.invoice.tbl-plain .items-table thead th { border-bottom: 1px solid #ddd; }
+
+/* Density */
+.invoice.den-compact .items-table { margin-top: 1rem; }
+.invoice.den-compact .items-table td { padding: 0.28rem 0; }
+.invoice.den-compact .bill-to { margin-top: 1rem; }
+.invoice.den-compact .totals div { padding: 0.15rem 0; }
+
+/* Header layout */
+.invoice.hdr-center header { flex-direction: column; align-items: center; text-align: center; }
+.invoice.hdr-center .invoice-meta { text-align: center; }
+.invoice.hdr-swap header { flex-direction: row-reverse; }
+.invoice.hdr-swap .invoice-meta { text-align: left; }
+
 @media print {
   .invoice { box-shadow: none; max-width: none; }
   /* Header bands and accents must survive print's default no-background rule. */
   .invoice.t-modern header,
   .invoice.t-bold header,
+  .invoice.t-creative header,
+  .invoice.t-creative .totals .grand,
+  .invoice.tbl-zebra .items-table tbody tr:nth-child(even),
   .invoice.t-modern .items-table thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

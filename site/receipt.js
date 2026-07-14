@@ -12,6 +12,7 @@ import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
 import { TEMPLATES } from './shared/templates.js';
+import { CURRENCIES } from './shared/currencies.js';
 import { compressLogoImage } from './shared/logo-embed.js';
 import { isHttpsUrl } from './shared/wire.js';
 
@@ -82,7 +83,7 @@ function fillFormFromReceipt(r) {
   $('fContact').value = r.contact ?? '';
   $('fDate').value = r.date ?? '';
   $('fReference').value = r.reference ?? '';
-  $('fCurrency').value = r.currency === 'USD' ? '' : r.currency;
+  selectCurrency(r.currency);
   $('fDiscount').value = r.discountMinor != null ? String(fromMinor(r.discountMinor, r.currency)) : '';
   $('fTax').value = r.taxMinor != null ? String(fromMinor(r.taxMinor, r.currency)) : '';
   $('fTip').value = r.tipMinor != null ? String(fromMinor(r.tipMinor, r.currency)) : '';
@@ -133,6 +134,31 @@ async function loadFromHash() {
 }
 
 // ---- style controls ------------------------------------------------------------
+
+/** Fills the currency <select> from the common-currency list. */
+function buildCurrencyPicker() {
+  const select = $('fCurrency');
+  select.replaceChildren(...CURRENCIES.map(([code, name]) => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = `${code} — ${name}`;
+    return opt;
+  }));
+}
+
+/** Selects a currency, adding it as an option first if it isn't one of the
+ *  common ones — so a currency from an upload or an older edit link is never
+ *  silently dropped just because it's off the default menu. */
+function selectCurrency(code) {
+  const select = $('fCurrency');
+  if (![...select.options].some((o) => o.value === code)) {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = code;
+    select.append(opt);
+  }
+  select.value = code;
+}
 
 function buildTemplatePicker() {
   const picker = $('templatePicker');
@@ -458,6 +484,7 @@ $('manageRates').addEventListener('click', () => {
 // ---- boot ---------------------------------------------------------------------------
 
 buildTemplatePicker();
+buildCurrencyPicker();
 refreshTaxPresets();
 const loadedFromEditLink = await loadFromHash();
 if (!loadedFromEditLink) {

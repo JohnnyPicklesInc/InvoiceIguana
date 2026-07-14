@@ -10,6 +10,7 @@ import { fromMinor } from './shared/codec.js';
 import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQrInto } from './shared/qr.js';
 import { TEMPLATES } from './shared/invoice-templates.js';
+import { CURRENCIES } from './shared/currencies.js';
 import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { loadRates, saveRate, removeRate } from './shared/tax-rates.js';
@@ -90,7 +91,7 @@ function fillFormFromInvoice(inv) {
   $('fInvoiceNumber').value = inv.invoiceNumber ?? '';
   $('fIssueDate').value = inv.issueDate ?? '';
   $('fDueDate').value = inv.dueDate ?? '';
-  $('fCurrency').value = inv.currency === 'USD' ? '' : inv.currency;
+  selectCurrency(inv.currency);
   $('fDiscount').value = inv.discountMinor != null ? String(fromMinor(inv.discountMinor, inv.currency)) : '';
   $('fTax').value = inv.taxMinor != null ? String(fromMinor(inv.taxMinor, inv.currency)) : '';
   $('fPaymentInstructions').value = inv.paymentInstructions ?? '';
@@ -112,6 +113,8 @@ function restoreStyleControls(inv) {
   $('fAccent').value = inv.accent ? `#${inv.accent}` : '#2456a6';
   $('fAccent').disabled = !inv.accent;
   $('fQr').checked = !!inv.qr;
+  for (const [id, field, def] of CUSTOM_CONTROLS) $(id).value = inv[field] ?? def;
+  updateCustomPanel();
   $('fBrandingOff').checked = !!inv.brandingOff;
   if (inv.logoData) {
     pendingLogoData = inv.logoData;
@@ -141,6 +144,50 @@ async function loadFromHash() {
 
 // ---- style controls --------------------------------------------------------------
 
+// Custom-template knobs: [select id, normalized field, neutral default]. The
+// default matches the codec/parser so non-custom templates round-trip exactly.
+const CUSTOM_CONTROLS = [
+  ['cFont', 'font', 'sans'],
+  ['cTotals', 'totalsLayout', 'wide'],
+  ['cTable', 'tableStyle', 'lines'],
+  ['cDensity', 'density', 'comfortable'],
+  ['cHeader', 'headerLayout', 'default'],
+];
+
+function selectedTemplate() {
+  return document.querySelector('input[name="template"]:checked')?.value ?? 'classic';
+}
+
+/** The custom-formatting panel is only relevant to the "custom" template. */
+function updateCustomPanel() {
+  $('customPanel').hidden = selectedTemplate() !== 'custom';
+}
+
+/** Fills the currency <select> from the common-currency list. */
+function buildCurrencyPicker() {
+  const select = $('fCurrency');
+  select.replaceChildren(...CURRENCIES.map(([code, name]) => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = `${code} — ${name}`;
+    return opt;
+  }));
+}
+
+/** Selects a currency, adding it as an option first if it isn't one of the
+ *  common ones — so a currency from an upload or an older edit link is never
+ *  silently dropped just because it's off the default menu. */
+function selectCurrency(code) {
+  const select = $('fCurrency');
+  if (![...select.options].some((o) => o.value === code)) {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = code;
+    select.append(opt);
+  }
+  select.value = code;
+}
+
 /** Populates the template picker from the registry (mirrors receipt.js). */
 function buildTemplatePicker() {
   const picker = $('templatePicker');
@@ -152,7 +199,7 @@ function buildTemplatePicker() {
     radio.name = 'template';
     radio.value = id;
     radio.checked = id === 'classic';
-    radio.addEventListener('change', scheduleUpdate);
+    radio.addEventListener('change', () => { updateCustomPanel(); scheduleUpdate(); });
     const span = document.createElement('span');
     span.textContent = tpl.label;
     label.append(radio, span);
@@ -161,14 +208,20 @@ function buildTemplatePicker() {
 }
 
 function styleFromControls() {
+  const template = selectedTemplate();
+  // The formatting knobs only take effect for the custom template; every other
+  // template forces the neutral defaults so its payload never carries a `cf`.
+  const custom = Object.fromEntries(CUSTOM_CONTROLS.map(([id, field, def]) =>
+    [field, template === 'custom' ? $(id).value : def]));
   return {
-    template: document.querySelector('input[name="template"]:checked')?.value ?? 'classic',
+    template,
     accent: $('fAccentOn').checked ? $('fAccent').value.slice(1).toLowerCase() : null,
     // No emoji key here on purpose — the generator no longer offers a way to
     // set one, so this leaves whatever was already on the invoice (null for
     // a fresh document, or a decoded value from an edit link) untouched
     // rather than clobbering it. Still fully decodable for old links.
     qr: $('fQr').checked,
+    ...custom,
     brandingOff: $('fBrandingOff').checked,
     // The generator never sets an external logoUrl anymore — a URL pasted into
     // fLogoUrl is downloaded and embedded via pendingLogoData instead (see
@@ -269,26 +322,39 @@ function scheduleUpdate() {
 async function update() {
   const raw = rawFromForm();
   const untouched = !raw.seller && raw.items.length === 0;
-  let { invoice, errors, warnings } = parseInvoice(JSON.stringify(raw), 'json');
+
+  // Nothing is required: a lenient parse always yields a renderable, encodable
+  // invoice, so the preview and the link both track the form from the very
+  // first keystroke. (The upload path still uses the strict parser for real
+  // validation — see handleFile.)
+  let { invoice, warnings } = parseInvoice(JSON.stringify(raw), 'json', { lenient: true });
 
   if (invoice && activeTaxRate) {
     const computedTaxMinor = Math.round(invoice.subtotalMinor * activeTaxRate.rate / 100);
     raw.tax = fromMinor(computedTaxMinor, invoice.currency);
     raw.taxlabel = `${activeTaxRate.name} (${activeTaxRate.rate}%)`;
-    ({ invoice, errors, warnings } = parseInvoice(JSON.stringify(raw), 'json'));
+    ({ invoice, warnings } = parseInvoice(JSON.stringify(raw), 'json', { lenient: true }));
     $('fTax').value = String(raw.tax);
   }
 
-  setList('errors', untouched ? [] : errors);
+  setList('errors', []); // nothing blocks — the invoice always parses
   setList('warnings', warnings);
-  currentInvoice = null;
-  if (!invoice) {
+
+  // The live preview always reflects the form — nothing is required to see it.
+  if (invoice) {
+    Object.assign(invoice, styleFromControls());
+    renderInvoiceInto($('preview'), invoice);
+  }
+  const qrEl = $('preview').querySelector('[data-f="qr"]');
+
+  // Hold the link back only while the form is still pristine (nothing typed),
+  // so an untouched page isn't offering a link to a blank invoice.
+  currentInvoice = untouched ? null : invoice;
+  if (untouched || !invoice) {
+    qrEl.hidden = true;
     $('result').hidden = true;
     return;
   }
-
-  Object.assign(invoice, styleFromControls());
-  currentInvoice = invoice;
 
   const payload = await encodeInvoice(invoice);
   // The shared link always points at the durable GitHub Pages host, so it
@@ -297,8 +363,6 @@ async function update() {
   currentUrl = durableLink(payload);
   $('editLinkInput').value = `${location.origin}/#${payload}`;
 
-  renderInvoiceInto($('preview'), invoice);
-  const qrEl = $('preview').querySelector('[data-f="qr"]');
   qrEl.hidden = !invoice.qr;
   if (invoice.qr) renderQrInto(qrEl, currentUrl);
 
@@ -307,7 +371,7 @@ async function update() {
   $('charcount').textContent = `${currentUrl.length.toLocaleString()} characters`;
   $('lengthWarning').hidden = currentUrl.length <= URL_LENGTH_WARNING;
 
-  const share = shareLinks(currentUrl, invoice.seller.name);
+  const share = shareLinks(currentUrl, invoice.seller.name || 'Invoice');
   $('shareEmail').href = share.email;
   $('shareSms').href = share.sms;
   $('shareWhatsapp').href = share.whatsapp;
@@ -357,6 +421,7 @@ $('fAccentOn').addEventListener('change', () => {
 $('fAccent').addEventListener('input', scheduleUpdate);
 $('fQr').addEventListener('change', scheduleUpdate);
 $('fBrandingOff').addEventListener('change', scheduleUpdate);
+for (const [id] of CUSTOM_CONTROLS) $(id).addEventListener('change', scheduleUpdate);
 
 $('fLogoUrl').addEventListener('change', () => {
   const url = $('fLogoUrl').value.trim();
@@ -466,6 +531,7 @@ $('manageRates').addEventListener('click', () => {
 
 refreshTaxPresets();
 buildTemplatePicker();
+buildCurrencyPicker();
 const loadedFromEditLink = await loadFromHash();
 if (!loadedFromEditLink) {
   addItemRow();
