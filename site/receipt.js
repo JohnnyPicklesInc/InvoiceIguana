@@ -14,6 +14,7 @@ import { TEMPLATES } from './shared/templates.js';
 import { CURRENCIES } from './shared/currencies.js';
 import { compressLogoImage } from './shared/logo-embed.js';
 import { isHttpsUrl } from './shared/wire.js';
+import { put, get, list, remove, exportAll, importAll } from './shared/db.js';
 
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
@@ -23,6 +24,8 @@ let currentUrl = '';
 let activeTaxRate = null;
 let pendingLogoData = null;
 let pendingLogoError = null;
+// See generator.js: mirrors the same "load from IndexedDB / save in place" flow.
+let currentSavedId = null;
 
 // ---- item rows -----------------------------------------------------------
 
@@ -482,6 +485,215 @@ $('fTaxPercent').addEventListener('input', () => {
   scheduleUpdate();
 });
 
+// ---- saved receipts (IndexedDB) ---------------------------------------------------
+
+/** Mirror of the invoice generator's saved-list — pulls from the shared
+ *  `invoices` store filtered to kind='receipt'. Keeps both generators sharing
+ *  one backup/restore stream while showing each side only its own documents. */
+async function refreshSavedList() {
+  let rows;
+  try {
+    const all = await list('invoices', { index: 'updatedAt', direction: 'prev' });
+    rows = all.filter((r) => r.kind === 'receipt');
+  } catch {
+    $('savedPanel').hidden = true;
+    return;
+  }
+  const listEl = $('savedList');
+  $('savedCount').textContent = String(rows.length);
+  $('savedPanel').hidden = rows.length === 0;
+  listEl.replaceChildren();
+  const fmtDate = (t) => new Date(t).toLocaleDateString();
+  for (const row of rows) {
+    const li = document.createElement('li');
+    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '');
+    const label = row.doc?.reference || row.doc?.merchant || 'Untitled receipt';
+    const meta = `${row.doc?.merchant || 'No merchant'} · ${fmtDate(row.updatedAt)}`;
+    const openBtn = document.createElement('button');
+    openBtn.type = 'button';
+    openBtn.className = 'saved-open';
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const span = document.createElement('span');
+    span.className = 'linkmeta';
+    span.textContent = meta;
+    openBtn.append(strong, span);
+    openBtn.addEventListener('click', () => openSavedReceipt(row.id));
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'ghost saved-del';
+    del.textContent = 'Delete';
+    del.title = 'Delete this saved receipt';
+    del.addEventListener('click', () => deleteSavedReceipt(row.id, label));
+    li.append(openBtn, del);
+    listEl.append(li);
+  }
+}
+
+async function saveCurrentReceipt() {
+  if (!currentReceipt) return;
+  const record = {
+    id: currentSavedId,
+    kind: 'receipt',
+    status: 'saved',
+    doc: currentReceipt,
+  };
+  const saved = await put('invoices', record);
+  currentSavedId = saved.id;
+  await persistMerchantEntry(currentReceipt);
+  await refreshDirectories();
+  flashSaveStatus('Saved');
+  refreshSavedList();
+}
+
+// ---- saved businesses (merchant directory) --------------------------------
+
+let businessDirectory = [];
+
+async function refreshDirectories() {
+  try {
+    businessDirectory = await list('businesses');
+  } catch {
+    businessDirectory = [];
+    return;
+  }
+  const dl = $('businessNames');
+  dl.replaceChildren();
+  for (const row of businessDirectory) {
+    const opt = document.createElement('option');
+    opt.value = row.name;
+    dl.append(opt);
+  }
+}
+
+async function persistMerchantEntry(doc) {
+  const name = doc.merchant?.trim();
+  if (!name) return;
+  await put('businesses', {
+    id: `biz:${name.toLowerCase()}`,
+    name,
+    address: doc.address ?? null,
+    contact: doc.contact ?? null,
+    logoData: doc.logoData ?? null,
+  });
+}
+
+function autofillFromDirectory(nameValue, directory, targets) {
+  const key = nameValue.trim().toLowerCase();
+  const hit = directory.find((r) => r.name.trim().toLowerCase() === key);
+  if (!hit) return false;
+  let changed = false;
+  for (const [inputId, field] of targets) {
+    if (!$(inputId).value.trim() && hit[field]) {
+      $(inputId).value = hit[field];
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+async function openSavedReceipt(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromReceipt(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = id;
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function deleteSavedReceipt(id, label) {
+  if (!confirm(`Delete "${label}"? This can't be undone.`)) return;
+  await remove('invoices', id);
+  if (currentSavedId === id) currentSavedId = null;
+  refreshSavedList();
+}
+
+function resetToNewReceipt() {
+  currentSavedId = null;
+  $('form').reset();
+  $('itemRows').replaceChildren();
+  addItemRow();
+  addItemRow();
+  pendingLogoData = null;
+  pendingLogoError = null;
+  updateLogoFileStatus();
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const classic = document.querySelector('input[name="template"][value="classic"]');
+  if (classic) classic.checked = true;
+  $('fAccentOn').checked = false;
+  $('fAccent').disabled = true;
+  $('fQr').checked = false;
+  $('fBrandingOff').checked = false;
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+}
+
+async function downloadBackup() {
+  const backup = await exportAll();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `invoiceiguana-backup-${stamp}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupFile(file) {
+  try {
+    const backup = JSON.parse(await file.text());
+    const { imported } = await importAll(backup, { mode: 'merge' });
+    const total = Object.values(imported).reduce((a, b) => a + b, 0);
+    alert(`Imported ${total} record${total === 1 ? '' : 's'}.`);
+    refreshSavedList();
+  } catch (e) {
+    alert(`Couldn't import that file: ${e.message}`);
+  }
+}
+
+let saveStatusTimer = null;
+function flashSaveStatus(text) {
+  const el = $('saveStatus');
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(saveStatusTimer);
+  saveStatusTimer = setTimeout(() => { el.hidden = true; }, 1500);
+}
+
+$('saveBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  saveCurrentReceipt().catch((err) => alert(`Couldn't save: ${err.message}`));
+});
+$('fMerchant').addEventListener('change', () => {
+  if (autofillFromDirectory($('fMerchant').value, businessDirectory,
+      [['fAddress', 'address'], ['fContact', 'contact']])) scheduleUpdate();
+});
+$('newInvoiceBtn').addEventListener('click', resetToNewReceipt);
+$('backupBtn').addEventListener('click', () => {
+  downloadBackup().catch((err) => alert(`Couldn't create backup: ${err.message}`));
+});
+$('restoreBtn').addEventListener('click', () => $('restoreFile').click());
+$('restoreFile').addEventListener('change', () => {
+  const file = $('restoreFile').files[0];
+  if (file) importBackupFile(file);
+  $('restoreFile').value = '';
+});
+$('printBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  print();
+});
+
 // ---- boot ---------------------------------------------------------------------------
 
 buildTemplatePicker();
@@ -495,3 +707,5 @@ if (!loadedFromEditLink) {
   $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 update();
+refreshSavedList();
+refreshDirectories();

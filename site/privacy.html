@@ -27,8 +27,14 @@
     <h2>Your documents never reach us</h2>
     <p>The entire invoice or receipt is compressed into the part of the link after the <code>#</code>
        (the URL fragment). Browsers do not send fragments to servers, so neither the generator nor the
-       viewer page ever transmits your document anywhere. There is no database, no account, and nothing
-       to delete — if you have the link, you have the document; if you discard it, it's gone.</p>
+       viewer page ever transmits your document anywhere. There is no account and nothing to sign up
+       for — if you have the link, you have the document.</p>
+
+    <h2>Saved on this device</h2>
+    <p>If you use the "save to this device" button, the invoice or receipt is written to your browser's
+       local storage (IndexedDB). It stays in that one browser on that one device — we can't see it,
+       it isn't synced anywhere, and clearing your browser data deletes it. Use the "Download backup"
+       button to keep a copy or move your saved documents to another device.</p>
 
     <h2>Hosting</h2>
     <p>The site is served by Cloudflare Pages, which processes standard connection data (like your IP
@@ -71,8 +77,8 @@
         <a href="privacy.html">Privacy</a>
       </div>
     </div>
-    <p class="footer-legal">Your document is compressed into the URL itself — the part after
-       <code>#</code> is never sent to any server.</p>
+    <p class="footer-legal">Saved documents live in your browser, not on any server. Share via link
+       or download as PDF — no signup, ever.</p>
   </footer>
 </body>
 </html>

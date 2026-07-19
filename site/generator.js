@@ -15,6 +15,7 @@ import { durableLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { compressLogoImage } from './shared/logo-embed.js';
 import { isHttpsUrl } from './shared/wire.js';
+import { put, get, list, remove, exportAll, importAll, getMeta, setMeta } from './shared/db.js';
 
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
@@ -24,6 +25,10 @@ let currentUrl = '';
 let activeTaxRate = null;
 let pendingLogoData = null;
 let pendingLogoError = null;
+// The record id in IndexedDB for the invoice currently loaded into the form
+// (either opened from the saved list or already saved once). null means the
+// next Save creates a new record; a value means Save overwrites in place.
+let currentSavedId = null;
 
 // ---- item rows -----------------------------------------------------------
 
@@ -530,6 +535,299 @@ $('fTaxPercent').addEventListener('input', () => {
   scheduleUpdate();
 });
 
+// ---- saved invoices (IndexedDB) ---------------------------------------------------
+
+/** Loads the saved-list from IndexedDB and renders it. Shows the panel only
+ *  when there's at least one saved invoice, so a first-time visitor sees the
+ *  same clean editor they always have. */
+async function refreshSavedList() {
+  let rows;
+  try {
+    rows = await list('invoices', { index: 'updatedAt', direction: 'prev' });
+  } catch {
+    // IndexedDB unavailable (e.g. private-window edge cases) — hide the panel
+    // and keep the generator working in its original URL-only mode.
+    $('savedPanel').hidden = true;
+    return;
+  }
+  const listEl = $('savedList');
+  $('savedCount').textContent = String(rows.length);
+  $('savedPanel').hidden = rows.length === 0;
+  listEl.replaceChildren();
+  const fmtDate = (t) => new Date(t).toLocaleDateString();
+  for (const row of rows) {
+    const li = document.createElement('li');
+    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '');
+    const label = row.doc?.invoiceNumber || 'Untitled invoice';
+    const buyer = row.doc?.buyer?.name || 'No client';
+    const meta = `${buyer} · ${fmtDate(row.updatedAt)}`;
+    const statusPill = document.createElement('button');
+    statusPill.type = 'button';
+    statusPill.className = `saved-status-pill status-${row.status || 'draft'}`;
+    statusPill.textContent = row.status || 'draft';
+    statusPill.title = 'Click to cycle: draft → sent → paid';
+    statusPill.addEventListener('click', (e) => { e.stopPropagation(); cycleStatus(row.id); });
+    const openBtn = document.createElement('button');
+    openBtn.type = 'button';
+    openBtn.className = 'saved-open';
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const span = document.createElement('span');
+    span.className = 'linkmeta';
+    span.textContent = meta;
+    openBtn.append(strong, span);
+    openBtn.addEventListener('click', () => openSavedInvoice(row.id));
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'ghost saved-del';
+    del.textContent = 'Delete';
+    del.title = 'Delete this saved invoice';
+    del.addEventListener('click', () => deleteSavedInvoice(row.id, label));
+    li.append(openBtn, statusPill, del);
+    listEl.append(li);
+  }
+}
+
+const STATUS_CYCLE = ['draft', 'sent', 'paid'];
+async function cycleStatus(id) {
+  const row = await get('invoices', id);
+  if (!row) return;
+  const current = STATUS_CYCLE.indexOf(row.status);
+  row.status = STATUS_CYCLE[(current + 1) % STATUS_CYCLE.length];
+  await put('invoices', row);
+  refreshSavedList();
+}
+
+// ---- saved directories (clients + businesses) ----------------------------------
+
+let clientDirectory = [];
+let businessDirectory = [];
+
+async function refreshDirectories() {
+  try {
+    [clientDirectory, businessDirectory] = await Promise.all([
+      list('clients'),
+      list('businesses'),
+    ]);
+  } catch {
+    clientDirectory = [];
+    businessDirectory = [];
+    return;
+  }
+  const fill = (id, rows) => {
+    const dl = $(id);
+    dl.replaceChildren();
+    for (const row of rows) {
+      const opt = document.createElement('option');
+      opt.value = row.name;
+      dl.append(opt);
+    }
+  };
+  fill('clientNames', clientDirectory);
+  fill('businessNames', businessDirectory);
+}
+
+/** Upserts the current invoice's parties into their directories so autocomplete
+ *  learns from every save. `id` is derived from the name (lower-cased) so
+ *  repeated saves of the same client update in place instead of piling up. */
+async function persistDirectoryEntries(doc) {
+  const nameKey = (s) => (s || '').trim().toLowerCase();
+  const puts = [];
+  if (doc.buyer?.name?.trim()) {
+    puts.push(put('clients', {
+      id: `client:${nameKey(doc.buyer.name)}`,
+      name: doc.buyer.name.trim(),
+      address: doc.buyer.address ?? null,
+      contact: doc.buyer.contact ?? null,
+    }));
+  }
+  if (doc.seller?.name?.trim()) {
+    puts.push(put('businesses', {
+      id: `biz:${nameKey(doc.seller.name)}`,
+      name: doc.seller.name.trim(),
+      address: doc.seller.address ?? null,
+      contact: doc.seller.contact ?? null,
+      logoData: doc.logoData ?? null,
+    }));
+  }
+  await Promise.all(puts);
+}
+
+function autofillFromDirectory(nameValue, directory, targets) {
+  const key = nameValue.trim().toLowerCase();
+  const hit = directory.find((r) => r.name.trim().toLowerCase() === key);
+  if (!hit) return false;
+  let changed = false;
+  for (const [inputId, field] of targets) {
+    if (!$(inputId).value.trim() && hit[field]) {
+      $(inputId).value = hit[field];
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+async function saveCurrentInvoice() {
+  if (!currentInvoice) return;
+  // Preserve the existing status when overwriting a saved invoice; a fresh
+  // save defaults to 'draft'. Explicit status changes come from cycleStatus.
+  let status = 'draft';
+  if (currentSavedId) {
+    const existing = await get('invoices', currentSavedId);
+    if (existing?.status) status = existing.status;
+  }
+  const record = { id: currentSavedId, kind: 'invoice', status, doc: currentInvoice };
+  const saved = await put('invoices', record);
+  currentSavedId = saved.id;
+  await recordNextInvoiceNumber(currentInvoice.invoiceNumber);
+  await persistDirectoryEntries(currentInvoice);
+  await refreshDirectories();
+  flashSaveStatus('Saved');
+  refreshSavedList();
+}
+
+/** Parses "INV-2026-014" into { prefix: "INV-2026-", num: 14, padLen: 3 }.
+ *  Only the trailing run of digits is treated as the counter; the rest is
+ *  preserved verbatim as the prefix. Returns null for numbers without any
+ *  trailing digits (e.g. "invoice for Q3"). */
+function parseInvoiceNumber(str) {
+  if (!str) return null;
+  const match = /^(.*?)(\d+)$/.exec(str);
+  if (!match) return null;
+  return { prefix: match[1], num: Number(match[2]), padLen: match[2].length };
+}
+
+function formatInvoiceNumber({ prefix, num, padLen }) {
+  return `${prefix}${String(num).padStart(padLen, '0')}`;
+}
+
+async function recordNextInvoiceNumber(current) {
+  const parsed = parseInvoiceNumber(current);
+  if (!parsed) return;
+  await setMeta('nextInvoiceNumber', { ...parsed, num: parsed.num + 1 });
+}
+
+async function suggestNextInvoiceNumber() {
+  const next = await getMeta('nextInvoiceNumber');
+  return next ? formatInvoiceNumber(next) : '';
+}
+
+async function openSavedInvoice(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromInvoice(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = id;
+  // Reset any tax-preset UI state — the saved doc already carries a flat tax.
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  // Bring the editor into view; on mobile the saved panel is above the form.
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function deleteSavedInvoice(id, label) {
+  if (!confirm(`Delete "${label}"? This can't be undone.`)) return;
+  await remove('invoices', id);
+  if (currentSavedId === id) currentSavedId = null;
+  refreshSavedList();
+}
+
+async function resetToNewInvoice() {
+  currentSavedId = null;
+  $('form').reset();
+  $('itemRows').replaceChildren();
+  addItemRow();
+  pendingLogoData = null;
+  pendingLogoError = null;
+  updateLogoFileStatus();
+  // Re-apply the "today + 30 days" defaults used on a fresh page load.
+  const today = new Date();
+  const due = new Date(today);
+  due.setDate(due.getDate() + 30);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  $('fIssueDate').value = fmt(today);
+  $('fDueDate').value = fmt(due);
+  // Suggest the next invoice number based on the last one the user saved.
+  $('fInvoiceNumber').value = await suggestNextInvoiceNumber();
+  // Style controls default: classic template, no accent, no QR, no branding off.
+  const classic = document.querySelector('input[name="template"][value="classic"]');
+  if (classic) classic.checked = true;
+  $('fAccentOn').checked = false;
+  $('fAccent').disabled = true;
+  $('fQr').checked = false;
+  $('fBrandingOff').checked = false;
+  updateCustomPanel();
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+}
+
+async function downloadBackup() {
+  const backup = await exportAll();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `invoiceiguana-backup-${stamp}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupFile(file) {
+  try {
+    const backup = JSON.parse(await file.text());
+    const { imported } = await importAll(backup, { mode: 'merge' });
+    const total = Object.values(imported).reduce((a, b) => a + b, 0);
+    alert(`Imported ${total} record${total === 1 ? '' : 's'}.`);
+    refreshSavedList();
+  } catch (e) {
+    alert(`Couldn't import that file: ${e.message}`);
+  }
+}
+
+let saveStatusTimer = null;
+function flashSaveStatus(text) {
+  const el = $('saveStatus');
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(saveStatusTimer);
+  saveStatusTimer = setTimeout(() => { el.hidden = true; }, 1500);
+}
+
+$('saveBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  saveCurrentInvoice().catch((err) => alert(`Couldn't save: ${err.message}`));
+});
+
+// Autocomplete: when the seller/client name matches a saved directory entry,
+// auto-fill the address/contact fields that are still blank. Never overwrites
+// values the user has already typed.
+$('fSeller').addEventListener('change', () => {
+  if (autofillFromDirectory($('fSeller').value, businessDirectory,
+      [['fSellerAddress', 'address'], ['fSellerContact', 'contact']])) scheduleUpdate();
+});
+$('fBuyer').addEventListener('change', () => {
+  if (autofillFromDirectory($('fBuyer').value, clientDirectory,
+      [['fBuyerAddress', 'address'], ['fBuyerContact', 'contact']])) scheduleUpdate();
+});
+$('newInvoiceBtn').addEventListener('click', resetToNewInvoice);
+$('backupBtn').addEventListener('click', () => {
+  downloadBackup().catch((err) => alert(`Couldn't create backup: ${err.message}`));
+});
+$('restoreBtn').addEventListener('click', () => $('restoreFile').click());
+$('restoreFile').addEventListener('change', () => {
+  const file = $('restoreFile').files[0];
+  if (file) importBackupFile(file);
+  $('restoreFile').value = '';
+});
+
 // ---- boot ---------------------------------------------------------------------------
 
 buildTemplatePicker();
@@ -544,5 +842,9 @@ if (!loadedFromEditLink) {
   const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   $('fIssueDate').value = fmt(today);
   $('fDueDate').value = fmt(dueDate);
+  const suggested = await suggestNextInvoiceNumber();
+  if (suggested) $('fInvoiceNumber').value = suggested;
 }
 update();
+refreshSavedList();
+refreshDirectories();

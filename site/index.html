@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>InvoiceIguana — free invoice maker, the invoice lives in the link</title>
-  <meta name="description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server. The entire invoice is compressed into the URL itself.">
+  <title>Free Invoice Generator — No Signup, No Watermark | InvoiceIguana</title>
+  <meta name="description" content="Create a professional invoice online for free. Save clients and businesses to reuse, download PDFs, and share via link — no signup, no watermark, works on your phone.">
   <link rel="canonical" href="https://invoiceiguana.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="InvoiceIguana">
   <meta property="og:url" content="https://invoiceiguana.com/">
-  <meta property="og:title" content="InvoiceIguana — free invoice maker, the invoice lives in the link">
-  <meta property="og:description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server. The entire invoice is compressed into the URL itself.">
+  <meta property="og:title" content="Free Invoice Generator — No Signup, No Watermark">
+  <meta property="og:description" content="Create a professional invoice online for free. Save clients and businesses to reuse, download PDFs, and share via link — no signup, no watermark, works on your phone.">
   <meta property="og:image" content="https://invoiceiguana.com/icons/icon512.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="InvoiceIguana — free invoice maker, the invoice lives in the link">
-  <meta name="twitter:description" content="Make a professional invoice and share it as a link — no signup, no watermark, nothing stored on any server.">
+  <meta name="twitter:title" content="Free Invoice Generator — No Signup, No Watermark">
+  <meta name="twitter:description" content="Create a professional invoice online for free. Save clients and businesses to reuse, download PDFs, and share via link.">
   <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
   <meta name="theme-color" content="#12a06a">
   <link rel="icon" href="icons/icon48.png">
@@ -32,7 +32,7 @@
     "url": "https://invoiceiguana.com/",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
-    "description": "Free invoice and receipt maker where the whole document is compressed into a shareable link — no signup, no watermark, nothing stored on any server.",
+    "description": "Free invoice and receipt generator — save clients and businesses to reuse, download PDFs, and share via link. No signup, no watermark, works on your phone.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
   </script>
@@ -53,12 +53,26 @@
   </header>
 
   <div class="app-intro">
-    <p>A free invoice maker where the whole invoice lives <em>inside the link</em>. Type
-       it in, share the URL — no signup, no watermark, and nothing is ever uploaded or
-       stored on a server.</p>
+    <h1>Free invoice generator</h1>
+    <p>Make a professional invoice in seconds — <b>no signup, no watermark</b>. Save it
+       to your device to reuse, download a PDF, or share it as a link.</p>
   </div>
 
   <main>
+    <section id="savedPanel" class="saved-panel" hidden>
+      <details>
+        <summary>Saved on this device — <span id="savedCount">0</span></summary>
+        <p class="linkmeta">Saved invoices live in this browser only, not on any server. Use "Download backup" below to move them to another device or keep a copy.</p>
+        <ul id="savedList" class="saved-list"></ul>
+        <p class="linkmeta saved-actions">
+          <button id="newInvoiceBtn" type="button" class="ghost">New blank invoice</button>
+          <button id="backupBtn" type="button" class="ghost">Download backup</button>
+          <button id="restoreBtn" type="button" class="ghost">Import backup</button>
+          <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+        </p>
+      </details>
+    </section>
+
     <section class="editor">
       <div class="tabs" role="tablist">
         <button id="tabForm" class="tab active" type="button">Type it in</button>
@@ -68,7 +82,8 @@
       <form id="form" autocomplete="off">
         <section class="form-section">
           <h3 class="section-head">Your business</h3>
-          <label>Business name<input id="fSeller" type="text" placeholder="Acme Consulting"></label>
+          <label>Business name<input id="fSeller" type="text" list="businessNames" placeholder="Acme Consulting" autocomplete="off"></label>
+          <datalist id="businessNames"></datalist>
           <div class="grid2">
             <label>Address<input id="fSellerAddress" type="text" placeholder="1 Main St, Springfield"></label>
             <label>Contact<input id="fSellerContact" type="text" placeholder="billing@acme.com"></label>
@@ -77,7 +92,8 @@
 
         <section class="form-section">
           <h3 class="section-head">Bill to</h3>
-          <label>Client<input id="fBuyer" type="text" placeholder="Client Co"></label>
+          <label>Client<input id="fBuyer" type="text" list="clientNames" placeholder="Client Co" autocomplete="off"></label>
+          <datalist id="clientNames"></datalist>
           <div class="grid2">
             <label>Client address<input id="fBuyerAddress" type="text" placeholder="2 Oak Ave, Springfield"></label>
             <label>Client contact<input id="fBuyerContact" type="text" placeholder="ap@client.com"></label>
@@ -216,7 +232,7 @@ item,Consulting hours,10,150</pre>
           <input id="link" type="text" readonly>
           <button id="copy" type="button">Copy</button>
         </div>
-        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="printBtn" href="#" role="button">print / save as PDF</a></p>
+        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="printBtn" href="#" role="button">print / save as PDF</a> · <a id="saveBtn" href="#" role="button">save to this device</a> <span id="saveStatus" class="linkmeta saved-status" hidden></span></p>
         <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
 
         <p class="linkmeta share-row">Share:
@@ -290,28 +306,33 @@ item,Consulting hours,10,150</pre>
   </main>
 
   <section class="page">
-    <h2>An invoice that <span class="grad">lives in a link</span></h2>
-    <p class="lede">Fill in the form, and InvoiceIguana compresses the whole invoice into the URL
-       itself. Share that link by email, text, or chat — when your client opens it, their browser
-       rebuilds the invoice locally. There's nothing to sign up for and nothing to store.</p>
+    <h2>Everything you need to <span class="grad">invoice clients</span> — free</h2>
+    <p class="lede">Save your clients, businesses, and past invoices in your browser to reuse them next
+       time. Download PDFs, share via link, and never see a paywall or a signup screen.</p>
     <div class="features">
       <div class="feature">
-        <div class="ico">🔗</div>
-        <h3>The link is the invoice</h3>
-        <p>No database, no account, no expiry. The document is encoded straight into the URL, so the link
-           is all you (or your client) ever need to keep.</p>
+        <div class="ico">💾</div>
+        <h3>Save &amp; reuse</h3>
+        <p>Every invoice can be saved to your device. Clients, businesses, and invoice numbers
+           auto-fill next time so you're not retyping the same details every month.</p>
       </div>
       <div class="feature">
         <div class="ico">🔒</div>
-        <h3>Nothing leaves your browser</h3>
-        <p>Everything after the <code>#</code> in a URL is never sent to a server. We literally cannot see
-           your invoices — there's nothing on our end to leak.</p>
+        <h3>Private by design</h3>
+        <p>Nothing is uploaded. Your saved invoices live in this browser — take them with you via a
+           one-click backup file whenever you want.</p>
       </div>
       <div class="feature">
         <div class="ico">🎨</div>
         <h3>Polished, print-ready</h3>
-        <p>Multiple templates, an accent color, your logo, a QR code, per-line discounts, and print / save
-           as PDF — with a live preview of exactly what your client sees.</p>
+        <p>Multiple templates, your logo, an accent color, a QR code, per-line discounts, and print
+           or save as PDF — with a live preview of exactly what your client sees.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔗</div>
+        <h3>Share as a link, too</h3>
+        <p>Prefer not to email a PDF? Every invoice can also be shared as a URL that recreates the
+           whole document in your client's browser — no signup on their end either.</p>
       </div>
     </div>
     <p class="section-cta"><a class="btn btn-primary btn-lg" href="/free-invoice-generator">See how it works →</a></p>
@@ -336,8 +357,8 @@ item,Consulting hours,10,150</pre>
         <a href="privacy.html">Privacy</a>
       </div>
     </div>
-    <p class="footer-legal">Your invoice is compressed into the URL itself — the part after
-       <code>#</code> is never sent to any server.</p>
+    <p class="footer-legal">Saved invoices live in your browser, not on any server. Share via
+       link or download as PDF — no signup, ever.</p>
   </footer>
 </body>
 </html>

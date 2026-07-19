@@ -254,6 +254,86 @@ input[type="checkbox"] { accent-color: var(--brand); }
 .linkmeta a { color: var(--brand-ink); }
 @media (prefers-color-scheme: dark) { .linkmeta a { color: var(--brand); } }
 
+/* Saved-on-this-device panel — the local IndexedDB archive of invoices. */
+.saved-panel {
+  flex: 1 1 100%;
+  max-width: 1000px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 1.1rem;
+}
+.saved-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0.35rem 0;
+  user-select: none;
+}
+.saved-panel summary::marker, .saved-panel summary::-webkit-details-marker { color: var(--muted); }
+.saved-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0.4rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.saved-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.saved-item.is-current { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent); }
+.saved-open {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.55rem 0.8rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.saved-open:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.saved-open strong { font-size: 0.95rem; }
+.saved-del {
+  align-self: center;
+  margin-right: 0.5rem;
+}
+.saved-status-pill {
+  align-self: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--muted);
+}
+.saved-status-pill.status-draft   { background: #f2f3f5; color: #55606d; border-color: #dee1e6; }
+.saved-status-pill.status-sent    { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.saved-status-pill.status-paid    { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+@media (prefers-color-scheme: dark) {
+  .saved-status-pill.status-draft { background: #2a2f36; color: #b8c1cd; border-color: #3a4048; }
+  .saved-status-pill.status-sent  { background: #1e3a8a; color: #dbeafe; border-color: #2b4bad; }
+  .saved-status-pill.status-paid  { background: #14532d; color: #dcfce7; border-color: #1c6b3c; }
+}
+.saved-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.saved-status { color: var(--brand-ink); font-weight: 600; margin-left: 0.5rem; }
+@media (prefers-color-scheme: dark) { .saved-status { color: var(--brand); } }
+
 @media (max-width: 560px) {
   .grid4 { grid-template-columns: 1fr 1fr; }
   .grid3 { grid-template-columns: 1fr 1fr; }
