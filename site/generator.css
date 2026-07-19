@@ -339,3 +339,34 @@ input[type="checkbox"] { accent-color: var(--brand); }
   .grid3 { grid-template-columns: 1fr 1fr; }
   .preview-pane { position: static; }
 }
+
+/* Print: only the invoice/receipt preview should end up on paper (or in a
+   "save as PDF" export). The saved-panel, editor, style controls, site
+   header/footer, marketing sections, and everything else on the page are
+   ephemeral chrome. */
+@media print {
+  .site-header,
+  .app-intro,
+  #savedPanel,
+  .editor,
+  .result,
+  .page,
+  .site-footer,
+  .preview-label { display: none !important; }
+  main {
+    display: block;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
+  .preview-pane {
+    position: static;
+    flex: none;
+    top: auto;
+    max-width: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+  body { background: none; }
+}
