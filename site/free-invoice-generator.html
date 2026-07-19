@@ -137,6 +137,7 @@
         <section class="form-section">
           <h3 class="section-head">Payment &amp; notes</h3>
           <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
+          <label>Payment link (Stripe, PayPal, Venmo, etc.)<input id="fPaymentUrl" type="url" placeholder="https://buy.stripe.com/… or https://paypal.me/…"></label>
           <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>
         </section>
       </form>
@@ -330,6 +331,10 @@ item,Consulting hours,10,150</pre>
           <p class="label">Payment Instructions</p>
           <p data-f="paymentInstructions"></p>
         </div>
+
+        <p class="pay-action">
+          <a data-f="payButton" class="btn-pay" href="#" target="_blank" rel="noopener nofollow" hidden>Pay this invoice</a>
+        </p>
 
         <p data-f="notes" class="notes" hidden></p>
         <div data-f="qr" class="qrbox" hidden></div>

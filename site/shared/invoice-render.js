@@ -105,5 +105,18 @@ export function renderInvoiceInto(root, inv) {
 
   $('paymentRow').hidden = inv.paymentInstructions == null;
   setOptional('paymentInstructions', inv.paymentInstructions);
+  // "Pay this invoice" button — only rendered when the URL is a valid HTTPS
+  // URL (the codec's isHttpsUrl gate). Never innerHTML the URL; use the anchor
+  // href, which the browser validates and escapes.
+  const payBtn = $('payButton');
+  if (payBtn) {
+    if (inv.paymentUrl) {
+      payBtn.href = inv.paymentUrl;
+      payBtn.hidden = false;
+    } else {
+      payBtn.removeAttribute('href');
+      payBtn.hidden = true;
+    }
+  }
   setOptional('notes', inv.notes);
 }

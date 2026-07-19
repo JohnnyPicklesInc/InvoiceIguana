@@ -12,7 +12,7 @@
  *     invoiceNumber, issueDate, dueDate, currency,
  *     items: [{name, qty, priceMinor, discount}], subtotalMinor, discountMinor,
  *     (item.discount is {kind:'pct'|'amt', value} | null — a per-line discount)
- *     taxMinor, taxLabel, totalMinor, paymentInstructions, notes,
+ *     taxMinor, taxLabel, totalMinor, paymentInstructions, paymentUrl, notes,
  *     template, brandingOff, accent, emoji, logoUrl, logoData, qr }
  * total = subtotal - discount + tax (no tip on an invoice). taxLabel is
  * purely descriptive — it never affects the math.
@@ -29,7 +29,7 @@
  * for readability): m sellerName, a sellerAddress, o sellerContact,
  * n buyerName, j buyerAddress, v buyerContact, r invoiceNumber,
  * d issueDate, z dueDate, c currency, i items, s subtotal, g discount,
- * x tax, h taxLabel, t total, y paymentInstructions, f notes,
+ * x tax, h taxLabel, t total, y paymentInstructions, p paymentUrl, f notes,
  * w template, b brandingOff, k accent, e emoji, u logoUrl, l logoData, q qr,
  * cf customFormat { f font, t totalsLayout, b tableStyle, d density,
  * h headerLayout } — only present for the "custom" template's non-default
@@ -85,6 +85,7 @@ function toCompact(inv) {
   if (inv.taxLabel) c.h = inv.taxLabel;
   c.t = inv.totalMinor;
   if (inv.paymentInstructions) c.y = inv.paymentInstructions;
+  if (inv.paymentUrl) c.p = inv.paymentUrl;
   if (inv.notes) c.f = inv.notes;
   if (inv.template && inv.template !== 'classic') c.w = inv.template;
   if (inv.brandingOff) c.b = 1;
@@ -156,6 +157,11 @@ function fromCompact(c) {
   for (const k of ['a', 'o', 'n', 'j', 'v', 'r', 'd', 'z', 'c', 'y', 'f', 'h']) {
     if (c[k] != null && typeof c[k] !== 'string') throw new BadPayload(`Bad field "${k}"`);
   }
+  // paymentUrl is lenient like logoUrl: bad values drop to null rather than
+  // corrupting the invoice, since the renderer only turns the URL into a
+  // clickable button when it survives an isHttpsUrl check anyway. Old links
+  // (no p key) decode with paymentUrl: null.
+  const paymentUrl = isHttpsUrl(c.p) ? c.p : null;
   return {
     seller: { name: c.m ?? null, address: c.a ?? null, contact: c.o ?? null },
     buyer: { name: c.n ?? null, address: c.j ?? null, contact: c.v ?? null },
@@ -170,6 +176,7 @@ function fromCompact(c) {
     taxLabel: c.h ?? null,
     totalMinor: c.t,
     paymentInstructions: c.y ?? null,
+    paymentUrl,
     notes: c.f ?? null,
     ...styleFromCompact(c),
   };

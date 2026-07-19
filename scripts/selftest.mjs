@@ -539,6 +539,46 @@ await test('invoice: pinned v1 fixture keeps decoding (old-link regression guard
   strictEqual(r.totalMinor, 16200);
 });
 
+await test('invoice: paymentUrl round-trips; non-HTTPS values drop to null (renderer safety)', async () => {
+  const { invoice, errors } = parseInvoice(JSON.stringify({
+    seller: 'Acme',
+    items: [{ name: 'Design', price: '100' }],
+    paymenturl: 'https://buy.stripe.com/test_1234',
+  }), 'json');
+  deepStrictEqual(errors, []);
+  strictEqual(invoice.paymentUrl, 'https://buy.stripe.com/test_1234');
+  const round = await decodeInvoice(await encodeInvoice(invoice));
+  strictEqual(round.paymentUrl, 'https://buy.stripe.com/test_1234');
+
+  // http:// and javascript: URLs are rejected by the parser (they'd fail the
+  // renderer's URL gate anyway, but stopping them at parse gives a friendlier
+  // error). Test they don't ride into the invoice.
+  const httpTry = parseInvoice(JSON.stringify({
+    seller: 'Acme', items: [{ name: 'x', price: '10' }],
+    paymenturl: 'http://insecure.example',
+  }), 'json');
+  ok(httpTry.errors.length > 0 || httpTry.invoice.paymentUrl == null,
+    'http:// paymentUrl must not ride through — either errored or dropped');
+  const jsTry = parseInvoice(JSON.stringify({
+    seller: 'Acme', items: [{ name: 'x', price: '10' }],
+    paymenturl: 'javascript:alert(1)',
+  }), 'json');
+  ok(jsTry.errors.length > 0 || jsTry.invoice.paymentUrl == null,
+    'javascript: paymentUrl must not ride through — either errored or dropped');
+
+  // Old-link forward-compatibility: a payload with no p key still decodes.
+  const legacy = await decodeInvoice(await forgeInvoice({ m: 'A', i: [['x', 1, 100]], s: 100, t: 100 }));
+  strictEqual(legacy.paymentUrl, null);
+
+  // A tampered link with a non-HTTPS p key drops to null instead of throwing —
+  // paymentUrl is style-lenient (see invoice-codec.js).
+  const tampered = await decodeInvoice(await forgeInvoice({
+    m: 'A', i: [['x', 1, 100]], s: 100, t: 100,
+    p: 'javascript:steal()',
+  }));
+  strictEqual(tampered.paymentUrl, null);
+});
+
 await test('invoice/receipt payloads are mutually rejected (cross-type safety)', async () => {
   const { receipt } = parseReceipt(sampleJson, 'json');
   const receiptPayload = await encodeReceipt(receipt);

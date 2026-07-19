@@ -103,6 +103,26 @@
 }
 .invoice .payment-instructions p:last-child { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
 
+/* "Pay this invoice" button — the seller's payment link (Stripe/PayPal/etc)
+   rendered as a prominent call-to-action for the recipient. Accent-colored
+   when the invoice has an accent set, otherwise falls back to a solid dark
+   button so it always reads as "clickable" and not part of the invoice text. */
+.invoice .pay-action { margin: 1.1rem 0 0; text-align: center; }
+.invoice .btn-pay {
+  display: inline-block;
+  padding: 0.65rem 1.6rem;
+  border-radius: 8px;
+  background: var(--accent, #1f2937);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  transition: filter 0.15s;
+}
+.invoice .btn-pay:hover { filter: brightness(1.1); }
+@media print { .invoice .pay-action { display: none; } }
+
 .invoice .notes { margin-top: 1.25rem; color: #555; font-size: 0.85rem; overflow-wrap: anywhere; white-space: pre-line; }
 .invoice .qrbox { text-align: center; margin: 1.25rem 0 0; }
 .invoice .qrbox svg { width: 116px; height: 116px; }

@@ -128,6 +128,7 @@ function normalize(raw, errors, warnings, lenient = false) {
   const issueDate = asOptionalString(raw, 'issuedate', sink, 60);
   const dueDate = asOptionalString(raw, 'duedate', sink, 60);
   const paymentInstructions = asOptionalString(raw, 'paymentinstructions', sink, 300);
+  const paymentUrl = asOptionalHttpsUrl(raw, 'paymenturl', sink);
   const notes = asOptionalString(raw, 'notes', sink);
   const taxLabel = asOptionalString(raw, 'taxlabel', sink, 40);
   const logoUrl = asOptionalHttpsUrl(raw, 'logourl', sink);
@@ -208,6 +209,7 @@ function normalize(raw, errors, warnings, lenient = false) {
     taxLabel: taxMinor != null ? taxLabel : null,
     totalMinor,
     paymentInstructions,
+    paymentUrl,
     notes,
     // logoUrl is upload-settable (a business's logo rarely changes per-invoice),
     // unlike the style block below, which is generator-UI-only.

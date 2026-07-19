@@ -94,6 +94,7 @@ function rawFromForm() {
   if (val('fDiscount')) raw.discount = val('fDiscount');
   if (val('fTax')) raw.tax = val('fTax');
   if (val('fPaymentInstructions')) raw.paymentinstructions = val('fPaymentInstructions');
+  if (val('fPaymentUrl')) raw.paymenturl = val('fPaymentUrl');
   if (val('fNotes')) raw.notes = val('fNotes');
   for (const row of $('itemRows').children) {
     const name = row.querySelector('.i-name').value.trim();
@@ -126,6 +127,7 @@ function fillFormFromInvoice(inv) {
   $('fDiscount').value = inv.discountMinor != null ? String(fromMinor(inv.discountMinor, inv.currency)) : '';
   $('fTax').value = inv.taxMinor != null ? String(fromMinor(inv.taxMinor, inv.currency)) : '';
   $('fPaymentInstructions').value = inv.paymentInstructions ?? '';
+  $('fPaymentUrl').value = inv.paymentUrl ?? '';
   $('fNotes').value = inv.notes ?? '';
   $('fLogoUrl').value = inv.logoUrl ?? '';
   $('itemRows').replaceChildren();
