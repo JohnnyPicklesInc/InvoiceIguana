@@ -525,7 +525,13 @@ async function refreshSavedList() {
     del.textContent = 'Delete';
     del.title = 'Delete this saved receipt';
     del.addEventListener('click', () => deleteSavedReceipt(row.id, label));
-    li.append(openBtn, del);
+    const dup = document.createElement('button');
+    dup.type = 'button';
+    dup.className = 'ghost saved-dup';
+    dup.textContent = 'Duplicate';
+    dup.title = 'Copy this receipt into a new draft';
+    dup.addEventListener('click', () => duplicateSavedReceipt(row.id));
+    li.append(openBtn, dup, del);
     listEl.append(li);
   }
 }
@@ -610,6 +616,25 @@ async function deleteSavedReceipt(id, label) {
   await remove('invoices', id);
   if (currentSavedId === id) currentSavedId = null;
   refreshSavedList();
+}
+
+/** Duplicates a saved receipt: loads it into the form as an unsaved draft
+ *  with the current timestamp. User's next Save creates a new record. */
+async function duplicateSavedReceipt(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromReceipt(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = null;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  flashSaveStatus('Duplicated — click Save to keep the copy');
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function resetToNewReceipt() {

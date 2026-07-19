@@ -45,6 +45,14 @@ function addItemRow(name = '', qty = '', price = '', disc = '', discType = 'pct'
     input.addEventListener('input', scheduleUpdate);
     return input;
   };
+  const nameInput = mk('i-name', 'Consulting hours', name);
+  // Datalist offers saved product names; on match, autofill the sibling
+  // .i-price if the user hasn't already typed one.
+  nameInput.setAttribute('list', 'productNames');
+  nameInput.addEventListener('change', () => {
+    if (autofillProductPrice(row)) scheduleUpdate();
+  });
+  const priceInput = mk('i-price', '150.00', price, 'decimal');
   // Per-line discount: a value plus a %/$ unit toggle. Empty value = no discount.
   const discTypeSel = document.createElement('select');
   discTypeSel.className = 'i-disctype';
@@ -63,8 +71,8 @@ function addItemRow(name = '', qty = '', price = '', disc = '', discType = 'pct'
   remove.textContent = '×';
   remove.title = 'Remove item';
   remove.addEventListener('click', () => { row.remove(); scheduleUpdate(); });
-  row.append(mk('i-name', 'Consulting hours', name), mk('i-qty', '1', qty, 'numeric'),
-    mk('i-price', '150.00', price, 'decimal'), mk('i-disc', '0', disc, 'decimal'),
+  row.append(nameInput, mk('i-qty', '1', qty, 'numeric'),
+    priceInput, mk('i-disc', '0', disc, 'decimal'),
     discTypeSel, remove);
   $('itemRows').append(row);
 }
@@ -577,13 +585,19 @@ async function refreshSavedList() {
     span.textContent = meta;
     openBtn.append(strong, span);
     openBtn.addEventListener('click', () => openSavedInvoice(row.id));
+    const dup = document.createElement('button');
+    dup.type = 'button';
+    dup.className = 'ghost saved-dup';
+    dup.textContent = 'Duplicate';
+    dup.title = 'Copy this invoice into a new draft';
+    dup.addEventListener('click', () => duplicateSavedInvoice(row.id));
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'ghost saved-del';
     del.textContent = 'Delete';
     del.title = 'Delete this saved invoice';
     del.addEventListener('click', () => deleteSavedInvoice(row.id, label));
-    li.append(openBtn, statusPill, del);
+    li.append(openBtn, statusPill, dup, del);
     listEl.append(li);
   }
 }
@@ -602,16 +616,19 @@ async function cycleStatus(id) {
 
 let clientDirectory = [];
 let businessDirectory = [];
+let productDirectory = [];
 
 async function refreshDirectories() {
   try {
-    [clientDirectory, businessDirectory] = await Promise.all([
+    [clientDirectory, businessDirectory, productDirectory] = await Promise.all([
       list('clients'),
       list('businesses'),
+      list('products'),
     ]);
   } catch {
     clientDirectory = [];
     businessDirectory = [];
+    productDirectory = [];
     return;
   }
   const fill = (id, rows) => {
@@ -625,11 +642,13 @@ async function refreshDirectories() {
   };
   fill('clientNames', clientDirectory);
   fill('businessNames', businessDirectory);
+  fill('productNames', productDirectory);
 }
 
-/** Upserts the current invoice's parties into their directories so autocomplete
- *  learns from every save. `id` is derived from the name (lower-cased) so
- *  repeated saves of the same client update in place instead of piling up. */
+/** Upserts the current invoice's parties + line items into their directories
+ *  so autocomplete learns from every save. `id` is derived from the name
+ *  (lower-cased) so repeated saves of the same client / product update in
+ *  place instead of piling up. */
 async function persistDirectoryEntries(doc) {
   const nameKey = (s) => (s || '').trim().toLowerCase();
   const puts = [];
@@ -650,6 +669,15 @@ async function persistDirectoryEntries(doc) {
       logoData: doc.logoData ?? null,
     }));
   }
+  for (const item of doc.items || []) {
+    if (!item.name?.trim() || !item.priceMinor) continue;
+    puts.push(put('products', {
+      id: `product:${nameKey(item.name)}`,
+      name: item.name.trim(),
+      priceMinor: item.priceMinor,
+      currency: doc.currency,
+    }));
+  }
   await Promise.all(puts);
 }
 
@@ -665,6 +693,23 @@ function autofillFromDirectory(nameValue, directory, targets) {
     }
   }
   return changed;
+}
+
+/** Autofills the price on a line item row from the saved product catalog.
+ *  Only fires when the price is still blank (so the user's typed override
+ *  wins) and when the saved product's currency matches the current invoice's
+ *  currency (a USD-priced product doesn't belong in a JPY invoice). */
+function autofillProductPrice(row) {
+  const nameEl = row.querySelector('.i-name');
+  const priceEl = row.querySelector('.i-price');
+  if (!nameEl.value.trim() || priceEl.value.trim()) return false;
+  const key = nameEl.value.trim().toLowerCase();
+  const hit = productDirectory.find((p) => p.name.trim().toLowerCase() === key);
+  if (!hit) return false;
+  const currency = $('fCurrency').value || 'USD';
+  if (hit.currency && hit.currency !== currency) return false;
+  priceEl.value = String(fromMinor(hit.priceMinor, currency));
+  return true;
 }
 
 async function saveCurrentInvoice() {
@@ -732,6 +777,35 @@ async function deleteSavedInvoice(id, label) {
   await remove('invoices', id);
   if (currentSavedId === id) currentSavedId = null;
   refreshSavedList();
+}
+
+/** Duplicates a saved invoice: loads it into the form as an unsaved draft,
+ *  bumps its own invoice number (so #INV-2026-014 duplicates to -015 rather
+ *  than the meta-tracked "next"), and resets the dates to today + net-30.
+ *  User's next Save creates a new record instead of overwriting the source. */
+async function duplicateSavedInvoice(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromInvoice(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = null;
+  const parsed = parseInvoiceNumber(row.doc.invoiceNumber);
+  $('fInvoiceNumber').value = parsed
+    ? formatInvoiceNumber({ ...parsed, num: parsed.num + 1 })
+    : (await suggestNextInvoiceNumber());
+  const today = new Date();
+  const due = new Date(today);
+  due.setDate(due.getDate() + 30);
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  $('fIssueDate').value = fmt(today);
+  $('fDueDate').value = fmt(due);
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  flashSaveStatus('Duplicated — click Save to keep the copy');
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function resetToNewInvoice() {
