@@ -31,19 +31,18 @@
     <nav>
       <label class="type-switch">Document
         <select id="docTypeNav">
-          <option value="/">Invoice</option>
+          <option value="/free-invoice-generator">Invoice</option>
           <option value="/receipt" selected>Receipt</option>
         </select>
       </label>
-      <a href="/free-invoice-generator">Guide</a>
+      <a href="/">How it works</a>
       <a href="privacy.html">Privacy</a>
     </nav>
   </header>
 
   <div class="app-intro">
     <h1>Free receipt maker</h1>
-    <p>Make a clean, professional receipt in seconds — <b>no signup, no watermark</b>. Save it to
-       your device to reuse, download as PDF or PNG, or share as a link.</p>
+    <p>Everything lives in this browser — <a href="/">how it works</a>.</p>
   </div>
 
   <main>
@@ -165,7 +164,7 @@ item,Coffee,2,3.50</pre>
           <input id="link" type="text" readonly>
           <button id="copy" type="button">Copy</button>
         </div>
-        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="pngBtn" href="#" role="button">download PNG</a> · <a id="printBtn" href="#" role="button">print / save as PDF</a> · <a id="saveBtn" href="#" role="button">save to this device</a> <span id="saveStatus" class="linkmeta saved-status" hidden></span></p>
+        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="pngBtn" href="#" role="button" title="Downloads a PNG image of the receipt">download PNG</a> · <a id="printBtn" href="#" role="button" title="Opens the browser print dialog — choose “Save as PDF” to download">print / save as PDF</a> · <a id="saveBtn" href="#" role="button" title="Saves this receipt to your browser only — nothing uploaded">save to this device</a> <span id="saveStatus" class="linkmeta saved-status" hidden></span></p>
         <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
 
         <p class="linkmeta share-row">Share:
@@ -221,55 +220,27 @@ item,Coffee,2,3.50</pre>
     </section>
   </main>
 
-  <section class="page">
-    <h2>A receipt that <span class="grad">lives in a link</span></h2>
-    <p class="lede">Fill in the form and InvoiceIguana compresses the whole receipt into the URL
-       itself. Share that link however you like — when someone opens it, their browser rebuilds the
-       receipt locally. Nothing to sign up for, nothing stored.</p>
-    <div class="features">
-      <div class="feature">
-        <div class="ico">🧾</div>
-        <h3>Thermal-style templates</h3>
-        <p>Clean receipt layouts with your logo, an accent color, tax, tip, per-line discounts, and a QR
-           code — with a live preview as you type.</p>
-      </div>
-      <div class="feature">
-        <div class="ico">🔒</div>
-        <h3>Nothing leaves your browser</h3>
-        <p>Everything after the <code>#</code> in a URL is never sent to a server, so your receipts stay
-           entirely on your device.</p>
-      </div>
-      <div class="feature">
-        <div class="ico">📎</div>
-        <h3>Share or save anywhere</h3>
-        <p>Copy the link, export a PNG, or print / save as PDF. There's no account and no expiry — the
-           link is all you need to keep.</p>
-      </div>
-    </div>
-    <p class="section-cta"><a class="btn btn-primary btn-lg" href="/free-invoice-generator">See how it works →</a></p>
-  </section>
-
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand">
         <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
-        <p>The free invoice &amp; receipt maker where the whole document lives in the link — no signup,
-           no server, no expiry.</p>
+        <p>The free invoice &amp; receipt maker. Everything is saved in your browser or shared as a link
+           — no signup, no server, no expiry.</p>
       </div>
       <div class="footer-col">
         <h4>Create</h4>
-        <a href="/">Invoice generator</a>
+        <a href="/free-invoice-generator">Invoice generator</a>
         <a href="/receipt">Receipt generator</a>
-        <a href="/free-invoice-generator">Free invoice guide</a>
       </div>
       <div class="footer-col">
         <h4>About</h4>
-        <a href="/free-invoice-generator#faq">FAQ</a>
+        <a href="/">How it works</a>
+        <a href="/#faq">FAQ</a>
         <a href="privacy.html">Privacy</a>
       </div>
     </div>
-    <p class="footer-legal">Your receipt is compressed into the URL itself — the part after
-       <code>#</code> is never sent to any server.</p>
+    <p class="footer-legal">Saved receipts live in your browser, not on any server. Share via
+       link or download as PDF — no signup, ever.</p>
   </footer>
 </body>
 </html>
