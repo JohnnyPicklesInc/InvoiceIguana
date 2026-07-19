@@ -500,10 +500,18 @@ $('copy').addEventListener('click', async () => {
   setTimeout(() => { $('copy').textContent = 'Copy'; }, 1200);
 });
 
-// No PNG export for v1 (canvas layout is vertical-specific) — print-to-PDF only.
-$('printBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  print();
+// Result-panel actions — see index.html #result. The old `printBtn`/`saveBtn`
+// text links have been replaced with a 4-card action grid; the same underlying
+// behaviors live here.
+$('downloadBtn').addEventListener('click', () => print());
+$('shareBtn').addEventListener('click', () => {
+  const panel = $('sharePanel');
+  const open = panel.hidden;
+  panel.hidden = !open;
+  $('shareBtn').setAttribute('aria-expanded', String(open));
+});
+$('templateBtn').addEventListener('click', () => {
+  saveCurrentInvoiceAsTemplate().catch((err) => alert(`Couldn't save template: ${err.message}`));
 });
 
 $('editLinkCopy').addEventListener('click', async () => {
@@ -564,17 +572,25 @@ async function refreshSavedList() {
   listEl.replaceChildren();
   const fmtDate = (t) => new Date(t).toLocaleDateString();
   for (const row of rows) {
+    const isTemplate = row.status === 'template';
     const li = document.createElement('li');
-    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '');
-    const label = row.doc?.invoiceNumber || 'Untitled invoice';
-    const buyer = row.doc?.buyer?.name || 'No client';
-    const meta = `${buyer} · ${fmtDate(row.updatedAt)}`;
+    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '') + (isTemplate ? ' is-template' : '');
+    const label = row.doc?.invoiceNumber || (isTemplate ? 'Untitled template' : 'Untitled invoice');
+    const buyer = row.doc?.buyer?.name || (isTemplate ? '' : 'No client');
+    const meta = buyer ? `${buyer} · ${fmtDate(row.updatedAt)}` : fmtDate(row.updatedAt);
+    // Status pill: draft/sent/paid cycle for regular invoices; templates get
+    // a static "template" badge that opens the doc instead of cycling.
     const statusPill = document.createElement('button');
     statusPill.type = 'button';
     statusPill.className = `saved-status-pill status-${row.status || 'draft'}`;
     statusPill.textContent = row.status || 'draft';
-    statusPill.title = 'Click to cycle: draft → sent → paid';
-    statusPill.addEventListener('click', (e) => { e.stopPropagation(); cycleStatus(row.id); });
+    if (isTemplate) {
+      statusPill.title = 'Template — open it to start a new invoice from this style/business';
+      statusPill.disabled = true;
+    } else {
+      statusPill.title = 'Click to cycle: draft → sent → paid';
+      statusPill.addEventListener('click', (e) => { e.stopPropagation(); cycleStatus(row.id); });
+    }
     const openBtn = document.createElement('button');
     openBtn.type = 'button';
     openBtn.className = 'saved-open';
@@ -584,7 +600,9 @@ async function refreshSavedList() {
     span.className = 'linkmeta';
     span.textContent = meta;
     openBtn.append(strong, span);
-    openBtn.addEventListener('click', () => openSavedInvoice(row.id));
+    // Templates open as a fresh draft (currentSavedId=null so Save creates a
+    // new record). Regular invoices open in-place — Save overwrites.
+    openBtn.addEventListener('click', () => isTemplate ? openTemplateAsDraft(row.id) : openSavedInvoice(row.id));
     const dup = document.createElement('button');
     dup.type = 'button';
     dup.className = 'ghost saved-dup';
@@ -595,11 +613,33 @@ async function refreshSavedList() {
     del.type = 'button';
     del.className = 'ghost saved-del';
     del.textContent = 'Delete';
-    del.title = 'Delete this saved invoice';
+    del.title = isTemplate ? 'Delete this template' : 'Delete this saved invoice';
     del.addEventListener('click', () => deleteSavedInvoice(row.id, label));
     li.append(openBtn, statusPill, dup, del);
     listEl.append(li);
   }
+}
+
+/** Opens a saved template as a new draft — same underlying data load as
+ *  duplicateSavedInvoice but keeps the invoice number as-is (templates
+ *  shouldn't imply a specific number). Nulls currentSavedId so the next
+ *  Save creates a new record instead of overwriting the template. */
+async function openTemplateAsDraft(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromInvoice(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = null;
+  // Templates suggest the auto-tracked next number, since the stored number
+  // came from whichever concrete invoice seeded the template.
+  const suggested = await suggestNextInvoiceNumber();
+  if (suggested) $('fInvoiceNumber').value = suggested;
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  flashSaveStatus('Loaded from template — Save to keep');
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 const STATUS_CYCLE = ['draft', 'sent', 'paid'];
@@ -728,6 +768,22 @@ async function saveCurrentInvoice() {
   await persistDirectoryEntries(currentInvoice);
   await refreshDirectories();
   flashSaveStatus('Saved');
+  refreshSavedList();
+}
+
+/** Saves the current invoice as a template — a separate record with
+ *  status='template' so it doesn't clutter the draft/sent/paid list, and
+ *  isn't the "current" record either (so a follow-up Save doesn't overwrite
+ *  the template with a filled-in client's invoice). Opening a template later
+ *  loads it as a fresh draft. */
+async function saveCurrentInvoiceAsTemplate() {
+  if (!currentInvoice) return;
+  // Always creates a new record (id: null) — templates don't overwrite.
+  const record = { id: null, kind: 'invoice', status: 'template', doc: currentInvoice };
+  await put('invoices', record);
+  await persistDirectoryEntries(currentInvoice);
+  await refreshDirectories();
+  flashSaveStatus('Saved as template');
   refreshSavedList();
 }
 

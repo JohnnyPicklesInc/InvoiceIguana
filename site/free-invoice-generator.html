@@ -226,31 +226,62 @@ item,Consulting hours,10,150</pre>
         </details>
       </section>
 
+      <!-- The result panel — four primary actions in a card grid. Client and
+           edit links live inside the collapsible Share panel so they're not
+           the first thing a user sees. -->
       <div id="result" class="result" hidden>
-        <label for="link">Your invoice link</label>
-        <div class="linkrow">
-          <input id="link" type="text" readonly>
-          <button id="copy" type="button">Copy</button>
+        <p class="result-status">Your invoice is ready. <span id="saveStatus" class="saved-status" hidden></span></p>
+        <div class="action-grid">
+          <button id="saveBtn" type="button" class="action-btn">
+            <span class="action-ico">💾</span>
+            <span class="action-lbl">Save</span>
+            <span class="action-sub">In this browser</span>
+          </button>
+          <button id="shareBtn" type="button" class="action-btn" aria-expanded="false" aria-controls="sharePanel">
+            <span class="action-ico">🔗</span>
+            <span class="action-lbl">Share</span>
+            <span class="action-sub">Link, email, text</span>
+          </button>
+          <button id="downloadBtn" type="button" class="action-btn">
+            <span class="action-ico">📄</span>
+            <span class="action-lbl">Download</span>
+            <span class="action-sub">as PDF</span>
+          </button>
+          <button id="templateBtn" type="button" class="action-btn">
+            <span class="action-ico">📋</span>
+            <span class="action-lbl">Save as template</span>
+            <span class="action-sub">Reuse next time</span>
+          </button>
         </div>
-        <p class="linkmeta"><span id="charcount"></span> · <a id="open" href="#" target="_blank" rel="noopener">open it</a> · <a id="printBtn" href="#" role="button" title="Opens the browser print dialog — choose “Save as PDF” to download">print / save as PDF</a> · <a id="saveBtn" href="#" role="button" title="Saves this invoice to your browser only — nothing uploaded">save to this device</a> <span id="saveStatus" class="linkmeta saved-status" hidden></span></p>
-        <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
 
-        <p class="linkmeta share-row">Share:
-          <a id="shareEmail" href="#">Email</a> ·
-          <a id="shareSms" href="#">Text</a> ·
-          <a id="shareWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
-        </p>
-
-        <!-- Edit link: reopens this exact form (data + style) instead of the
-             read-only viewer, by pointing back at this same page. Reuses the
-             identical payload — see loadFromHash() in generator.js. -->
-        <div id="editLinkSection" class="durable">
-          <label for="editLinkInput">Edit link (reopens this form to keep tweaking)</label>
-          <div class="linkrow">
-            <input id="editLinkInput" type="text" readonly>
-            <button id="editLinkCopy" type="button">Copy</button>
-          </div>
-          <p class="linkmeta">Save this to pick up editing later, or use it as a starting template for a similar invoice.</p>
+        <!-- Share panel: revealed by clicking Share. Contains the quick share
+             buttons (Email / Text / WhatsApp), and both links (client-facing
+             + edit) tucked into a further sub-details so a first-time user
+             isn't confronted with two URL fields. -->
+        <div id="sharePanel" class="share-panel" hidden>
+          <p class="share-chips">
+            <a id="shareEmail" href="#" class="chip">✉️ Email</a>
+            <a id="shareSms" href="#" class="chip">💬 Text</a>
+            <a id="shareWhatsapp" href="#" target="_blank" rel="noopener" class="chip">💚 WhatsApp</a>
+            <a id="open" href="#" target="_blank" rel="noopener" class="chip">👁 Preview it</a>
+          </p>
+          <details class="share-links">
+            <summary>Or copy the raw link</summary>
+            <label for="link" class="linkmeta-strong">Client link — this IS the invoice</label>
+            <div class="linkrow">
+              <input id="link" type="text" readonly>
+              <button id="copy" type="button">Copy</button>
+            </div>
+            <p class="linkmeta"><span id="charcount"></span></p>
+            <p id="lengthWarning" class="warnings-inline" hidden>⚠ This link is very long and may break in some chat apps.</p>
+            <!-- Edit link: reopens this exact form (data + style) instead of the
+                 read-only viewer, by pointing back at this same page. -->
+            <label for="editLinkInput" class="linkmeta-strong">Edit link — reopens this form to keep tweaking</label>
+            <div class="linkrow">
+              <input id="editLinkInput" type="text" readonly>
+              <button id="editLinkCopy" type="button">Copy</button>
+            </div>
+          </details>
         </div>
       </div>
     </section>

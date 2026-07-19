@@ -505,10 +505,21 @@ async function refreshSavedList() {
   listEl.replaceChildren();
   const fmtDate = (t) => new Date(t).toLocaleDateString();
   for (const row of rows) {
+    const isTemplate = row.status === 'template';
     const li = document.createElement('li');
-    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '');
-    const label = row.doc?.reference || row.doc?.merchant || 'Untitled receipt';
+    li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '') + (isTemplate ? ' is-template' : '');
+    const label = row.doc?.reference || row.doc?.merchant || (isTemplate ? 'Untitled template' : 'Untitled receipt');
     const meta = `${row.doc?.merchant || 'No merchant'} · ${fmtDate(row.updatedAt)}`;
+    // Templates carry a static "template" pill; regular receipts show no
+    // pill (unlike invoices they have no status to cycle through).
+    const pill = document.createElement('span');
+    if (isTemplate) {
+      pill.className = 'saved-status-pill status-template';
+      pill.textContent = 'template';
+      pill.title = 'Template — open it to start a new receipt from this style/business';
+    } else {
+      pill.hidden = true;
+    }
     const openBtn = document.createElement('button');
     openBtn.type = 'button';
     openBtn.className = 'saved-open';
@@ -518,22 +529,53 @@ async function refreshSavedList() {
     span.className = 'linkmeta';
     span.textContent = meta;
     openBtn.append(strong, span);
-    openBtn.addEventListener('click', () => openSavedReceipt(row.id));
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.className = 'ghost saved-del';
-    del.textContent = 'Delete';
-    del.title = 'Delete this saved receipt';
-    del.addEventListener('click', () => deleteSavedReceipt(row.id, label));
+    openBtn.addEventListener('click', () => isTemplate ? openTemplateAsDraft(row.id) : openSavedReceipt(row.id));
     const dup = document.createElement('button');
     dup.type = 'button';
     dup.className = 'ghost saved-dup';
     dup.textContent = 'Duplicate';
     dup.title = 'Copy this receipt into a new draft';
     dup.addEventListener('click', () => duplicateSavedReceipt(row.id));
-    li.append(openBtn, dup, del);
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'ghost saved-del';
+    del.textContent = 'Delete';
+    del.title = isTemplate ? 'Delete this template' : 'Delete this saved receipt';
+    del.addEventListener('click', () => deleteSavedReceipt(row.id, label));
+    li.append(openBtn, pill, dup, del);
     listEl.append(li);
   }
+}
+
+/** Save the current receipt as a template — a status='template' record that
+ *  won't overwrite when the user later saves a real receipt built from it. */
+async function saveCurrentReceiptAsTemplate() {
+  if (!currentReceipt) return;
+  const record = { id: null, kind: 'receipt', status: 'template', doc: currentReceipt };
+  await put('invoices', record);
+  await persistMerchantEntry(currentReceipt);
+  await refreshDirectories();
+  flashSaveStatus('Saved as template');
+  refreshSavedList();
+}
+
+/** Open a template as a fresh draft — nulls currentSavedId so the next Save
+ *  creates a new record, leaving the template untouched. */
+async function openTemplateAsDraft(id) {
+  const row = await get('invoices', id);
+  if (!row?.doc) return;
+  fillFormFromReceipt(row.doc);
+  restoreStyleControls(row.doc);
+  currentSavedId = null;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  $('taxPreset').value = '';
+  applyTaxMode();
+  update();
+  refreshSavedList();
+  flashSaveStatus('Loaded from template — Save to keep');
+  document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function saveCurrentReceipt() {
@@ -714,9 +756,19 @@ $('restoreFile').addEventListener('change', () => {
   if (file) importBackupFile(file);
   $('restoreFile').value = '';
 });
-$('printBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  print();
+// Result-panel actions — the old text-link row (`printBtn` / `saveBtn`) has
+// been replaced with a 4-card action grid; the same underlying behaviors
+// live here. `pngBtn` is a secondary link below the grid, kept for the
+// receipt-specific PNG export.
+$('downloadBtn').addEventListener('click', () => print());
+$('shareBtn').addEventListener('click', () => {
+  const panel = $('sharePanel');
+  const open = panel.hidden;
+  panel.hidden = !open;
+  $('shareBtn').setAttribute('aria-expanded', String(open));
+});
+$('templateBtn').addEventListener('click', () => {
+  saveCurrentReceiptAsTemplate().catch((err) => alert(`Couldn't save template: ${err.message}`));
 });
 
 // ---- boot ---------------------------------------------------------------------------
