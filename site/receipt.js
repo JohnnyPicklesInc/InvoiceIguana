@@ -500,8 +500,21 @@ async function refreshSavedList() {
     return;
   }
   const listEl = $('savedList');
+  // Count reflects total saved (unfiltered); filter only affects display.
   $('savedCount').textContent = String(rows.length);
   $('savedPanel').hidden = rows.length === 0;
+  const filter = ($('savedFilter').value || '').trim().toLowerCase();
+  if (filter) {
+    rows = rows.filter((r) => {
+      const parts = [
+        r.doc?.reference,
+        r.doc?.merchant,
+        r.status === 'template' ? 'template' : '',
+      ].filter(Boolean).join(' ').toLowerCase();
+      return parts.includes(filter);
+    });
+  }
+  $('savedEmpty').hidden = !(filter && rows.length === 0);
   listEl.replaceChildren();
   const fmtDate = (t) => new Date(t).toLocaleDateString();
   for (const row of rows) {
@@ -756,6 +769,7 @@ $('restoreFile').addEventListener('change', () => {
   if (file) importBackupFile(file);
   $('restoreFile').value = '';
 });
+$('savedFilter').addEventListener('input', () => refreshSavedList());
 // Result-panel actions — the old text-link row (`printBtn` / `saveBtn`) has
 // been replaced with a 4-card action grid; the same underlying behaviors
 // live here. `pngBtn` is a secondary link below the grid, kept for the

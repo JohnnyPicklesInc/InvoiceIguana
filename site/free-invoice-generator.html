@@ -62,7 +62,9 @@
       <details>
         <summary>Saved on this device — <span id="savedCount">0</span></summary>
         <p class="linkmeta">Saved invoices live in this browser only, not on any server. Use "Download backup" below to move them to another device or keep a copy.</p>
+        <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by invoice #, client, or status…" aria-label="Filter saved invoices">
         <ul id="savedList" class="saved-list"></ul>
+        <p id="savedEmpty" class="linkmeta saved-empty" hidden>No matches.</p>
         <p class="linkmeta saved-actions">
           <button id="newInvoiceBtn" type="button" class="ghost">New blank invoice</button>
           <button id="backupBtn" type="button" class="ghost">Download backup</button>

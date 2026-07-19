@@ -567,8 +567,24 @@ async function refreshSavedList() {
     return;
   }
   const listEl = $('savedList');
+  // Count reflects total saved (unfiltered) — the filter only affects what's
+  // shown, so a user searching for "acme" still sees "Saved on this device — 12"
+  // instead of "Saved on this device — 2".
   $('savedCount').textContent = String(rows.length);
   $('savedPanel').hidden = rows.length === 0;
+  const filter = ($('savedFilter').value || '').trim().toLowerCase();
+  if (filter) {
+    rows = rows.filter((r) => {
+      const parts = [
+        r.doc?.invoiceNumber,
+        r.doc?.buyer?.name,
+        r.doc?.seller?.name,
+        r.status,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return parts.includes(filter);
+    });
+  }
+  $('savedEmpty').hidden = !(filter && rows.length === 0);
   listEl.replaceChildren();
   const fmtDate = (t) => new Date(t).toLocaleDateString();
   for (const row of rows) {
@@ -957,6 +973,7 @@ $('restoreFile').addEventListener('change', () => {
   if (file) importBackupFile(file);
   $('restoreFile').value = '';
 });
+$('savedFilter').addEventListener('input', () => refreshSavedList());
 
 // ---- boot ---------------------------------------------------------------------------
 

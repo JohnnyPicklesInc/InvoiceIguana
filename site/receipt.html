@@ -50,7 +50,9 @@
       <details>
         <summary>Saved on this device — <span id="savedCount">0</span></summary>
         <p class="linkmeta">Saved receipts live in this browser only, not on any server. Use "Download backup" below to move them to another device or keep a copy.</p>
+        <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by reference, merchant, or date…" aria-label="Filter saved receipts">
         <ul id="savedList" class="saved-list"></ul>
+        <p id="savedEmpty" class="linkmeta saved-empty" hidden>No matches.</p>
         <p class="linkmeta saved-actions">
           <button id="newInvoiceBtn" type="button" class="ghost">New blank receipt</button>
           <button id="backupBtn" type="button" class="ghost">Download backup</button>

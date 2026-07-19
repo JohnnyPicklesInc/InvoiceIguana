@@ -363,6 +363,19 @@ input[type="checkbox"] { accent-color: var(--brand); }
   user-select: none;
 }
 .saved-panel summary::marker, .saved-panel summary::-webkit-details-marker { color: var(--muted); }
+.saved-filter {
+  width: 100%;
+  margin: 0.55rem 0 0.15rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.saved-filter:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent); }
+.saved-empty { text-align: center; padding: 0.5rem 0 0; font-style: italic; }
 .saved-list {
   list-style: none;
   padding: 0;
