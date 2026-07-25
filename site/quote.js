@@ -1,13 +1,13 @@
 /**
- * InvoiceIguana generator page. Mirrors site/generator.js's structure for the
+ * InvoiceIguana quote generator page (clone of generator.js). Mirrors site/generator.js's structure for the
  * invoice shape. Everything happens locally in this tab: form (or uploaded
  * file) -> validate -> live preview -> encode into the link. No network
  * calls; the invoice never leaves the browser.
  */
 import { parseInvoice } from './shared/invoice-parse.js';
-import { encodeInvoice, decodeInvoice } from './shared/invoice-codec.js';
+import { encodeQuote, decodeQuote } from './shared/quote-codec.js';
 import { fromMinor } from './shared/codec.js';
-import { renderInvoiceInto } from './shared/invoice-render.js';
+import { renderQuoteInto } from './shared/quote-render.js';
 import { money as fmtMoney } from './shared/render.js';
 import { renderQrInto } from './shared/qr.js';
 import { TEMPLATES } from './shared/invoice-templates.js';
@@ -108,8 +108,6 @@ function rawFromForm() {
   if (val('fCurrency')) raw.currency = val('fCurrency');
   if (val('fDiscount')) raw.discount = val('fDiscount');
   if (val('fTax')) raw.tax = val('fTax');
-  if (val('fPaymentInstructions')) raw.paymentinstructions = val('fPaymentInstructions');
-  if (val('fPaymentUrl')) raw.paymenturl = val('fPaymentUrl');
   if (val('fNotes')) raw.notes = val('fNotes');
   for (const row of $('itemRows').children) {
     const name = row.querySelector('.i-name').value.trim();
@@ -143,8 +141,6 @@ function fillFormFromInvoice(inv) {
   selectCurrency(inv.currency);
   $('fDiscount').value = inv.discountMinor != null ? String(fromMinor(inv.discountMinor, inv.currency)) : '';
   $('fTax').value = inv.taxMinor != null ? String(fromMinor(inv.taxMinor, inv.currency)) : '';
-  $('fPaymentInstructions').value = inv.paymentInstructions ?? '';
-  $('fPaymentUrl').value = inv.paymentUrl ?? '';
   $('fNotes').value = inv.notes ?? '';
   $('fLogoUrl').value = inv.logoUrl ?? '';
   $('itemRows').replaceChildren();
@@ -189,7 +185,7 @@ async function loadFromHash() {
   const payload = location.hash.slice(1);
   if (!payload) return false;
   try {
-    const invoice = await decodeInvoice(payload);
+    const invoice = await decodeQuote(payload);
     fillFormFromInvoice(invoice);
     restoreStyleControls(invoice);
     return true;
@@ -418,7 +414,7 @@ function setSavedStatus() {
  *  reminder to download a backup once there are several saved invoices. */
 async function updateSafetyBanners(count) {
   if (count == null) {
-    try { count = (await list('invoices')).filter((r) => r.kind === 'invoice').length; } catch { count = 0; }
+    try { count = (await list('invoices')).filter((r) => r.kind === 'quote').length; } catch { count = 0; }
   }
   const mkBackupBtn = (label) => {
     const b = document.createElement('button');
@@ -495,7 +491,7 @@ async function update() {
   // The live preview always reflects the form — nothing is required to see it.
   if (invoice) {
     Object.assign(invoice, styleFromControls());
-    renderInvoiceInto($('preview'), invoice);
+    renderQuoteInto($('preview'), invoice);
   }
   const qrEl = $('preview').querySelector('[data-f="qr"]');
 
@@ -508,7 +504,7 @@ async function update() {
     return;
   }
 
-  const payload = await encodeInvoice(invoice);
+  const payload = await encodeQuote(invoice);
   // The shared link always points at the durable GitHub Pages host, so it
   // survives our own hosting going away (see shared/durable-link.js). The edit
   // link stays on the current host so in-place editing works wherever you are.
@@ -692,7 +688,7 @@ async function refreshSavedList() {
     // The 'invoices' store holds every doc kind (invoice/receipt/quote); this
     // page only lists invoices.
     const all = await list('invoices', { index: 'updatedAt', direction: 'prev' });
-    rows = all.filter((r) => r.kind === 'invoice');
+    rows = all.filter((r) => r.kind === 'quote');
   } catch {
     // IndexedDB unavailable (e.g. private-window edge cases) — hide the panel
     // and keep the generator working in its original URL-only mode.
@@ -937,7 +933,7 @@ async function saveCurrentInvoice() {
     const existing = await get('invoices', currentSavedId);
     if (existing?.status) status = existing.status;
   }
-  const record = { id: currentSavedId, kind: 'invoice', status, doc: currentInvoice };
+  const record = { id: currentSavedId, kind: 'quote', status, doc: currentInvoice };
   const saved = await put('invoices', record);
   currentSavedId = saved.id;
   await recordNextInvoiceNumber(currentInvoice.invoiceNumber);
@@ -955,7 +951,7 @@ async function saveCurrentInvoice() {
 async function saveCurrentInvoiceAsTemplate() {
   if (!currentInvoice) return;
   // Always creates a new record (id: null) — templates don't overwrite.
-  const record = { id: null, kind: 'invoice', status: 'template', doc: currentInvoice };
+  const record = { id: null, kind: 'quote', status: 'template', doc: currentInvoice };
   await put('invoices', record);
   await persistDirectoryEntries(currentInvoice);
   await refreshDirectories();
@@ -981,11 +977,11 @@ function formatInvoiceNumber({ prefix, num, padLen }) {
 async function recordNextInvoiceNumber(current) {
   const parsed = parseInvoiceNumber(current);
   if (!parsed) return;
-  await setMeta('nextInvoiceNumber', { ...parsed, num: parsed.num + 1 });
+  await setMeta('nextQuoteNumber', { ...parsed, num: parsed.num + 1 });
 }
 
 async function suggestNextInvoiceNumber() {
-  const next = await getMeta('nextInvoiceNumber');
+  const next = await getMeta('nextQuoteNumber');
   return next ? formatInvoiceNumber(next) : '';
 }
 

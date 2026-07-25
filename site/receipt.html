@@ -11,11 +11,11 @@
   <meta property="og:url" content="https://invoiceiguana.com/receipt">
   <meta property="og:title" content="Free Receipt Maker — No Signup, No Watermark">
   <meta property="og:description" content="Make a clean, professional receipt online for free. Save businesses to reuse, download as PDF or PNG, and share via link — no signup, no watermark.">
-  <meta property="og:image" content="https://invoiceiguana.com/icons/icon512.png">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Free Receipt Maker — No Signup, No Watermark">
   <meta name="twitter:description" content="Make a clean, professional receipt online for free. Save businesses to reuse, download as PDF or PNG.">
-  <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
+  <meta name="twitter:image" content="https://invoiceiguana.com/og-image.png">
   <meta name="theme-color" content="#12a06a">
   <link rel="icon" href="icons/icon48.png">
   <link rel="apple-touch-icon" href="icons/icon192.png">
@@ -23,7 +23,12 @@
   <link rel="stylesheet" href="shared/receipt.css">
   <link rel="stylesheet" href="shared/templates.css">
   <link rel="stylesheet" href="generator.css">
+  <link rel="manifest" href="manifest.webmanifest">
   <script type="module" src="receipt.js"></script>
+  <script type="module" src="register-sw.js"></script>
+  <!-- Cloudflare Web Analytics (cookieless, privacy-friendly). Replace the token
+       with your zone token from the Cloudflare dashboard to activate. -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
 </head>
 <body>
   <header class="site-header">
@@ -33,6 +38,7 @@
         <select id="docTypeNav">
           <option value="/free-invoice-generator">Invoice</option>
           <option value="/receipt" selected>Receipt</option>
+          <option value="/quote">Quote</option>
         </select>
       </label>
       <a href="/">How it works</a>
@@ -47,19 +53,25 @@
 
   <main>
     <section id="savedPanel" class="saved-panel" hidden>
-      <details>
-        <summary>Saved on this device — <span id="savedCount">0</span></summary>
-        <p class="linkmeta">Saved receipts live in this browser only, not on any server. Use "Download backup" below to move them to another device or keep a copy.</p>
-        <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by reference, merchant, or date…" aria-label="Filter saved receipts">
-        <ul id="savedList" class="saved-list"></ul>
-        <p id="savedEmpty" class="linkmeta saved-empty" hidden>No matches.</p>
-        <p class="linkmeta saved-actions">
-          <button id="newInvoiceBtn" type="button" class="ghost">New blank receipt</button>
-          <button id="backupBtn" type="button" class="ghost">Download backup</button>
-          <button id="restoreBtn" type="button" class="ghost">Import backup</button>
+      <div class="saved-head">
+        <div class="saved-title">
+          <strong>Your receipts</strong>
+          <span id="savedCount" class="saved-count">0</span>
+          <span id="autosaveStatus" class="autosave-status" hidden></span>
+        </div>
+        <div class="saved-actions">
+          <button id="newInvoiceBtn" type="button" class="ghost">+ New receipt</button>
+          <button id="backupBtn" type="button" class="ghost">↓ Backup</button>
+          <button id="restoreBtn" type="button" class="ghost">Import</button>
           <input id="restoreFile" type="file" accept="application/json,.json" hidden>
-        </p>
-      </details>
+        </div>
+      </div>
+      <p id="savedIntro" class="linkmeta saved-intro">Receipts you make are saved automatically <strong>in this browser</strong> — no account, and nothing is sent to a server. They stay on this device; use <b>Backup</b> to keep a copy or move them elsewhere.</p>
+      <p id="durabilityWarn" class="saved-banner saved-banner-warn" hidden></p>
+      <p id="backupReminder" class="saved-banner" hidden></p>
+      <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by reference, merchant, or date…" aria-label="Filter saved receipts" hidden>
+      <ul id="savedList" class="saved-list"></ul>
+      <p id="savedEmpty" class="linkmeta saved-empty" hidden>No matches.</p>
     </section>
 
     <section class="editor">
@@ -166,10 +178,10 @@ item,Coffee,2,3.50</pre>
       <div id="result" class="result" hidden>
         <p class="result-status">Your receipt is ready. <span id="saveStatus" class="saved-status" hidden></span></p>
         <div class="action-grid">
-          <button id="saveBtn" type="button" class="action-btn">
-            <span class="action-ico">💾</span>
-            <span class="action-lbl">Save</span>
-            <span class="action-sub">In this browser</span>
+          <button id="myReceiptsBtn" type="button" class="action-btn">
+            <span class="action-ico">📁</span>
+            <span class="action-lbl">My receipts</span>
+            <span class="action-sub">Saved in this browser</span>
           </button>
           <button id="shareBtn" type="button" class="action-btn" aria-expanded="false" aria-controls="sharePanel">
             <span class="action-ico">🔗</span>

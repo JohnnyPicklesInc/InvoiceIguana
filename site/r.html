@@ -13,7 +13,12 @@
   <link rel="stylesheet" href="shared/templates.css">
   <link rel="stylesheet" href="shared/invoice.css">
   <link rel="stylesheet" href="viewer.css">
+  <link rel="manifest" href="manifest.webmanifest">
   <script type="module" src="viewer.js"></script>
+  <script type="module" src="register-sw.js"></script>
+  <!-- Cloudflare Web Analytics (cookieless, privacy-friendly). Replace the token
+       with your zone token from the Cloudflare dashboard to activate. -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
 </head>
 <body>
   <div class="stage">
@@ -103,7 +108,49 @@
       <p class="brand">made with InvoiceIguana 🦎 — this invoice lives entirely in the link</p>
     </main>
 
+    <main id="quote" class="invoice" hidden>
+      <header>
+        <div class="invoice-brand">
+          <img data-f="logoImg" class="logo-img" hidden alt="">
+          <p data-f="logo" class="logo" hidden></p>
+          <h1 data-f="sellerName"></h1>
+          <p data-f="sellerAddress" hidden></p>
+          <p data-f="sellerContact" hidden></p>
+        </div>
+        <div class="invoice-meta">
+          <h2>Quote</h2>
+          <p data-f="invoiceNumber" hidden></p>
+          <p data-f="issueDate" hidden></p>
+          <p data-f="dueDate" hidden></p>
+        </div>
+      </header>
+
+      <div class="bill-to">
+        <p class="label">Prepared for</p>
+        <p data-f="buyerName" hidden></p>
+        <p data-f="buyerAddress" hidden></p>
+        <p data-f="buyerContact" hidden></p>
+      </div>
+
+      <table class="items-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+        <tbody data-f="items"></tbody>
+      </table>
+
+      <dl class="totals">
+        <div><dt>Subtotal</dt><dd data-f="subtotal"></dd></div>
+        <div data-f="discountRow" hidden><dt>Discount</dt><dd data-f="discount"></dd></div>
+        <div data-f="taxRow" hidden><dt data-f="taxLabel">Tax</dt><dd data-f="tax"></dd></div>
+        <div class="grand"><dt>Total</dt><dd data-f="total"></dd></div>
+      </dl>
+
+      <p data-f="notes" class="notes" hidden></p>
+      <div data-f="qr" class="qrbox" hidden></div>
+      <p class="brand">made with InvoiceIguana 🦎 — this quote lives entirely in the link</p>
+    </main>
+
     <div id="actions" class="actions" hidden>
+      <a id="acceptQuote" href="#" hidden>✓ Accept this quote</a>
       <button id="downloadPng" type="button">Download PNG</button>
       <button id="printBtn" type="button">Print / Save as PDF</button>
       <a id="shareEmail" href="#">Email</a>

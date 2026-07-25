@@ -165,11 +165,15 @@ function normalize(raw, errors, warnings, lenient = false) {
         sink.push(`${where}: item price is not a number (got "${it.price}")`);
       }
       const discount = itemDiscount(it, currency, where, sink);
+      // Unit is display-only ("hrs", "days", "each") — trimmed, capped, dropped
+      // silently if too long rather than failing the whole invoice.
+      const rawUnit = typeof it.unit === 'string' ? it.unit.trim() : '';
+      const unit = rawUnit && rawUnit.length <= 8 ? rawUnit : null;
       if (lenient) {
         // Show the row as it's being typed, filling gaps with neutral defaults.
-        items.push({ name: name || 'Item', qty: qtyOk ? qty : 1, priceMinor: priceMinor ?? 0, discount });
+        items.push({ name: name || 'Item', qty: qtyOk ? qty : 1, priceMinor: priceMinor ?? 0, discount, unit });
       } else if (name && priceMinor != null && qtyOk) {
-        items.push({ name, qty, priceMinor, discount });
+        items.push({ name, qty, priceMinor, discount, unit });
       }
     });
   }

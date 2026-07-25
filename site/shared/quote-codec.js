@@ -1,11 +1,11 @@
 /**
- * InvoiceIguana codec — mirrors shared/codec.js's structure for the invoice
+ * Quote codec — mirrors shared/codec.js's structure for the invoice
  * document shape. Built on the generic payload framing, compression,
  * base64url, and money helpers in shared/wire.js (the same primitives the
  * receipt codec uses).
  *
- * encodeInvoice(normalized) -> "1i" + base64url(deflateRaw(utf8(compactJSON)))
- * decodeInvoice(payload)    -> normalized invoice object
+ * encodeQuote(normalized) -> "1i" + base64url(deflateRaw(utf8(compactJSON)))
+ * decodeQuote(payload)    -> normalized invoice object
  *
  * Normalized invoice shape (all money in integer minor units, e.g. cents):
  *   { seller: {name, address, contact}, buyer: {name, address, contact},
@@ -41,7 +41,7 @@ import {
   ACCENT_RE, isHttpsUrl, asLogoData, payloadHeader,
 } from './wire.js';
 
-export const DOC_INVOICE = 'i';
+export const DOC_QUOTE = 'q';
 
 const DEFAULT_CURRENCY = 'USD';
 
@@ -133,7 +133,7 @@ function styleFromCompact(c) {
 
 function fromCompact(c) {
   if (typeof c !== 'object' || c === null || Array.isArray(c)) {
-    throw new BadPayload('Payload is not an invoice object');
+    throw new BadPayload('Payload is not a quote object');
   }
   // Seller name and items are optional (see toCompact), but a present value of
   // the wrong type is still corruption and fails closed rather than being
@@ -197,16 +197,16 @@ function fromCompact(c) {
 
 // ---- public API --------------------------------------------------------------
 
-export async function encodeInvoice(normalized) {
+export async function encodeQuote(normalized) {
   const json = JSON.stringify(toCompact(normalized));
   const packed = await deflateRaw(encoder.encode(json));
-  return VERSION + DOC_INVOICE + b64u(packed);
+  return VERSION + DOC_QUOTE + b64u(packed);
 }
 
-export async function decodeInvoice(payload) {
+export async function decodeQuote(payload) {
   const { docType, body } = payloadHeader(payload);
-  if (docType !== DOC_INVOICE) {
-    throw new BadPayload(`Not an invoice payload (doc type "${docType}")`);
+  if (docType !== DOC_QUOTE) {
+    throw new BadPayload(`Not a quote payload (doc type "${docType}")`);
   }
   let json;
   try {
@@ -218,7 +218,7 @@ export async function decodeInvoice(payload) {
   try {
     compact = JSON.parse(json);
   } catch {
-    throw new BadPayload('Payload does not contain valid invoice data');
+    throw new BadPayload('Payload does not contain valid quote data');
   }
   return fromCompact(compact);
 }

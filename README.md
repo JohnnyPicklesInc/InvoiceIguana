@@ -1,20 +1,29 @@
 # 🦎 InvoiceIguana
 
-A free invoice (and receipt) maker where **the whole document lives in the URL**. Type
-it in (or upload JSON/CSV), share the link — no signup, no watermark, no server
+A free invoice / receipt / quote maker where **the whole document lives in the URL**.
+Type it in (or upload JSON/CSV), share the link — no signup, no watermark, no server
 storage, no database. The link *is* the document.
 
-- **Invoice generator** (`/`): a web page — form editor with live preview, or JSON/CSV
-  upload. Works on phones. Pick an accent color, logo, QR code; print/save as PDF.
+- **Landing page** (`/`, `index.html`): marketing/SEO page that links to the generators.
+- **Invoice generator** (`/free-invoice-generator`, `free-invoice-generator.html` +
+  `generator.js`): form editor with live preview, or JSON/CSV upload. Works on phones.
+  Pick a template, accent color, logo, QR code; per-line discounts; print/save as PDF.
 - **Receipt generator** (`/receipt`): the same idea for receipts — thermal-style
   templates, tax presets, PNG export.
+- **Quote generator** (`/quote`): invoice minus payment-due, plus a "valid until" date,
+  "prepared for" framing, and an **Accept this quote** mailto button on the viewer.
 - **Viewer** (`/r#<payload>`): decodes the URL hash fragment and renders whichever
-  document type the link contains in the recipient's browser. The fragment is never
-  sent to any server.
+  document type the link contains (`r` receipt, `i` invoice, `q` quote) in the
+  recipient's browser. The fragment is never sent to any server.
+- **Local save** (`shared/db.js`): each generator **auto-saves** your documents to this
+  browser (IndexedDB) with a saved list, saved clients/businesses/products for
+  autocomplete, and one-click backup export/import. Nothing is uploaded; it requests
+  persistent storage and warns when a browser might evict it (e.g. private mode).
+- **Offline / installable**: a service worker (`sw.js`) precaches the app shell, so every
+  generator and the viewer work with no connection; the web manifest makes it installable.
 - **Edit link**: the result panel also shows an edit link — the same payload, but
-  pointing back at the generator (`/#<payload>` or `/receipt#<payload>`) instead of the
-  viewer. Opening it reloads the whole form, style choices included, so you can pick up
-  editing later or start a new document from an existing one as a template.
+  pointing back at the generator (e.g. `/free-invoice-generator#<payload>`) instead of the
+  viewer. Opening it reloads the whole form, style choices included.
 - **Chrome extension** (`extension/`): an optional thin shortcut that opens the web app.
 
 ## How a link works
@@ -98,15 +107,27 @@ Samples are in [samples/](samples/).
 ## Repo layout
 
 ```
-site/          the whole app (Cloudflare Pages root; 100% static)
-  index.html   invoice generator/landing page (form editor + upload)
-  receipt.html receipt generator page
-  r.html       viewer (invoice and receipt links both resolve here)
-  shared/      codec, parser, renderer, templates, QR, PNG/print export
+site/                          the whole app (Cloudflare Pages root; 100% static)
+  index.html                   landing / SEO page (links to the generators)
+  free-invoice-generator.html  invoice generator  (+ generator.js, generator.css)
+  receipt.html                 receipt generator   (+ receipt.js)
+  quote.html                   quote/estimate generator (+ quote.js)
+  r.html                       viewer (receipt/invoice/quote links all resolve here)
+  privacy.html  404.html       privacy page, themed 404
+  theme.css                    shared design tokens + page chrome (dark mode)
+  sw.js  register-sw.js        service worker (offline) + its registration
+  ads.js                       first-party ad slot (marketing pages only)
+  manifest.webmanifest         PWA manifest
+  shared/      codec/parser/renderer per doc type (invoice-*, quote-*, receipt via
+               codec.js/parse.js/render.js), db.js (IndexedDB save), line-math,
+               templates, currencies, QR, logo embed, PNG/print export, wire.js
 extension/     optional Chrome MV3 shortcut that opens the site
 scripts/       selftest.mjs, make-icons.mjs
 samples/       example documents used by the selftest
 ```
+
+To turn on privacy-friendly analytics, replace `REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN`
+in each page's Cloudflare Web Analytics beacon with your zone token.
 
 `site/shared/qrcodegen.js` is vendored from
 [Nayuki's QR Code generator](https://www.nayuki.io/page/qr-code-generator-library)
@@ -121,7 +142,13 @@ npm run selftest         # round-trip tests, Node 18+, no deps, no network
 npm run dev              # serve the site at http://localhost:8788
 node scripts/selftest.mjs --print-sample-url   # a ready-to-open sample link
 npm run icons            # regenerate the icons (site + extension)
+npm run og               # render the 1200x630 social image -> site/og-image.png
 ```
+
+`npm run og` rasterizes `scripts/og-image.html` into `site/og-image.png` (the image
+the pages reference in their Open Graph / Twitter tags) using a local headless Chrome —
+set `CHROME_PATH` if the browser isn't in a standard location. Re-run it after editing
+the template.
 
 ## Deploy
 

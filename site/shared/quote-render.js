@@ -1,5 +1,5 @@
 /**
- * Shared invoice renderer — fills an .invoice DOM subtree (see the markup in
+ * Shared quote renderer — fills an .invoice DOM subtree (see the markup in
  * site/r.html and site/invoice.html) from a normalized invoice. Used by both
  * the viewer page and the generator's live preview so they can never drift
  * apart — same pattern as shared/render.js for receipts.
@@ -36,7 +36,7 @@ function applyInvoiceLayout(root, inv) {
   }
 }
 
-export function renderInvoiceInto(root, inv) {
+export function renderQuoteInto(root, inv) {
   const $ = (f) => root.querySelector(`[data-f="${f}"]`);
 
   const setOptional = (f, value) => {
@@ -56,9 +56,9 @@ export function renderInvoiceInto(root, inv) {
   setOptional('buyerAddress', inv.buyer?.address ?? null);
   setOptional('buyerContact', inv.buyer?.contact ?? null);
 
-  setOptional('invoiceNumber', inv.invoiceNumber ? `Invoice #${inv.invoiceNumber}` : null);
+  setOptional('invoiceNumber', inv.invoiceNumber ? `Quote #${inv.invoiceNumber}` : null);
   setOptional('issueDate', inv.issueDate ? `Issued: ${inv.issueDate}` : null);
-  setOptional('dueDate', inv.dueDate ? `Due: ${inv.dueDate}` : null);
+  setOptional('dueDate', inv.dueDate ? `Valid until: ${inv.dueDate}` : null);
 
   const tbody = $('items');
   tbody.replaceChildren();
@@ -106,20 +106,9 @@ export function renderInvoiceInto(root, inv) {
   if (inv.taxMinor) $('tax').textContent = money(inv.taxMinor, inv.currency);
   $('total').textContent = money(inv.totalMinor, inv.currency);
 
-  $('paymentRow').hidden = inv.paymentInstructions == null;
-  setOptional('paymentInstructions', inv.paymentInstructions);
-  // "Pay this invoice" button — only rendered when the URL is a valid HTTPS
-  // URL (the codec's isHttpsUrl gate). Never innerHTML the URL; use the anchor
-  // href, which the browser validates and escapes.
-  const payBtn = $('payButton');
-  if (payBtn) {
-    if (inv.paymentUrl) {
-      payBtn.href = inv.paymentUrl;
-      payBtn.hidden = false;
-    } else {
-      payBtn.removeAttribute('href');
-      payBtn.hidden = true;
-    }
-  }
+  // Quotes carry no payment instructions or pay button (those are invoice-only);
+  // guard the optional fields in case the shared markup still includes them.
+  const paymentRow = $('paymentRow');
+  if (paymentRow) paymentRow.hidden = true;
   setOptional('notes', inv.notes);
 }

@@ -316,6 +316,37 @@ a:hover { text-decoration: underline; }
 .faq details p { margin: 0 0 0.9rem; color: var(--muted); }
 
 .section-cta { text-align: center; margin: 2.6rem 0 1rem; }
+.text-center { text-align: center; }
+
+/* First-party ad slot (marketing pages only — see ads.js). Hidden until filled. */
+.ad-slot { max-width: 640px; margin: 1.6rem auto; padding: 0 1rem; }
+.ad-slot:empty { display: none; }
+.ad {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.85rem 1.1rem;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.ad:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); text-decoration: none; }
+.ad-label {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+.ad-text { flex: 1; font-size: 0.9rem; }
+.ad-cta { flex-shrink: 0; color: var(--brand-ink); font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+@media (prefers-color-scheme: dark) { .ad-cta { color: var(--brand); } }
 
 /* ---- site footer ---------------------------------------------------------- */
 

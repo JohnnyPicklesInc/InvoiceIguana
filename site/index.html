@@ -11,15 +11,19 @@
   <meta property="og:url" content="https://invoiceiguana.com/">
   <meta property="og:title" content="InvoiceIguana — Free invoice &amp; receipt generator, no signup">
   <meta property="og:description" content="Free invoice and receipt generator. Save clients to reuse, download PDFs, share as a link — all in your browser. No signup, no watermark, nothing uploaded.">
-  <meta property="og:image" content="https://invoiceiguana.com/icons/icon512.png">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="InvoiceIguana — Free invoice &amp; receipt generator, no signup">
   <meta name="twitter:description" content="Free invoice and receipt generator. Save clients to reuse, download PDFs, share as a link — no signup, works on your phone.">
-  <meta name="twitter:image" content="https://invoiceiguana.com/icons/icon512.png">
+  <meta name="twitter:image" content="https://invoiceiguana.com/og-image.png">
   <meta name="theme-color" content="#12a06a">
   <link rel="icon" href="icons/icon48.png">
   <link rel="apple-touch-icon" href="icons/icon192.png">
   <link rel="manifest" href="manifest.webmanifest">
+  <script type="module" src="register-sw.js"></script>
+  <!-- Cloudflare Web Analytics (cookieless, privacy-friendly). Replace the token
+       with your zone token from the Cloudflare dashboard to activate. -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
   <link rel="stylesheet" href="theme.css">
   <script type="application/ld+json">
   {
@@ -168,6 +172,8 @@
       </div>
     </section>
 
+    <div class="ad-slot"></div>
+
     <section id="faq">
       <h2>Frequently asked questions</h2>
       <div class="faq">
@@ -246,5 +252,6 @@
     <p class="footer-legal">Saved invoices live in your browser, not on any server. Share via
        link or download as PDF — no signup, ever.</p>
   </footer>
+  <script type="module" src="ads.js"></script>
 </body>
 </html>

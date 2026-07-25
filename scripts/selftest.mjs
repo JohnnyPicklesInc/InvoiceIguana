@@ -19,6 +19,7 @@ import { parseReceipt, splitCsvLine } from '../site/shared/parse.js';
 import { TEMPLATES } from '../site/shared/templates.js';
 import { TEMPLATES as INVOICE_TEMPLATES } from '../site/shared/invoice-templates.js';
 import { encodeInvoice, decodeInvoice, DOC_INVOICE } from '../site/shared/invoice-codec.js';
+import { encodeQuote, decodeQuote, DOC_QUOTE } from '../site/shared/quote-codec.js';
 import { parseInvoice } from '../site/shared/invoice-parse.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -401,7 +402,7 @@ await test('invoice: lenient mode requires nothing and coerces partial items', (
     'json', { lenient: true },
   ).invoice;
   strictEqual(partial.items.length, 2);
-  deepStrictEqual(partial.items[0], { name: 'Design work', qty: 1, priceMinor: 0, discount: null });
+  deepStrictEqual(partial.items[0], { name: 'Design work', qty: 1, priceMinor: 0, discount: null, unit: null });
   strictEqual(partial.items[1].name, 'Item');
   strictEqual(partial.items[1].priceMinor, 0);
 
@@ -466,6 +467,48 @@ await test('invoice: per-line discounts (% and flat) apply to the line and round
   // A corrupt line-discount tuple fails closed.
   await expectThrow(
     decodeInvoice(await forgeInvoice({ m: 'M', i: [['a', 1, 100, [5, 10]]], s: 100, t: 100 })),
+    BadPayload,
+  );
+});
+
+await test('invoice: line item unit ("hrs", "days"...) round-trips + old-link back-compat', async () => {
+  // Full parse -> encode -> decode round-trip with units on some items but not
+  // all — a mixed shape catches "did we always emit unit?" bugs.
+  const { invoice, errors } = parseInvoice(JSON.stringify({
+    seller: 'Acme',
+    items: [
+      { name: 'Consulting', qty: 10, price: '150', unit: 'hrs' },
+      { name: 'Retainer',   qty: 1,  price: '2000' },
+      { name: 'Storage',    qty: 3,  price: '20', discount: '10', discounttype: 'percent', unit: 'mo' },
+    ],
+  }), 'json');
+  deepStrictEqual(errors, []);
+  strictEqual(invoice.items[0].unit, 'hrs');
+  strictEqual(invoice.items[1].unit, null);
+  strictEqual(invoice.items[2].unit, 'mo');
+  deepStrictEqual(await decodeInvoice(await encodeInvoice(invoice)), invoice);
+
+  // Legacy 3-elem tuple (no discount, no unit) still decodes → both null.
+  const legacy = await decodeInvoice(await forgeInvoice({ m: 'M', i: [['a', 1, 100]], s: 100, t: 100 }));
+  strictEqual(legacy.items[0].unit, null);
+  strictEqual(legacy.items[0].discount, null);
+
+  // Legacy 4-elem tuple (discount, no unit) still decodes → unit null.
+  const legacy4 = await decodeInvoice(await forgeInvoice({
+    m: 'M', i: [['a', 1, 100, [0, 10]]], s: 100, t: 100,
+  }));
+  strictEqual(legacy4.items[0].unit, null);
+  strictEqual(legacy4.items[0].discount?.kind, 'pct');
+
+  // Oversized/blank unit drops leniently rather than failing the invoice.
+  const bad = await decodeInvoice(await forgeInvoice({
+    m: 'M', i: [['a', 1, 100, null, 'reallyreallylong']], s: 100, t: 100,
+  }));
+  strictEqual(bad.items[0].unit, null);
+
+  // Wrong-shape tuple (6 elements) still fails closed.
+  await expectThrow(
+    decodeInvoice(await forgeInvoice({ m: 'M', i: [['a', 1, 100, null, 'hr', 'extra']], s: 100, t: 100 })),
     BadPayload,
   );
 });
@@ -587,6 +630,19 @@ await test('invoice/receipt payloads are mutually rejected (cross-type safety)',
   strictEqual(payloadHeader(invoicePayload).docType, DOC_INVOICE);
   await expectThrow(decodeInvoice(receiptPayload), BadPayload);
   await expectThrow(decodeReceipt(invoicePayload), BadPayload);
+});
+
+await test('quote: round-trips, carries the "q" doc type, and is cross-type isolated', async () => {
+  // Quotes reuse the invoice normalizer + shape; only the codec/doc-type differ.
+  const { invoice: quote, errors } = parseInvoice(JSON.stringify(invoiceRaw), 'json');
+  deepStrictEqual(errors, []);
+  const payload = await encodeQuote(quote);
+  ok(payload.startsWith('1q'), `quote prefix: ${payload.slice(0, 2)}`);
+  strictEqual(payloadHeader(payload).docType, DOC_QUOTE);
+  deepStrictEqual(await decodeQuote(payload), quote);
+  // A quote payload must not decode as an invoice/receipt and vice versa.
+  await expectThrow(decodeInvoice(payload), BadPayload);
+  await expectThrow(decodeQuote(await encodeInvoice(quote)), BadPayload);
 });
 
 // ---- summary ------------------------------------------------------------------

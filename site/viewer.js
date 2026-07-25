@@ -7,8 +7,10 @@
  */
 import { decodeReceipt, payloadHeader, BadVersion, DOC_RECEIPT } from './shared/codec.js';
 import { decodeInvoice, DOC_INVOICE } from './shared/invoice-codec.js';
+import { decodeQuote, DOC_QUOTE } from './shared/quote-codec.js';
 import { renderReceiptInto } from './shared/render.js';
 import { renderInvoiceInto } from './shared/invoice-render.js';
+import { renderQuoteInto } from './shared/quote-render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
 import { durableLink } from './shared/durable-link.js';
@@ -20,10 +22,11 @@ let currentDocType = null;
 let currentPayload = '';
 
 function show(section) {
-  for (const id of ['receipt', 'invoice', 'empty', 'error']) $(id).hidden = id !== section;
-  $('actions').hidden = section !== 'receipt' && section !== 'invoice';
+  for (const id of ['receipt', 'invoice', 'quote', 'empty', 'error']) $(id).hidden = id !== section;
+  $('actions').hidden = section !== 'receipt' && section !== 'invoice' && section !== 'quote';
   // PNG export is receipt-only for v1 — invoices' canvas layout doesn't exist yet.
   $('downloadPng').hidden = section !== 'receipt';
+  $('acceptQuote').hidden = section !== 'quote';
 }
 
 function fail(msg) {
@@ -69,6 +72,30 @@ async function main() {
       current = invoice;
       currentDocType = docType;
       show('invoice');
+    } else if (docType === DOC_QUOTE) {
+      const quote = await decodeQuote(payload);
+      document.title = `${quote.seller.name} — quote`;
+      renderQuoteInto($('quote'), quote);
+      const qrEl = $('quote').querySelector('[data-f="qr"]');
+      qrEl.hidden = !quote.qr;
+      if (quote.qr) renderQrInto(qrEl, durableLink(payload));
+      wireShareLinks(durableLink(payload), quote.seller.name);
+      current = quote;
+      currentDocType = docType;
+      show('quote');
+      // Accept-by-email: mailto the seller's contact (the ROADMAP's lightweight,
+      // no-server acceptance). Only offered when the seller left a contact.
+      const accept = $('acceptQuote');
+      const contact = quote.seller.contact;
+      if (contact) {
+        const num = quote.invoiceNumber ? ` #${quote.invoiceNumber}` : '';
+        const subject = encodeURIComponent(`Accepting your quote${num}`);
+        const body = encodeURIComponent(`Hi ${quote.seller.name || ''},\n\nI'd like to accept this quote${num}.\n\n${durableLink(payload)}\n`);
+        accept.href = `mailto:${contact}?subject=${subject}&body=${body}`;
+      } else {
+        accept.hidden = true;
+        accept.removeAttribute('href');
+      }
     } else {
       fail("This link holds a document type this page doesn't know yet — it may be from a newer tool in the family.");
     }

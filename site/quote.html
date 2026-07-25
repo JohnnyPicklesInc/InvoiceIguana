@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Free Invoice Generator — No Signup, No Watermark | InvoiceIguana</title>
+  <title>Free Quote &amp; Estimate Generator — No Signup | InvoiceIguana</title>
   <meta name="description" content="Create a professional invoice online for free. Save clients and businesses to reuse, download PDFs, and share via link — no signup, no watermark, works on your phone.">
-  <link rel="canonical" href="https://invoiceiguana.com/free-invoice-generator">
+  <link rel="canonical" href="https://invoiceiguana.com/quote">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="InvoiceIguana">
-  <meta property="og:url" content="https://invoiceiguana.com/free-invoice-generator">
+  <meta property="og:url" content="https://invoiceiguana.com/quote">
   <meta property="og:title" content="Free Invoice Generator — No Signup, No Watermark">
   <meta property="og:description" content="Create a professional invoice online for free. Save clients and businesses to reuse, download PDFs, and share via link — no signup, no watermark, works on your phone.">
   <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
@@ -27,13 +27,13 @@
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="shared/invoice.css">
   <link rel="stylesheet" href="generator.css">
-  <script type="module" src="generator.js"></script>
+  <script type="module" src="quote.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "InvoiceIguana Invoice Generator",
-    "url": "https://invoiceiguana.com/free-invoice-generator",
+    "name": "InvoiceIguana Quote Generator",
+    "url": "https://invoiceiguana.com/quote",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "description": "Free invoice generator — save clients and businesses to reuse, download PDFs, and share via link. No signup, no watermark, works on your phone.",
@@ -47,9 +47,9 @@
     <nav>
       <label class="type-switch">Document
         <select id="docTypeNav">
-          <option value="/free-invoice-generator" selected>Invoice</option>
+          <option value="/free-invoice-generator">Invoice</option>
           <option value="/receipt">Receipt</option>
-          <option value="/quote">Quote</option>
+          <option value="/quote" selected>Quote</option>
         </select>
       </label>
       <a href="/">How it works</a>
@@ -58,7 +58,7 @@
   </header>
 
   <div class="app-intro">
-    <h1>Free invoice generator</h1>
+    <h1>Free quote &amp; estimate generator</h1>
     <p>Everything lives in this browser — <a href="/">how it works</a>.</p>
   </div>
 
@@ -66,21 +66,21 @@
     <section id="savedPanel" class="saved-panel" hidden>
       <div class="saved-head">
         <div class="saved-title">
-          <strong>Your invoices</strong>
+          <strong>Your quotes</strong>
           <span id="savedCount" class="saved-count">0</span>
           <span id="autosaveStatus" class="autosave-status" hidden></span>
         </div>
         <div class="saved-actions">
-          <button id="newInvoiceBtn" type="button" class="ghost">+ New invoice</button>
+          <button id="newInvoiceBtn" type="button" class="ghost">+ New quote</button>
           <button id="backupBtn" type="button" class="ghost">↓ Backup</button>
           <button id="restoreBtn" type="button" class="ghost">Import</button>
           <input id="restoreFile" type="file" accept="application/json,.json" hidden>
         </div>
       </div>
-      <p id="savedIntro" class="linkmeta saved-intro">Invoices you make are saved automatically <strong>in this browser</strong> — no account, and nothing is sent to a server. They stay on this device; use <b>Backup</b> to keep a copy or move them elsewhere.</p>
+      <p id="savedIntro" class="linkmeta saved-intro">Quotes you make are saved automatically <strong>in this browser</strong> — no account, and nothing is sent to a server. They stay on this device; use <b>Backup</b> to keep a copy or move them elsewhere.</p>
       <p id="durabilityWarn" class="saved-banner saved-banner-warn" hidden></p>
       <p id="backupReminder" class="saved-banner" hidden></p>
-      <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by invoice #, client, or status…" aria-label="Filter saved invoices" hidden>
+      <input id="savedFilter" type="search" class="saved-filter" placeholder="Filter by quote #, client, or status…" aria-label="Filter saved invoices" hidden>
       <ul id="savedList" class="saved-list"></ul>
       <p id="savedEmpty" class="linkmeta saved-empty" hidden>No matches.</p>
     </section>
@@ -103,8 +103,8 @@
         </section>
 
         <section class="form-section">
-          <h3 class="section-head">Bill to</h3>
-          <label>Client<input id="fBuyer" type="text" list="clientNames" placeholder="Client Co" autocomplete="off"></label>
+          <h3 class="section-head">Prepared for</h3>
+          <label>Name<input id="fBuyer" type="text" list="clientNames" placeholder="Client Co" autocomplete="off"></label>
           <datalist id="clientNames"></datalist>
           <div class="grid2">
             <label>Client address<input id="fBuyerAddress" type="text" placeholder="2 Oak Ave, Springfield"></label>
@@ -113,11 +113,11 @@
         </section>
 
         <section class="form-section">
-          <h3 class="section-head">Invoice details</h3>
+          <h3 class="section-head">Quote details</h3>
           <div class="grid3">
-            <label>Invoice #<input id="fInvoiceNumber" type="text" placeholder="INV-2026-001"></label>
+            <label>Quote #<input id="fInvoiceNumber" type="text" placeholder="INV-2026-001"></label>
             <label>Issue date<input id="fIssueDate" type="text" placeholder="2026-07-01"></label>
-            <label>Due date<input id="fDueDate" type="text" placeholder="2026-07-31"></label>
+            <label>Valid until<input id="fDueDate" type="text" placeholder="2026-07-31"></label>
           </div>
         </section>
 
@@ -155,10 +155,8 @@
         </section>
 
         <section class="form-section">
-          <h3 class="section-head">Payment &amp; notes</h3>
-          <label>Payment instructions<textarea id="fPaymentInstructions" rows="3" placeholder="Wire to Acme Bank&#10;Account: 12345&#10;Routing: 67890"></textarea></label>
-          <label>Payment link (Stripe, PayPal, Venmo, etc.)<input id="fPaymentUrl" type="url" placeholder="https://buy.stripe.com/… or https://paypal.me/…"></label>
-          <label>Notes<textarea id="fNotes" rows="2" placeholder="Thanks for your business!"></textarea></label>
+          <h3 class="section-head">Notes &amp; terms</h3>
+          <label>Notes / terms<textarea id="fNotes" rows="3" placeholder="Valid for 30 days. 50% deposit to begin. Thanks for the opportunity!"></textarea></label>
         </section>
       </form>
 
@@ -253,11 +251,11 @@ item,Consulting hours,10,150</pre>
            edit links live inside the collapsible Share panel so they're not
            the first thing a user sees. -->
       <div id="result" class="result" hidden>
-        <p class="result-status">Your invoice is ready. <span id="saveStatus" class="saved-status" hidden></span></p>
+        <p class="result-status">Your quote is ready. <span id="saveStatus" class="saved-status" hidden></span></p>
         <div class="action-grid">
           <button id="myInvoicesBtn" type="button" class="action-btn">
             <span class="action-ico">📁</span>
-            <span class="action-lbl">My invoices</span>
+            <span class="action-lbl">My quotes</span>
             <span class="action-sub">Saved in this browser</span>
           </button>
           <button id="shareBtn" type="button" class="action-btn" aria-expanded="false" aria-controls="sharePanel">
@@ -321,7 +319,7 @@ item,Consulting hours,10,150</pre>
             <p data-f="sellerContact" hidden></p>
           </div>
           <div class="invoice-meta">
-            <h2>Invoice</h2>
+            <h2>Quote</h2>
             <p data-f="invoiceNumber" hidden></p>
             <p data-f="issueDate" hidden></p>
             <p data-f="dueDate" hidden></p>
@@ -329,7 +327,7 @@ item,Consulting hours,10,150</pre>
         </header>
 
         <div class="bill-to">
-          <p class="label">Bill To</p>
+          <p class="label">Prepared for</p>
           <p data-f="buyerName" hidden></p>
           <p data-f="buyerAddress" hidden></p>
           <p data-f="buyerContact" hidden></p>
@@ -344,7 +342,7 @@ item,Consulting hours,10,150</pre>
           <div><dt>Subtotal</dt><dd data-f="subtotal"></dd></div>
           <div data-f="discountRow" hidden><dt>Discount</dt><dd data-f="discount"></dd></div>
           <div data-f="taxRow" hidden><dt data-f="taxLabel">Tax</dt><dd data-f="tax"></dd></div>
-          <div class="grand"><dt>Total Due</dt><dd data-f="total"></dd></div>
+          <div class="grand"><dt>Total</dt><dd data-f="total"></dd></div>
         </dl>
 
         <div data-f="paymentRow" class="payment-instructions" hidden>
@@ -358,7 +356,7 @@ item,Consulting hours,10,150</pre>
 
         <p data-f="notes" class="notes" hidden></p>
         <div data-f="qr" class="qrbox" hidden></div>
-        <p class="brand">made with InvoiceIguana 🦎 — this invoice lives entirely in the link</p>
+        <p class="brand">made with InvoiceIguana 🦎 — this quote lives entirely in the link</p>
       </div>
     </section>
   </main>

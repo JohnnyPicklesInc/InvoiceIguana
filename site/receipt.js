@@ -5,7 +5,7 @@
  */
 import { parseReceipt } from './shared/parse.js';
 import { encodeReceipt, decodeReceipt, fromMinor } from './shared/codec.js';
-import { renderReceiptInto } from './shared/render.js';
+import { renderReceiptInto, money as fmtMoney } from './shared/render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
 import { durableLink } from './shared/durable-link.js';
@@ -14,7 +14,7 @@ import { TEMPLATES } from './shared/templates.js';
 import { CURRENCIES } from './shared/currencies.js';
 import { compressLogoImage } from './shared/logo-embed.js';
 import { isHttpsUrl } from './shared/wire.js';
-import { put, get, list, remove, exportAll, importAll } from './shared/db.js';
+import { put, get, list, remove, exportAll, importAll, getMeta, setMeta } from './shared/db.js';
 
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
@@ -26,6 +26,14 @@ let pendingLogoData = null;
 let pendingLogoError = null;
 // See generator.js: mirrors the same "load from IndexedDB / save in place" flow.
 let currentSavedId = null;
+// Auto-save state (mirrors generator.js). userEdited gates auto-save to real
+// edits; storagePersisted caches whether the browser promised to keep our data.
+let userEdited = false;
+let autosaveTimer = null;
+let storagePersisted = null;
+let persistenceRequested = false;
+let backupReminderDismissed = false;
+try { backupReminderDismissed = sessionStorage.getItem('iiBackupDismissed') === '1'; } catch { /* private mode */ }
 
 // ---- item rows -----------------------------------------------------------
 
@@ -292,6 +300,104 @@ let timer = null;
 function scheduleUpdate() {
   clearTimeout(timer);
   timer = setTimeout(update, 150);
+  scheduleAutosave();
+}
+
+// ---- auto-save (mirrors generator.js) --------------------------------------
+
+function scheduleAutosave() {
+  if (!userEdited) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => { autosaveNow().catch(() => {}); }, 900);
+}
+
+async function autosaveNow() {
+  if (!currentReceipt) return;
+  await ensurePersistence();
+  await saveCurrentReceipt();
+}
+
+async function ensurePersistence() {
+  if (persistenceRequested) return;
+  persistenceRequested = true;
+  try {
+    if (navigator.storage?.persist) {
+      storagePersisted = (await navigator.storage.persisted()) || (await navigator.storage.persist());
+    } else {
+      storagePersisted = false;
+    }
+  } catch { storagePersisted = false; }
+  updateSafetyBanners().catch(() => {});
+}
+
+async function checkPersistedPassive() {
+  try {
+    storagePersisted = navigator.storage?.persisted ? await navigator.storage.persisted() : false;
+  } catch { storagePersisted = false; }
+}
+
+function setSavedStatus() {
+  for (const id of ['autosaveStatus', 'saveStatus']) {
+    const el = $(id);
+    if (!el) continue;
+    el.textContent = '✓ Saved in this browser';
+    el.hidden = false;
+  }
+}
+
+/** Durability warning (storage not persisted) + periodic backup reminder. */
+async function updateSafetyBanners(count) {
+  if (count == null) {
+    try { count = (await list('invoices')).filter((r) => r.kind === 'receipt').length; } catch { count = 0; }
+  }
+  const mkBackupBtn = (label) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ghost';
+    b.textContent = label;
+    b.addEventListener('click', () => downloadBackup().catch((e) => alert(`Couldn't create backup: ${e.message}`)));
+    return b;
+  };
+
+  const warn = $('durabilityWarn');
+  if (warn) {
+    if (storagePersisted === false && count > 0) {
+      warn.replaceChildren(
+        document.createTextNode('⚠ This browser might clear saved receipts — e.g. in private/incognito mode, or when you clear browsing data. '),
+        mkBackupBtn('Download a backup'),
+      );
+      warn.hidden = false;
+    } else {
+      warn.hidden = true;
+    }
+  }
+
+  const rem = $('backupReminder');
+  if (rem) {
+    const lastBackup = await getMeta('lastBackupAt', 0);
+    const stale = !lastBackup || (Date.now() - lastBackup) > 14 * 24 * 3600 * 1000;
+    const showWarn = storagePersisted === false && count > 0;
+    if (count >= 3 && stale && !backupReminderDismissed && !showWarn) {
+      const dismiss = document.createElement('button');
+      dismiss.type = 'button';
+      dismiss.className = 'banner-x';
+      dismiss.title = 'Dismiss';
+      dismiss.textContent = '✕';
+      dismiss.addEventListener('click', () => {
+        backupReminderDismissed = true;
+        try { sessionStorage.setItem('iiBackupDismissed', '1'); } catch { /* private mode */ }
+        rem.hidden = true;
+      });
+      rem.replaceChildren(
+        document.createTextNode(`You have ${count} receipts saved only in this browser. `),
+        mkBackupBtn('Download a backup'),
+        dismiss,
+      );
+      rem.hidden = false;
+    } else {
+      rem.hidden = true;
+    }
+  }
 }
 
 async function update() {
@@ -502,7 +608,13 @@ async function refreshSavedList() {
   const listEl = $('savedList');
   // Count reflects total saved (unfiltered); filter only affects display.
   $('savedCount').textContent = String(rows.length);
-  $('savedPanel').hidden = rows.length === 0;
+  // Always-visible panel (mirrors the invoice generator) so first-timers learn
+  // saving exists and is automatic; intro shows only while empty.
+  $('savedPanel').hidden = false;
+  $('savedCount').hidden = rows.length === 0;
+  if ($('savedIntro')) $('savedIntro').hidden = rows.length > 0;
+  if ($('savedFilter')) $('savedFilter').hidden = rows.length <= 3;
+  updateSafetyBanners(rows.length).catch(() => {});
   const filter = ($('savedFilter').value || '').trim().toLowerCase();
   if (filter) {
     rows = rows.filter((r) => {
@@ -522,7 +634,9 @@ async function refreshSavedList() {
     const li = document.createElement('li');
     li.className = 'saved-item' + (row.id === currentSavedId ? ' is-current' : '') + (isTemplate ? ' is-template' : '');
     const label = row.doc?.reference || row.doc?.merchant || (isTemplate ? 'Untitled template' : 'Untitled receipt');
-    const meta = `${row.doc?.merchant || 'No merchant'} · ${fmtDate(row.updatedAt)}`;
+    const totalStr = !isTemplate && row.doc?.totalMinor != null && row.doc?.currency
+      ? fmtMoney(row.doc.totalMinor, row.doc.currency) : '';
+    const meta = [row.doc?.merchant || 'No merchant', fmtDate(row.updatedAt), totalStr].filter(Boolean).join(' · ');
     // Templates carry a static "template" pill; regular receipts show no
     // pill (unlike invoices they have no status to cycle through).
     const pill = document.createElement('span');
@@ -587,7 +701,7 @@ async function openTemplateAsDraft(id) {
   applyTaxMode();
   update();
   refreshSavedList();
-  flashSaveStatus('Loaded from template — Save to keep');
+  flashSaveStatus('Loaded from template — your edits save automatically');
   document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -603,7 +717,7 @@ async function saveCurrentReceipt() {
   currentSavedId = saved.id;
   await persistMerchantEntry(currentReceipt);
   await refreshDirectories();
-  flashSaveStatus('Saved');
+  setSavedStatus();
   refreshSavedList();
 }
 
@@ -686,9 +800,10 @@ async function duplicateSavedReceipt(id) {
   $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   $('taxPreset').value = '';
   applyTaxMode();
-  update();
-  refreshSavedList();
-  flashSaveStatus('Duplicated — click Save to keep the copy');
+  // Persist the copy immediately (currentSavedId is null → creates a new record).
+  userEdited = true;
+  await update();
+  await saveCurrentReceipt();
   document.querySelector('.editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -728,6 +843,8 @@ async function downloadBackup() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  await setMeta('lastBackupAt', Date.now());
+  updateSafetyBanners().catch(() => {});
 }
 
 async function importBackupFile(file) {
@@ -751,10 +868,15 @@ function flashSaveStatus(text) {
   saveStatusTimer = setTimeout(() => { el.hidden = true; }, 1500);
 }
 
-$('saveBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  saveCurrentReceipt().catch((err) => alert(`Couldn't save: ${err.message}`));
+// Saving is automatic now; this button just jumps to the saved list.
+$('myReceiptsBtn').addEventListener('click', () => {
+  $('savedPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
+// Any genuine edit inside the editor arms auto-save (programmatic fills don't
+// fire input/change, so opening a saved receipt or an edit link won't trip it).
+const editorEl = document.querySelector('.editor');
+editorEl.addEventListener('input', () => { userEdited = true; });
+editorEl.addEventListener('change', () => { userEdited = true; });
 $('fMerchant').addEventListener('change', () => {
   if (autofillFromDirectory($('fMerchant').value, businessDirectory,
       [['fAddress', 'address'], ['fContact', 'contact']])) scheduleUpdate();
@@ -798,5 +920,6 @@ if (!loadedFromEditLink) {
   $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 update();
+await checkPersistedPassive();
 refreshSavedList();
 refreshDirectories();
