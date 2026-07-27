@@ -80,6 +80,25 @@
         <button id="tabUpload" class="tab" type="button">Upload JSON/CSV</button>
       </div>
 
+      <!-- ✨ AI: describe your receipt, or a change. Works from an empty form too. -->
+      <div class="ai-bar">
+        <textarea id="aiEditPrompt" maxlength="2000" placeholder="Describe your receipt, or a change — e.g. “receipt from Rat's Deli: 2 coffees $3.50, a bagel $2.75, 8% tax, $2 tip, paid Visa”, or “add a $5 tip”."></textarea>
+        <div class="ai-row">
+          <button id="aiEditApply" type="button" class="ai-primary">✨ Ask AI</button>
+          <span id="aiEditStatus" class="ai-status"></span>
+        </div>
+      </div>
+      <div id="aiReviewBar" class="ai-reviewbar" hidden>
+        <div class="arb-main">
+          <span id="aiReviewMsg" class="arb-msg">✨ Here's your update — keep it?</span>
+          <ul id="aiChanges" class="arb-changes"></ul>
+        </div>
+        <span class="arb-acts">
+          <button id="aiKeep" type="button" class="ai-primary">Keep</button>
+          <button id="aiUndo" type="button" class="ghost">Undo</button>
+        </span>
+      </div>
+
       <form id="form" autocomplete="off">
         <section class="form-section">
           <h3 class="section-head">Business</h3>

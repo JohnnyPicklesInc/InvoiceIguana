@@ -560,3 +560,7 @@ input[type="checkbox"] { accent-color: var(--brand); }
 .arb-changes { margin: 0.3rem 0 0; padding-left: 1.15rem; font-size: 0.85rem; color: var(--muted); }
 .arb-changes:empty { display: none; }
 .arb-changes li { margin: 0.12rem 0; }
+.ai-bar { border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: 10px; padding: 0.7rem; margin: 0.3rem 0 0.6rem;
+  background: color-mix(in srgb, var(--brand) 5%, var(--surface)); }
+.ai-bar #aiEditPrompt { min-height: 52px; margin-top: 0; }

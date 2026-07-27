@@ -555,17 +555,14 @@ async function handleFile(file) {
 function switchTab(which) {
   $('tabForm').classList.toggle('active', which === 'form');
   $('tabUpload').classList.toggle('active', which === 'upload');
-  $('tabAI').classList.toggle('active', which === 'ai');
   $('form').hidden = which !== 'form';
   $('upload').hidden = which !== 'upload';
-  $('aiPanel').hidden = which !== 'ai';
 }
 
 $('docTypeNav').addEventListener('change', (e) => { location.href = e.target.value; });
 
 $('tabForm').addEventListener('click', () => switchTab('form'));
 $('tabUpload').addEventListener('click', () => switchTab('upload'));
-$('tabAI').addEventListener('click', () => switchTab('ai'));
 
 $('form').addEventListener('input', scheduleUpdate);
 $('addItem').addEventListener('click', () => addItemRow());
@@ -686,12 +683,13 @@ $('fTaxPercent').addEventListener('input', () => {
   scheduleUpdate();
 });
 
-// ---- AI: generate + edit (via the shared MuseMoose gateway) ----------------
-// The invoice text is sent to the gateway only when the user asks AI to act;
-// nothing is stored. Tax arithmetic stays deterministic: the model returns a
-// "taxrate" (%) and the app computes the amount from its own subtotal.
+// ---- AI: one box that creates OR edits (via the shared MuseMoose gateway) ---
+// You can describe a whole invoice on an empty form (creates one) or describe a
+// change to an existing one (edits it) — no need to fill anything in first. Text
+// is sent only when you click Ask AI; nothing is stored. Tax stays deterministic:
+// the model returns a "taxrate" (%) and the app computes the amount.
 const AI_ENDPOINT = 'https://musemoose.johnnypicklespartners.workers.dev';
-let aiBeforeInv = null;   // snapshot before the last AI edit (null = nothing to undo)
+let aiBeforeInv = null;   // snapshot before the last AI run, for Undo
 let aiBeforeTax = null;   // tax-mode UI state at snapshot time
 
 function setAiStatus(el, msg, kind) {
@@ -733,36 +731,25 @@ async function applyRawInvoice(raw) {
   await update();
 }
 
-async function generateInvoice() {
-  const statusEl = $('aiStatus'), btn = $('aiGenerate');
-  const prompt = $('aiPrompt').value.trim();
-  if (!prompt) { setAiStatus(statusEl, 'Describe the invoice first.', 'err'); return; }
-  btn.disabled = true; setAiStatus(statusEl, 'Working… writing your invoice.', 'working');
-  try {
-    const raw = await aiRequest({ prompt });
-    await applyRawInvoice(raw);
-    setAiStatus(statusEl, '');
-    switchTab('form');   // reveal the filled-in form
-  } catch (e) {
-    setAiStatus(statusEl, e.message || 'Something went wrong — try again.', 'err');
-  } finally { btn.disabled = false; }
-}
+const EMPTY_INVOICE = () => parseInvoice('{"seller":"","items":[]}', 'json', { lenient: true }).invoice;
 
-async function editInvoiceWithAI() {
+async function aiRun() {
   const statusEl = $('aiEditStatus'), btn = $('aiEditApply');
   const instr = $('aiEditPrompt').value.trim();
-  if (!currentInvoice) { setAiStatus(statusEl, 'Nothing to edit yet — add some details first.', 'err'); return; }
-  if (!instr) { setAiStatus(statusEl, 'Describe a change first.', 'err'); return; }
+  if (!instr) { setAiStatus(statusEl, 'Describe your invoice or a change first.', 'err'); return; }
   btn.disabled = true; setAiStatus(statusEl, 'Working… updating your invoice.', 'working');
   try {
-    const raw = await aiRequest({ prompt: instr, manifest: rawFromForm() });
-    // Snapshot BEFORE applying, so Undo restores exactly.
-    aiBeforeInv = structuredClone(currentInvoice);
+    // Empty form → generate from scratch; existing invoice → edit it.
+    const raw0 = rawFromForm();
+    const hasContent = !!((raw0.seller && raw0.seller.trim()) || (raw0.items && raw0.items.length));
+    // Snapshot BEFORE applying, so Undo always restores (empty form → empty snapshot).
+    aiBeforeInv = currentInvoice ? structuredClone(currentInvoice) : EMPTY_INVOICE();
     aiBeforeTax = { preset: $('taxPreset').value, pct: $('fTaxPercent').value };
+    const raw = await aiRequest(hasContent ? { prompt: instr, manifest: raw0 } : { prompt: instr });
     await applyRawInvoice(raw);
     renderInvoiceChanges(summarizeInvoiceChanges(aiBeforeInv, currentInvoice));
     setAiStatus(statusEl, ''); $('aiEditPrompt').value = '';
-    $('aiEditBar').hidden = true; $('aiReviewBar').hidden = false;
+    $('aiReviewBar').hidden = false;
   } catch (e) {
     setAiStatus(statusEl, e.message || 'Something went wrong — try again.', 'err');
   } finally { btn.disabled = false; }
@@ -781,8 +768,14 @@ async function undoAiEdit() {
   await update();
 }
 
-// A truthful summary of what an edit changed (diff of before/after invoices).
+// A truthful summary of what the AI did (diff of before/after invoices).
 function summarizeInvoiceChanges(b, a) {
+  const wasEmpty = !(b.seller?.name) && !(b.items || []).length;
+  if (wasEmpty) {
+    const line = ['Drafted your invoice'];
+    if (a.totalMinor) line.push(`Total is ${fromMinor(a.totalMinor, a.currency)} ${a.currency || ''}`.trim());
+    return line;
+  }
   const out = [];
   if ((b.seller?.name || '') !== (a.seller?.name || '')) out.push('Changed the business');
   if ((b.buyer?.name || '') !== (a.buyer?.name || '')) out.push('Changed the client');
@@ -810,19 +803,11 @@ function renderInvoiceChanges(list) {
   msg.textContent = list.length ? "✨ Here's what AI changed — keep it?" : "✨ Here's your update — keep it?";
 }
 
-$('aiGenerate').addEventListener('click', generateInvoice);
-$('aiEditToggle').addEventListener('click', () => {
-  if (aiBeforeInv) keepAiEdit();               // opening a new edit keeps any pending one
-  const bar = $('aiEditBar');
-  bar.hidden = !bar.hidden;
-  if (!bar.hidden) $('aiEditPrompt').focus();
-});
-$('aiEditCancel').addEventListener('click', () => { $('aiEditBar').hidden = true; setAiStatus($('aiEditStatus'), ''); });
-$('aiEditApply').addEventListener('click', editInvoiceWithAI);
+$('aiEditApply').addEventListener('click', aiRun);
 $('aiKeep').addEventListener('click', keepAiEdit);
 $('aiUndo').addEventListener('click', undoAiEdit);
 $('aiEditPrompt').addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); editInvoiceWithAI(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); aiRun(); }
 });
 
 // ---- saved invoices (IndexedDB) ---------------------------------------------------

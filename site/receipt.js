@@ -1,7 +1,8 @@
 /**
  * Receipt generator page. Everything happens locally in this tab: form (or
- * uploaded file) -> validate -> live preview -> encode into the link.
- * No network calls; the receipt never leaves the browser.
+ * uploaded file) -> validate -> live preview -> encode into the link. The only
+ * network call is the OPTIONAL AI (Ask AI), which sends receipt text to the
+ * shared MuseMoose gateway; nothing is sent unless you use AI, and nothing is stored.
  */
 import { parseReceipt } from './shared/parse.js';
 import { encodeReceipt, decodeReceipt, fromMinor } from './shared/codec.js';
@@ -589,6 +590,133 @@ $('taxPreset').addEventListener('change', () => {
 $('fTaxPercent').addEventListener('input', () => {
   applyTaxMode();
   scheduleUpdate();
+});
+
+// ---- AI: one box that creates OR edits (via the shared MuseMoose gateway) ---
+// Describe a whole receipt on an empty form (creates one) or a change to an
+// existing one (edits it). Text is sent only when you click Ask AI; nothing is
+// stored. Tax stays deterministic: the model returns "taxrate" (%), the app
+// computes the amount. Tip is a flat amount.
+const AI_ENDPOINT = 'https://musemoose.johnnypicklespartners.workers.dev';
+let aiBeforeRec = null;
+let aiBeforeTax = null;
+
+const EMPTY_RECEIPT = () => ({
+  merchant: '', address: null, contact: null, date: null, reference: null, currency: 'USD',
+  items: [], subtotalMinor: 0, discountMinor: null, taxMinor: null, taxLabel: null, tipMinor: null,
+  totalMinor: 0, payment: null, footer: null, logoUrl: null,
+  template: 'classic', brandingOff: false, accent: null, emoji: null, logoData: null, qr: false,
+});
+
+function setAiStatus(el, msg, kind) {
+  el.textContent = msg || '';
+  el.className = 'ai-status' + (kind ? ' ' + kind : '');
+}
+
+async function aiRequest(body) {
+  const res = await fetch(AI_ENDPOINT + '/api/generate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ app: 'invoiceiguana-receipt', ...body }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  if (!data.manifest || typeof data.manifest !== 'object') {
+    throw new Error("The AI didn't return a usable receipt — try rephrasing.");
+  }
+  return data.manifest;
+}
+
+async function applyRawReceipt(raw) {
+  const r = { ...raw };
+  const taxrate = r.taxrate;
+  delete r.taxrate;
+  const { receipt } = parseReceipt(JSON.stringify(r), 'json');   // strict: needs merchant + items
+  if (!receipt) throw new Error("The AI didn't return a usable receipt — try rephrasing.");
+  fillFormFromReceipt(receipt);
+  if (taxrate != null && Number.isFinite(Number(taxrate)) && Number(taxrate) >= 0) {
+    $('taxPreset').value = 'pct';
+    $('fTaxPercent').value = String(Number(taxrate));
+  } else {
+    $('taxPreset').value = '';
+    $('fTaxPercent').value = '';
+  }
+  applyTaxMode();
+  userEdited = true;
+  await update();
+}
+
+async function aiRun() {
+  const statusEl = $('aiEditStatus'), btn = $('aiEditApply');
+  const instr = $('aiEditPrompt').value.trim();
+  if (!instr) { setAiStatus(statusEl, 'Describe your receipt or a change first.', 'err'); return; }
+  btn.disabled = true; setAiStatus(statusEl, 'Working… updating your receipt.', 'working');
+  try {
+    const raw0 = rawFromForm();
+    const hasContent = !!((raw0.merchant && raw0.merchant.trim()) || (raw0.items && raw0.items.length));
+    aiBeforeRec = currentReceipt ? structuredClone(currentReceipt) : EMPTY_RECEIPT();
+    aiBeforeTax = { preset: $('taxPreset').value, pct: $('fTaxPercent').value };
+    const raw = await aiRequest(hasContent ? { prompt: instr, manifest: raw0 } : { prompt: instr });
+    await applyRawReceipt(raw);
+    renderAiChanges(summarizeReceiptChanges(aiBeforeRec, currentReceipt));
+    setAiStatus(statusEl, ''); $('aiEditPrompt').value = '';
+    $('aiReviewBar').hidden = false;
+  } catch (e) {
+    setAiStatus(statusEl, e.message || 'Something went wrong — try again.', 'err');
+  } finally { btn.disabled = false; }
+}
+
+function keepAiEdit() { aiBeforeRec = null; aiBeforeTax = null; $('aiReviewBar').hidden = true; }
+async function undoAiEdit() {
+  if (!aiBeforeRec) { $('aiReviewBar').hidden = true; return; }
+  fillFormFromReceipt(aiBeforeRec);
+  restoreStyleControls(aiBeforeRec);
+  $('taxPreset').value = aiBeforeTax.preset;
+  $('fTaxPercent').value = aiBeforeTax.pct;
+  applyTaxMode();
+  aiBeforeRec = null; aiBeforeTax = null;
+  $('aiReviewBar').hidden = true;
+  await update();
+}
+
+function summarizeReceiptChanges(b, a) {
+  const wasEmpty = !(b.merchant) && !(b.items || []).length;
+  if (wasEmpty) {
+    const line = ['Drafted your receipt'];
+    if (a.totalMinor) line.push(`Total is ${fromMinor(a.totalMinor, a.currency)} ${a.currency || ''}`.trim());
+    return line;
+  }
+  const out = [];
+  if ((b.merchant || '') !== (a.merchant || '')) out.push('Changed the merchant');
+  const bn = (b.items || []).length, an = (a.items || []).length;
+  if (an > bn) out.push(`Added ${an - bn} line item${an - bn > 1 ? 's' : ''}`);
+  else if (an < bn) out.push(`Removed ${bn - an} line item${bn - an > 1 ? 's' : ''}`);
+  else if (JSON.stringify(b.items) !== JSON.stringify(a.items)) out.push('Edited the line items');
+  if ((b.discountMinor || 0) !== (a.discountMinor || 0)) out.push('Changed the discount');
+  if ((b.taxMinor || 0) !== (a.taxMinor || 0) || (b.taxLabel || '') !== (a.taxLabel || '')) out.push('Changed the tax');
+  if ((b.tipMinor || 0) !== (a.tipMinor || 0)) out.push('Changed the tip');
+  if ((b.payment || '') !== (a.payment || '')) out.push('Updated the payment method');
+  if ((b.footer || '') !== (a.footer || '')) out.push('Updated the footer');
+  if ((b.date || '') !== (a.date || '') || (b.reference || '') !== (a.reference || '')) out.push('Updated the date/reference');
+  if ((b.totalMinor || 0) !== (a.totalMinor || 0)) {
+    out.push(`Total is now ${fromMinor(a.totalMinor, a.currency)} ${a.currency || ''}`.trim());
+  }
+  const seen = new Set(), res = [];
+  for (const s of out) if (!seen.has(s)) { seen.add(s); res.push(s); }
+  return res.slice(0, 7);
+}
+function renderAiChanges(list) {
+  const ul = $('aiChanges'), msg = $('aiReviewMsg');
+  ul.replaceChildren();
+  for (const s of list) { const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); }
+  msg.textContent = list.length ? "✨ Here's what AI changed — keep it?" : "✨ Here's your update — keep it?";
+}
+
+$('aiEditApply').addEventListener('click', aiRun);
+$('aiKeep').addEventListener('click', keepAiEdit);
+$('aiUndo').addEventListener('click', undoAiEdit);
+$('aiEditPrompt').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); aiRun(); }
 });
 
 // ---- saved receipts (IndexedDB) ---------------------------------------------------

@@ -677,6 +677,126 @@ $('fTaxPercent').addEventListener('input', () => {
   scheduleUpdate();
 });
 
+// ---- AI: generate + edit (via the shared MuseMoose gateway) ----------------
+// Quote shares the invoice model, so this mirrors the invoice page's AI wiring.
+// Tax stays deterministic: the model returns "taxrate" (%), the app computes it.
+const AI_ENDPOINT = 'https://musemoose.johnnypicklespartners.workers.dev';
+let aiBeforeInv = null;
+let aiBeforeTax = null;
+
+function setAiStatus(el, msg, kind) {
+  el.textContent = msg || '';
+  el.className = 'ai-status' + (kind ? ' ' + kind : '');
+}
+
+async function aiRequest(body) {
+  const res = await fetch(AI_ENDPOINT + '/api/generate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ app: 'invoiceiguana-quote', ...body }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  if (!data.manifest || typeof data.manifest !== 'object') {
+    throw new Error("The AI didn't return a usable quote — try rephrasing.");
+  }
+  return data.manifest;
+}
+
+async function applyRawInvoice(raw) {
+  const r = { ...raw };
+  const taxrate = r.taxrate;
+  delete r.taxrate;
+  const { invoice } = parseInvoice(JSON.stringify(r), 'json', { lenient: true });
+  fillFormFromInvoice(invoice);
+  if (taxrate != null && Number.isFinite(Number(taxrate)) && Number(taxrate) >= 0) {
+    $('taxPreset').value = 'pct';
+    $('fTaxPercent').value = String(Number(taxrate));
+  } else {
+    $('taxPreset').value = '';
+    $('fTaxPercent').value = '';
+  }
+  applyTaxMode();
+  userEdited = true;
+  await update();
+}
+
+const EMPTY_INVOICE = () => parseInvoice('{"seller":"","items":[]}', 'json', { lenient: true }).invoice;
+
+async function aiRun() {
+  const statusEl = $('aiEditStatus'), btn = $('aiEditApply');
+  const instr = $('aiEditPrompt').value.trim();
+  if (!instr) { setAiStatus(statusEl, 'Describe your quote or a change first.', 'err'); return; }
+  btn.disabled = true; setAiStatus(statusEl, 'Working… updating your quote.', 'working');
+  try {
+    const raw0 = rawFromForm();
+    const hasContent = !!((raw0.seller && raw0.seller.trim()) || (raw0.items && raw0.items.length));
+    aiBeforeInv = currentInvoice ? structuredClone(currentInvoice) : EMPTY_INVOICE();
+    aiBeforeTax = { preset: $('taxPreset').value, pct: $('fTaxPercent').value };
+    const raw = await aiRequest(hasContent ? { prompt: instr, manifest: raw0 } : { prompt: instr });
+    await applyRawInvoice(raw);
+    renderInvoiceChanges(summarizeInvoiceChanges(aiBeforeInv, currentInvoice));
+    setAiStatus(statusEl, ''); $('aiEditPrompt').value = '';
+    $('aiReviewBar').hidden = false;
+  } catch (e) {
+    setAiStatus(statusEl, e.message || 'Something went wrong — try again.', 'err');
+  } finally { btn.disabled = false; }
+}
+
+function keepAiEdit() { aiBeforeInv = null; aiBeforeTax = null; $('aiReviewBar').hidden = true; }
+async function undoAiEdit() {
+  if (!aiBeforeInv) { $('aiReviewBar').hidden = true; return; }
+  fillFormFromInvoice(aiBeforeInv);
+  restoreStyleControls(aiBeforeInv);
+  $('taxPreset').value = aiBeforeTax.preset;
+  $('fTaxPercent').value = aiBeforeTax.pct;
+  applyTaxMode();
+  aiBeforeInv = null; aiBeforeTax = null;
+  $('aiReviewBar').hidden = true;
+  await update();
+}
+
+function summarizeInvoiceChanges(b, a) {
+  const wasEmpty = !(b.seller?.name) && !(b.items || []).length;
+  if (wasEmpty) {
+    const line = ['Drafted your quote'];
+    if (a.totalMinor) line.push(`Total is ${fromMinor(a.totalMinor, a.currency)} ${a.currency || ''}`.trim());
+    return line;
+  }
+  const out = [];
+  if ((b.seller?.name || '') !== (a.seller?.name || '')) out.push('Changed the business');
+  if ((b.buyer?.name || '') !== (a.buyer?.name || '')) out.push('Changed the client');
+  if ((b.invoiceNumber || '') !== (a.invoiceNumber || '')) out.push('Updated the quote number');
+  if ((b.issueDate || '') !== (a.issueDate || '') || (b.dueDate || '') !== (a.dueDate || '')) out.push('Updated the dates');
+  if ((b.currency || '') !== (a.currency || '')) out.push('Changed the currency');
+  const bn = (b.items || []).length, an = (a.items || []).length;
+  if (an > bn) out.push(`Added ${an - bn} line item${an - bn > 1 ? 's' : ''}`);
+  else if (an < bn) out.push(`Removed ${bn - an} line item${bn - an > 1 ? 's' : ''}`);
+  else if (JSON.stringify(b.items) !== JSON.stringify(a.items)) out.push('Edited the line items');
+  if ((b.discountMinor || 0) !== (a.discountMinor || 0)) out.push('Changed the discount');
+  if ((b.taxMinor || 0) !== (a.taxMinor || 0) || (b.taxLabel || '') !== (a.taxLabel || '')) out.push('Changed the tax');
+  if ((b.notes || '') !== (a.notes || '')) out.push('Updated the notes');
+  if ((b.totalMinor || 0) !== (a.totalMinor || 0)) {
+    out.push(`Total is now ${fromMinor(a.totalMinor, a.currency)} ${a.currency || ''}`.trim());
+  }
+  const seen = new Set(), res = [];
+  for (const s of out) if (!seen.has(s)) { seen.add(s); res.push(s); }
+  return res.slice(0, 7);
+}
+function renderInvoiceChanges(list) {
+  const ul = $('aiChanges'), msg = $('aiReviewMsg');
+  ul.replaceChildren();
+  for (const s of list) { const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); }
+  msg.textContent = list.length ? "✨ Here's what AI changed — keep it?" : "✨ Here's your update — keep it?";
+}
+
+$('aiEditApply').addEventListener('click', aiRun);
+$('aiKeep').addEventListener('click', keepAiEdit);
+$('aiUndo').addEventListener('click', undoAiEdit);
+$('aiEditPrompt').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); aiRun(); }
+});
+
 // ---- saved invoices (IndexedDB) ---------------------------------------------------
 
 /** Loads the saved-list from IndexedDB and renders it. Shows the panel only

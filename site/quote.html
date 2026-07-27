@@ -91,6 +91,25 @@
         <button id="tabUpload" class="tab" type="button">Upload JSON/CSV</button>
       </div>
 
+      <!-- ✨ AI: describe your quote, or a change. Works from an empty form too. -->
+      <div class="ai-bar">
+        <textarea id="aiEditPrompt" maxlength="2000" placeholder="Describe your quote, or a change — e.g. “quote for a bathroom remodel, 30 hrs at $80 and $2500 materials, 6% tax”, or “add a 10% discount”."></textarea>
+        <div class="ai-row">
+          <button id="aiEditApply" type="button" class="ai-primary">✨ Ask AI</button>
+          <span id="aiEditStatus" class="ai-status"></span>
+        </div>
+      </div>
+      <div id="aiReviewBar" class="ai-reviewbar" hidden>
+        <div class="arb-main">
+          <span id="aiReviewMsg" class="arb-msg">✨ Here's your update — keep it?</span>
+          <ul id="aiChanges" class="arb-changes"></ul>
+        </div>
+        <span class="arb-acts">
+          <button id="aiKeep" type="button" class="ai-primary">Keep</button>
+          <button id="aiUndo" type="button" class="ghost">Undo</button>
+        </span>
+      </div>
+
       <form id="form" autocomplete="off">
         <section class="form-section">
           <h3 class="section-head">Your business</h3>
