@@ -2,7 +2,7 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
-  Content-Security-Policy: default-src 'none'; script-src 'self' static.cloudflareinsights.com; connect-src 'self' cloudflareinsights.com; style-src 'self'; img-src 'self' data: https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self' static.cloudflareinsights.com; connect-src 'self' cloudflareinsights.com https://musemoose.johnnypicklespartners.workers.dev; style-src 'self'; img-src 'self' data: https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
 
 /sw.js
   Service-Worker-Allowed: /

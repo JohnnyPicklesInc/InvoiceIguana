@@ -88,7 +88,31 @@
     <section class="editor">
       <div class="tabs" role="tablist">
         <button id="tabForm" class="tab active" type="button">Type it in</button>
+        <button id="tabAI" class="tab" type="button">✨ Describe it</button>
         <button id="tabUpload" class="tab" type="button">Upload JSON/CSV</button>
+      </div>
+
+      <!-- Edit the current invoice with AI. -->
+      <div class="ai-editrow">
+        <button id="aiEditToggle" type="button" class="ai-editbtn">✨ Edit with AI</button>
+      </div>
+      <div id="aiEditBar" class="ai-editbar" hidden>
+        <textarea id="aiEditPrompt" maxlength="2000" placeholder="Describe a change — e.g. “add a 10% discount”, “add a line for travel $50”, “change the tax to 8%”."></textarea>
+        <div class="ai-row">
+          <button id="aiEditApply" type="button" class="ai-primary">Update invoice</button>
+          <button id="aiEditCancel" type="button" class="ghost">Cancel</button>
+          <span id="aiEditStatus" class="ai-status"></span>
+        </div>
+      </div>
+      <div id="aiReviewBar" class="ai-reviewbar" hidden>
+        <div class="arb-main">
+          <span id="aiReviewMsg" class="arb-msg">✨ Here's your update — keep it?</span>
+          <ul id="aiChanges" class="arb-changes"></ul>
+        </div>
+        <span class="arb-acts">
+          <button id="aiKeep" type="button" class="ai-primary">Keep</button>
+          <button id="aiUndo" type="button" class="ghost">Undo</button>
+        </span>
       </div>
 
       <form id="form" autocomplete="off">
@@ -184,6 +208,17 @@ buyer,Client Co
 tax,80
 item,Consulting hours,10,150</pre>
         </details>
+      </div>
+
+      <div id="aiPanel" class="ai-panel" hidden>
+        <label class="ai-genlabel">Describe the invoice and AI drafts it
+          <textarea id="aiPrompt" maxlength="2000" placeholder="e.g. Invoice from Bright Web Studio to Maple Cafe for a 5-page website ($2000) and a logo ($400). Add 8% sales tax, net 14."></textarea>
+        </label>
+        <div class="ai-row">
+          <button id="aiGenerate" type="button" class="ai-primary">Generate invoice</button>
+          <span id="aiStatus" class="ai-status"></span>
+        </div>
+        <p class="ai-note">AI drafts a starting point — review every figure before you send it. Only text is sent to draft it; nothing is stored.</p>
       </div>
 
       <ul id="errors" class="errors" hidden></ul>

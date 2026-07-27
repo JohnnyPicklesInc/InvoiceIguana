@@ -527,3 +527,36 @@ input[type="checkbox"] { accent-color: var(--brand); }
   }
   body { background: none; }
 }
+
+/* ---- AI generate / edit (via the MuseMoose gateway) ---------------------- */
+.ai-panel { padding: 0.25rem 0 0.5rem; }
+.ai-genlabel { display: block; font-weight: 600; }
+#aiPrompt, #aiEditPrompt { width: 100%; min-height: 70px; margin-top: 0.4rem; resize: vertical; }
+#aiEditPrompt { min-height: 56px; margin-top: 0; }
+.ai-note { font-size: 0.8rem; color: var(--muted); margin: 0.6rem 0 0; }
+.ai-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.ai-primary { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 0.5rem 0.9rem; font-weight: 600; cursor: pointer; }
+.ai-primary:hover { filter: brightness(1.05); }
+.ai-primary:disabled { opacity: 0.6; cursor: default; }
+.ai-status { font-size: 0.86rem; color: var(--muted); }
+.ai-status.err { color: var(--danger); }
+.ai-status.working::before { content: ""; display: inline-block; width: 0.72em; height: 0.72em;
+  margin-right: 0.4em; border: 2px solid currentColor; border-right-color: transparent;
+  border-radius: 50%; vertical-align: -0.12em; animation: ii-spin 0.6s linear infinite; }
+@keyframes ii-spin { to { transform: rotate(360deg); } }
+.ai-editrow { margin: 0.45rem 0 0.2rem; }
+.ai-editbtn { border: 1px solid color-mix(in srgb, var(--brand) 40%, transparent);
+  background: color-mix(in srgb, var(--brand) 8%, var(--surface)); color: var(--brand);
+  border-radius: 8px; padding: 0.35rem 0.7rem; font-weight: 600; cursor: pointer; }
+.ai-editbtn:hover { background: color-mix(in srgb, var(--brand) 14%, var(--surface)); }
+.ai-editbar { border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  border-radius: 10px; padding: 0.7rem; margin: 0.3rem 0; background: var(--surface); }
+.ai-reviewbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  border: 1px solid var(--brand); border-radius: 10px; padding: 0.6rem 0.8rem; margin: 0.3rem 0;
+  background: color-mix(in srgb, var(--brand) 6%, var(--surface)); }
+.ai-reviewbar .arb-main { flex: 1; min-width: 12rem; }
+.ai-reviewbar .arb-msg { font-weight: 600; }
+.ai-reviewbar .arb-acts { display: flex; gap: 0.5rem; flex: 0 0 auto; }
+.arb-changes { margin: 0.3rem 0 0; padding-left: 1.15rem; font-size: 0.85rem; color: var(--muted); }
+.arb-changes:empty { display: none; }
+.arb-changes li { margin: 0.12rem 0; }
