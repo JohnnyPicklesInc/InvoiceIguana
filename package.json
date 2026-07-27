@@ -11,6 +11,7 @@
     "selftest": "node scripts/selftest.mjs",
     "icons": "node scripts/make-icons.mjs",
     "og": "node scripts/make-og.mjs",
+    "landing": "node scripts/make-landing.mjs",
     "deploy": "wrangler pages deploy site"
   },
   "devDependencies": {

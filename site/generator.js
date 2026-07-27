@@ -1294,6 +1294,20 @@ if (!loadedFromEditLink) {
   if (suggested) $('fInvoiceNumber').value = suggested;
 }
 update();
+
+// Deep-link from a landing page: ?prompt=... pre-fills the AI box. It does NOT
+// auto-run — keeping AI calls tied to a real click (not every visit or bot)
+// protects the shared per-app daily budget.
+const aiSeed = new URLSearchParams(location.search).get('prompt');
+if (aiSeed) {
+  const box = $('aiEditPrompt');
+  if (box) {
+    box.value = aiSeed.slice(0, 2000);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    box.focus();
+  }
+}
+
 await checkPersistedPassive();
 refreshSavedList();
 refreshDirectories();
