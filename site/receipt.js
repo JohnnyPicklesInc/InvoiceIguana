@@ -1048,6 +1048,15 @@ if (!loadedFromEditLink) {
   $('fDate').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 update();
+
+// Deep-link from a landing page: ?prompt=... pre-fills the AI box (no auto-run,
+// so AI calls stay tied to a real click, protecting the per-app daily budget).
+const aiSeed = new URLSearchParams(location.search).get('prompt');
+if (aiSeed) {
+  const box = $('aiEditPrompt');
+  if (box) { box.value = aiSeed.slice(0, 2000); box.scrollIntoView({ behavior: 'smooth', block: 'center' }); box.focus(); }
+}
+
 await checkPersistedPassive();
 refreshSavedList();
 refreshDirectories();

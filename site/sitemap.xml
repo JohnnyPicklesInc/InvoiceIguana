@@ -4,8 +4,10 @@
   <url><loc>https://invoiceiguana.com/receipt</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://invoiceiguana.com/free-invoice-generator</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://invoiceiguana.com/quote</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://invoiceiguana.com/invoice-templates</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://invoiceiguana.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://invoiceiguana.com/invoice-templates</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://invoiceiguana.com/quote-templates</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://invoiceiguana.com/receipt-templates</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://invoiceiguana.com/electrician-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://invoiceiguana.com/plumber-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://invoiceiguana.com/hvac-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -21,4 +23,42 @@
   <url><loc>https://invoiceiguana.com/personal-trainer-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://invoiceiguana.com/tutor-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://invoiceiguana.com/consultant-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/roofing-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/flooring-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/pressure-washing-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/pest-control-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/locksmith-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/appliance-repair-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/tree-service-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/pool-service-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/moving-company-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/junk-removal-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/auto-detailing-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/auto-repair-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/videographer-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/freelance-writer-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/social-media-manager-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/bookkeeper-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/dog-groomer-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/massage-therapist-invoice-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/general-contractor-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/roofing-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/painter-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/landscaping-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/flooring-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/fencing-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/hvac-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/concrete-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/bathroom-remodel-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/moving-company-quote-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/rent-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/cash-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/sales-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/donation-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/deposit-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/payment-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/service-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/restaurant-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/hotel-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://invoiceiguana.com/itemized-receipt-template</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
