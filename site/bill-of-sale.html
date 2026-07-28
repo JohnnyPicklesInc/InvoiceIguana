@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free Bill of Sale Template — Car, Boat &amp; General | InvoiceIguana</title>
+  <meta name="description" content="Free bill of sale template for a car, boat, or general private sale. Describe it and AI fills it in, then download a PDF or print — no signup, no watermark.">
+  <link rel="canonical" href="https://invoiceiguana.com/bill-of-sale">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InvoiceIguana">
+  <meta property="og:url" content="https://invoiceiguana.com/bill-of-sale">
+  <meta property="og:title" content="Free Bill of Sale Template — Car, Boat &amp; General">
+  <meta property="og:description" content="Free bill of sale template for a car, boat, or general private sale. Describe it and AI fills it in, then download a PDF or print — no signup, no watermark.">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Free Bill of Sale Template — Car, Boat &amp; General">
+  <meta name="twitter:description" content="Free bill of sale template for a car, boat, or general private sale. Describe it and AI fills it in — no signup, no watermark.">
+  <meta name="twitter:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="theme-color" content="#12a06a">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="shared/invoice.css">
+  <link rel="stylesheet" href="generator.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script type="module" src="bill-of-sale.js"></script>
+  <script type="module" src="register-sw.js"></script>
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "WebApplication",
+    "name": "InvoiceIguana Bill of Sale Generator",
+    "url": "https://invoiceiguana.com/bill-of-sale",
+    "applicationCategory": "BusinessApplication", "operatingSystem": "Web",
+    "description": "Free bill of sale generator for cars, boats and general private sales. AI fills it in from a description; download a PDF or print.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <label class="type-switch">Document
+        <select id="docTypeNav">
+          <option value="/free-invoice-generator">Invoice</option>
+          <option value="/receipt">Receipt</option>
+          <option value="/quote">Quote</option>
+          <option value="/bill-of-sale" selected>Bill of sale</option>
+        </select>
+      </label>
+      <a href="/">How it works</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <main class="bos-app">
+    <section class="editor">
+      <p class="bos-disclaimer">This is a general template, <strong>not legal advice</strong>. Requirements vary by state and by what you're selling (some vehicle sales need a notary or a specific state form). For high-value or regulated items, check your local DMV/rules or a lawyer.</p>
+
+      <!-- ✨ AI: describe the sale, or a change. Works from an empty form. -->
+      <div class="ai-bar">
+        <textarea id="aiEditPrompt" maxlength="2000" placeholder="Describe the sale, or a change — e.g. “Jordan sells a 2015 Ford F-150, VIN 1FTEW1EF0FFA00000, 88k miles, to Priya for $18,500 cash, as-is”, or “add the odometer reading”."></textarea>
+        <div class="ai-row">
+          <button id="aiEditApply" type="button" class="ai-primary">✨ Ask AI</button>
+          <span id="aiEditStatus" class="ai-status"></span>
+        </div>
+      </div>
+      <div id="aiReviewBar" class="ai-reviewbar" hidden>
+        <div class="arb-main"><span id="aiReviewMsg" class="arb-msg">✨ Here's your update — keep it?</span></div>
+        <span class="arb-acts">
+          <button id="aiKeep" type="button" class="ai-primary">Keep</button>
+          <button id="aiUndo" type="button" class="ghost">Undo</button>
+        </span>
+      </div>
+
+      <form id="form" autocomplete="off">
+        <section class="form-section">
+          <h3 class="section-head">What's being sold</h3>
+          <div class="grid2">
+            <label>Item type
+              <select id="fItemType">
+                <option value="vehicle">Vehicle</option>
+                <option value="boat">Boat</option>
+                <option value="firearm">Firearm</option>
+                <option value="general">General item</option>
+              </select>
+            </label>
+            <label>Sale price<input id="fPrice" type="text" inputmode="decimal" placeholder="18500"></label>
+          </div>
+          <label>Description<textarea id="fItem" rows="2" placeholder="2015 Ford F-150 XLT, VIN 1FTEW1EF0FFA00000, silver, 88,000 miles"></textarea></label>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Seller</h3>
+          <div class="grid2">
+            <label>Full name<input id="fSeller" type="text" placeholder="Jordan Miller"></label>
+            <label>Address<input id="fSellerAddress" type="text" placeholder="12 Oak St, Austin, TX"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Buyer</h3>
+          <div class="grid2">
+            <label>Full name<input id="fBuyer" type="text" placeholder="Priya Shah"></label>
+            <label>Address<input id="fBuyerAddress" type="text" placeholder="440 Elm Ave, Austin, TX"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Sale details</h3>
+          <div class="grid3">
+            <label>Currency<input id="fCurrency" type="text" maxlength="3" placeholder="USD"></label>
+            <label>Date of sale<input id="fDate" type="text" placeholder="2026-07-28"></label>
+            <label>Payment<input id="fPayment" type="text" placeholder="Paid in full, cash"></label>
+          </div>
+          <label>Terms<textarea id="fTerms" rows="2" placeholder="Sold as-is, where-is, with no warranty, express or implied."></textarea></label>
+        </section>
+      </form>
+    </section>
+
+    <section class="bos-preview-pane">
+      <div id="preview" class="bos-doc"></div>
+      <div class="bos-actions">
+        <button id="printBtn" type="button" class="action-btn">Download / print PDF</button>
+      </div>
+      <div class="ad-slot"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice, quote &amp; receipt maker. Everything is saved in your browser or shared as a link — no signup, no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/free-invoice-generator">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/quote">Quote generator</a>
+        <a href="/bill-of-sale">Bill of sale</a>
+      </div>
+      <div class="footer-col">
+        <h4>Templates</h4>
+        <a href="/invoice-templates">Invoice templates</a>
+        <a href="/quote-templates">Quote templates</a>
+        <a href="/bill-of-sale-templates">Bill of sale templates</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+    <p class="footer-legal">Saved documents live in your browser, not on any server. Share via link or download as PDF — no signup, ever.</p>
+  </footer>
+  <script type="module" src="ads.js"></script>
+</body>
+</html>

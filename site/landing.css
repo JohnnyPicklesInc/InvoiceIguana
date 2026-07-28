@@ -70,3 +70,7 @@
 .trade-card:hover { border-color: var(--brand); box-shadow: var(--shadow); }
 .tc-name { font-weight: 700; }
 .tc-sub { color: var(--muted); font-size: 0.85rem; }
+
+/* Bill-of-sale example card (on the [type/state] bill of sale landing pages) */
+.bos-ex-title { font-weight: 800; letter-spacing: 0.12em; text-align: center; color: var(--brand); margin: 0 0 0.7rem; }
+.example-invoice .bos-ex-item { border-left: 3px solid var(--brand); padding-left: 0.7rem; margin: 0.3rem 0 0.7rem; }
