@@ -126,8 +126,10 @@ scripts/       selftest.mjs, make-icons.mjs
 samples/       example documents used by the selftest
 ```
 
-To turn on privacy-friendly analytics, replace `REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN`
-in each page's Cloudflare Web Analytics beacon with your zone token.
+Analytics is handled by Cloudflare Web Analytics' **automatic** setup (enabled per-domain
+in the Cloudflare dashboard), which injects the beacon server-side — so the pages carry no
+analytics tag of their own. The CSP in `site/_headers` already allows
+`static.cloudflareinsights.com` (script) and `cloudflareinsights.com` (beacon report).
 
 `site/shared/qrcodegen.js` is vendored from
 [Nayuki's QR Code generator](https://www.nayuki.io/page/qr-code-generator-library)

@@ -99,7 +99,6 @@ const headMeta = ({ title, desc, url, ogTitle }) => `  <meta charset="utf-8">
   <link rel="apple-touch-icon" href="icons/icon192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <script type="module" src="register-sw.js"></script>
-  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="landing.css">`;
 
