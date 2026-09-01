@@ -24,6 +24,10 @@ storage, no database. The link *is* the document.
 - **Edit link**: the result panel also shows an edit link — the same payload, but
   pointing back at the generator (e.g. `/free-invoice-generator#<payload>`) instead of the
   viewer. Opening it reloads the whole form, style choices included.
+- **Permanent link**: the Share panel also offers the same payload served from the
+  GitHub Pages mirror (`shared/durable-link.js`), which keeps resolving even if this host
+  goes away. It is an explicit option, not the default — the client link stays on this
+  domain so a shared document brings the recipient back to the product.
 - **Chrome extension** (`extension/`): an optional thin shortcut that opens the web app.
 
 ## How a link works

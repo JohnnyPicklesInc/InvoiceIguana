@@ -9,7 +9,7 @@ import { encodeReceipt, decodeReceipt, fromMinor } from './shared/codec.js';
 import { renderReceiptInto, money as fmtMoney } from './shared/render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
-import { durableLink } from './shared/durable-link.js';
+import { durableLink, viewerLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 import { TEMPLATES } from './shared/templates.js';
 import { CURRENCIES } from './shared/currencies.js';
@@ -431,8 +431,9 @@ async function update() {
   // The shared link always points at the durable GitHub Pages host, so it
   // survives our own hosting going away (see shared/durable-link.js). The edit
   // link stays on the current host so in-place editing works wherever you are.
-  currentUrl = durableLink(payload);
+  currentUrl = viewerLink(payload);
   $('editLinkInput').value = `${location.origin}/receipt#${payload}`;
+  $('durableLinkInput').value = durableLink(payload);
 
   renderReceiptInto($('preview'), receipt);
   const qrEl = $('preview').querySelector('[data-f="qr"]');
@@ -559,6 +560,12 @@ $('editLinkCopy').addEventListener('click', async () => {
   await navigator.clipboard.writeText($('editLinkInput').value);
   $('editLinkCopy').textContent = 'Copied!';
   setTimeout(() => { $('editLinkCopy').textContent = 'Copy'; }, 1200);
+});
+
+$('durableLinkCopy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('durableLinkInput').value);
+  $('durableLinkCopy').textContent = 'Copied!';
+  setTimeout(() => { $('durableLinkCopy').textContent = 'Copy'; }, 1200);
 });
 
 /** Reflects the tax dropdown into UI state: activeTaxRate drives the computed

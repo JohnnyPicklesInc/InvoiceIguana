@@ -13,7 +13,7 @@ import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQuoteInto } from './shared/quote-render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
-import { durableLink } from './shared/durable-link.js';
+import { viewerLink } from './shared/durable-link.js';
 import { shareLinks } from './shared/share-links.js';
 
 const $ = (id) => document.getElementById(id);
@@ -56,8 +56,8 @@ async function main() {
       renderReceiptInto($('receipt'), receipt);
       const qrEl = $('receipt').querySelector('[data-f="qr"]');
       qrEl.hidden = !receipt.qr;
-      if (receipt.qr) renderQrInto(qrEl, durableLink(payload));
-      wireShareLinks(durableLink(payload), receipt.merchant);
+      if (receipt.qr) renderQrInto(qrEl, viewerLink(payload));
+      wireShareLinks(viewerLink(payload), receipt.merchant);
       current = receipt;
       currentDocType = docType;
       show('receipt');
@@ -67,8 +67,8 @@ async function main() {
       renderInvoiceInto($('invoice'), invoice);
       const qrEl = $('invoice').querySelector('[data-f="qr"]');
       qrEl.hidden = !invoice.qr;
-      if (invoice.qr) renderQrInto(qrEl, durableLink(payload));
-      wireShareLinks(durableLink(payload), invoice.seller.name);
+      if (invoice.qr) renderQrInto(qrEl, viewerLink(payload));
+      wireShareLinks(viewerLink(payload), invoice.seller.name);
       current = invoice;
       currentDocType = docType;
       show('invoice');
@@ -78,8 +78,8 @@ async function main() {
       renderQuoteInto($('quote'), quote);
       const qrEl = $('quote').querySelector('[data-f="qr"]');
       qrEl.hidden = !quote.qr;
-      if (quote.qr) renderQrInto(qrEl, durableLink(payload));
-      wireShareLinks(durableLink(payload), quote.seller.name);
+      if (quote.qr) renderQrInto(qrEl, viewerLink(payload));
+      wireShareLinks(viewerLink(payload), quote.seller.name);
       current = quote;
       currentDocType = docType;
       show('quote');
@@ -90,7 +90,7 @@ async function main() {
       if (contact) {
         const num = quote.invoiceNumber ? ` #${quote.invoiceNumber}` : '';
         const subject = encodeURIComponent(`Accepting your quote${num}`);
-        const body = encodeURIComponent(`Hi ${quote.seller.name || ''},\n\nI'd like to accept this quote${num}.\n\n${durableLink(payload)}\n`);
+        const body = encodeURIComponent(`Hi ${quote.seller.name || ''},\n\nI'd like to accept this quote${num}.\n\n${viewerLink(payload)}\n`);
         accept.href = `mailto:${contact}?subject=${subject}&body=${body}`;
       } else {
         accept.hidden = true;

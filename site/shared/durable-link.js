@@ -30,3 +30,17 @@ const PAGES_BASE = 'https://johnnypicklesinc.github.io/InvoiceIguana';
 export function durableLink(payload) {
   return `${PAGES_BASE}/r.html#${payload}`;
 }
+
+/**
+ * The normal client-facing link: this site's own viewer, on whatever origin
+ * the page is currently served from.
+ *
+ * This is what share buttons, the copied link and the QR code use. It is the
+ * link that actually reaches other people, so it carries the brand and brings
+ * the recipient back to the product; durableLink() stays available beside it
+ * as an explicit "works even if this site goes away" option. Both encode the
+ * identical payload, so a document shared either way renders the same.
+ */
+export function viewerLink(payload) {
+  return `${location.origin}/r#${payload}`;
+}
