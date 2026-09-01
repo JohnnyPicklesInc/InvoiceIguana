@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invoice Generator With No Signup — No Account, No Email | InvoiceIguana</title>
+  <meta name="description" content="Make and send an invoice with no signup, no account and no email address. The whole invoice is encoded in the link itself, so there is nothing to log into. Free, no watermark, no expiry.">
+  <link rel="canonical" href="https://invoiceiguana.com/invoice-generator-no-signup">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InvoiceIguana">
+  <meta property="og:url" content="https://invoiceiguana.com/invoice-generator-no-signup">
+  <meta property="og:title" content="Invoice Generator With No Signup — No Account, No Email">
+  <meta property="og:description" content="Make and send an invoice with no signup, no account and no email address. The whole invoice is encoded in the link itself, so there is nothing to log into. Free, no watermark, no expiry.">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Invoice Generator With No Signup — No Account, No Email">
+  <meta name="twitter:description" content="Make and send an invoice with no signup, no account and no email address. The whole invoice is encoded in the link itself, so there is nothing to log into. Free, no watermark, no expiry.">
+  <meta name="twitter:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="theme-color" content="#12a06a">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script type="module" src="register-sw.js"></script>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="landing.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Invoice Generator (No Signup)",
+  "url": "https://invoiceiguana.com/invoice-generator-no-signup",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "Make and send an invoice with no signup, no account and no email address. The whole invoice is encoded in the link itself, so there is nothing to log into. Free, no watermark, no expiry.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need an account to make an invoice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. There is no signup, no email address and no password anywhere in the app. Open the generator and start typing — the first invoice takes about a minute."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can you send an invoice without an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The invoice is compressed and encoded into the link itself rather than saved on a server, so sending the link sends the document. Your client opens it in any browser with nothing to install and nothing to sign up for."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is my invoice stored if there is no server?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In two places you control: the link you copied, and this browser if you chose to save it. Saved invoices live in IndexedDB on your own device, with a one-click JSON export for backup. Nothing is uploaded."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a watermark or a limit on free invoices?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Neither. There is no watermark on the PDF, no cap on how many invoices you make, and no feature held back for a paid tier."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the link expire?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Because the link carries the document rather than pointing at a database row, there is nothing to expire or delete. It keeps working as long as the recipient has the link."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I still get paid through it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — add your payment instructions, or a payment link (Stripe, PayPal, Wise) that shows up as a Pay button on the invoice your client opens. The money never routes through us; the link goes straight to your processor."
+      }
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <a href="/free-invoice-generator">Invoice</a>
+      <a href="/receipt">Receipt</a>
+      <a href="/quote">Quote</a>
+      <a href="/invoice-templates">Templates</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>An invoice generator with <span class="grad">no signup</span></h1>
+    <p class="tagline">No account, no email address, no "start your free trial". Open the generator, type the invoice, send the link. There is no login screen because there is nothing to log in to.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/free-invoice-generator?prompt=Invoice%20from%20Riverside%20Joinery%20to%20Ana%20Fields%20for%2012%20hours%20of%20finish%20carpentry%20at%20%2465%2Fhr%20plus%20%24180%20of%20materials%2C%20due%20in%2014%20days">Make an invoice now</a>
+      <a class="btn btn-lg" href="/free-invoice-generator">Open the free generator</a>
+    </div>
+    <p class="reassure">No account · No email required · No watermark · Nothing stored on a server</p>
+  </section>
+
+  <main class="page">
+    <section>
+      <h2>Why there is no signup</h2>
+      <p class="lede">Most invoice tools need an account because your invoice lives in their database. This one does not have a database.</p>
+      <p>When you finish an invoice, the whole document — your business, the client, every line
+         item, the tax, your accent colour and logo — is normalised, compressed with the browser's
+         own <code>deflate-raw</code>, and encoded into the part of the link after the
+         <code>#</code>. That fragment is <b>never sent to a web server</b>; browsers do not
+         transmit it. The link <em>is</em> the invoice.</p>
+      <p>So there is no record to protect behind a password, no row to look up, and nothing to
+         make you register for. A typical invoice comes out at a few hundred characters, and
+         around 100 line items still fits inside the ~2,000-character budget that chat apps and
+         email clients handle safely.</p>
+    </section>
+
+    <div class="ad-slot"></div>
+
+    <section>
+      <h2>What "no signup" actually gets you</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">🚫</div>
+          <h3>No account, ever</h3>
+          <p>No email, no password, no verification step, no trial that expires into a paywall. The generator opens straight into a working form.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🔗</div>
+          <h3>Your client signs up for nothing either</h3>
+          <p>They open the link and see the invoice. No portal, no "create an account to view this document" wall in front of the person who owes you money.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">💾</div>
+          <h3>Saved on your device, not ours</h3>
+          <p>Invoices you keep are stored in this browser (IndexedDB). There is a one-click JSON backup so your records are not hostage to a browser profile.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">✈️</div>
+          <h3>Works with no connection</h3>
+          <p>A service worker precaches the whole app, so the generator and the viewer both work offline. Useful on a job site with no signal.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🖊️</div>
+          <h3>No watermark, no invoice cap</h3>
+          <p>Nothing is stamped on your PDF and there is no "3 free invoices per month". It is the same tool at the first invoice and the thousandth.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">⏳</div>
+          <h3>Links do not expire</h3>
+          <p>The link is not a lookup into an account that could lapse — it carries the document itself. It still opens years later, whatever happens to this site.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="explainer">
+      <h2>The one thing that does leave your browser</h2>
+      <div class="explainer-grid">
+        <div class="explainer-card">
+          <div class="ico">🔒</div>
+          <p>The optional <b>Ask AI</b> box is the single exception. When you click it — and only then —
+          the text you typed is sent to our gateway so a model can draft or edit the invoice, and
+          the result comes back. Nothing about it is stored. Everything else on this site
+          (editing, saving, sharing, PDF export, the viewer) runs entirely in your browser and
+          contacts no server at all. If you never touch the AI box, nothing you type ever leaves
+          the machine.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="ad-slot"></div>
+
+    <section id="faq">
+      <h2>Questions</h2>
+      <div class="faq">
+        <details><summary>Do I need an account to make an invoice?</summary><p>No. There is no signup, no email address and no password anywhere in the app. Open the generator and start typing — the first invoice takes about a minute.</p></details>
+        <details><summary>How can you send an invoice without an account?</summary><p>The invoice is compressed and encoded into the link itself rather than saved on a server, so sending the link sends the document. Your client opens it in any browser with nothing to install and nothing to sign up for.</p></details>
+        <details><summary>Where is my invoice stored if there is no server?</summary><p>In two places you control: the link you copied, and this browser if you chose to save it. Saved invoices live in IndexedDB on your own device, with a one-click JSON export for backup. Nothing is uploaded.</p></details>
+        <details><summary>Is there a watermark or a limit on free invoices?</summary><p>Neither. There is no watermark on the PDF, no cap on how many invoices you make, and no feature held back for a paid tier.</p></details>
+        <details><summary>Does the link expire?</summary><p>No. Because the link carries the document rather than pointing at a database row, there is nothing to expire or delete. It keeps working as long as the recipient has the link.</p></details>
+        <details><summary>Can I still get paid through it?</summary><p>Yes — add your payment instructions, or a payment link (Stripe, PayPal, Wise) that shows up as a Pay button on the invoice your client opens. The money never routes through us; the link goes straight to your processor.</p></details>
+      </div>
+    </section>
+
+    <section class="related">
+      <h2>More</h2>
+      <nav class="related-links">
+        <a href="/ai-invoice-generator">AI invoice generator</a>
+        <a href="/invoice-templates">Invoice templates by trade →</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/quote">Quote generator</a>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice, quote &amp; receipt maker. Everything is saved in your browser or shared as a link — no signup, no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/free-invoice-generator">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/quote">Quote generator</a>
+        <a href="/ai-invoice-generator">AI invoice generator</a>
+        <a href="/invoice-generator-no-signup">Invoice generator, no signup</a>
+      </div>
+      <div class="footer-col">
+        <h4>Templates</h4>
+        <a href="/invoice-templates">Invoice templates</a>
+        <a href="/quote-templates">Quote templates</a>
+        <a href="/receipt-templates">Receipt templates</a>
+        <a href="/bill-of-sale-templates">Bill of sale templates</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+    <p class="footer-legal">Saved documents live in your browser, not on any server. Share via link or download as PDF — no signup, ever.</p>
+  </footer>
+  <script type="module" src="ads.js"></script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Invoice Generator — Describe the Job, Get an Invoice | InvoiceIguana</title>
+  <meta name="description" content="Describe a job in plain English and get a finished invoice, or describe a change and it edits the one you have. The model never does the arithmetic — the app computes every total and tax. Free, no signup.">
+  <link rel="canonical" href="https://invoiceiguana.com/ai-invoice-generator">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InvoiceIguana">
+  <meta property="og:url" content="https://invoiceiguana.com/ai-invoice-generator">
+  <meta property="og:title" content="AI Invoice Generator — Describe the Job, Get an Invoice">
+  <meta property="og:description" content="Describe a job in plain English and get a finished invoice, or describe a change and it edits the one you have. The model never does the arithmetic — the app computes every total and tax. Free, no signup.">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Invoice Generator — Describe the Job, Get an Invoice">
+  <meta name="twitter:description" content="Describe a job in plain English and get a finished invoice, or describe a change and it edits the one you have. The model never does the arithmetic — the app computes every total and tax. Free, no signup.">
+  <meta name="twitter:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="theme-color" content="#12a06a">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script type="module" src="register-sw.js"></script>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="landing.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "AI Invoice Generator",
+  "url": "https://invoiceiguana.com/ai-invoice-generator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "Describe a job in plain English and get a finished invoice, or describe a change and it edits the one you have. The model never does the arithmetic — the app computes every total and tax. Free, no signup.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can the AI get my totals wrong?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It cannot produce the totals at all. The model returns line items and a tax rate; the app computes every subtotal, discount, tax amount and total itself in integer minor units. Arithmetic never passes through the model."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an account to use the AI invoice generator?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. There is no signup and no email address for any part of the app, the AI included. It is free and there is no cap on how many invoices you draft."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my invoice sent to a server when I use AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The text you type in the AI box is sent when you click Ask AI, and only then, so a model can draft or edit the invoice. Nothing is stored. If you do not use the AI box, nothing you type ever leaves your browser."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it edit an invoice I already started?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Describe the change in the same box — \"add two hours to the second line\", \"make it net 30\" — and it edits that invoice rather than starting over. A summary shows what changed and Undo restores the previous version."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I type to get a good invoice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Plain English works. Say who it is for, what the work was, the quantities and rates, and the terms: \"12 hours of finish carpentry at $65/hr plus $180 of materials for Ana Fields, due in 14 days\". Missing details you can just fill in on the form afterwards."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the AI work for receipts, quotes and bills of sale too?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — the receipt, quote and bill of sale generators each have the same box, with the same rules about the app doing the arithmetic and Undo restoring the previous version."
+      }
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <a href="/free-invoice-generator">Invoice</a>
+      <a href="/receipt">Receipt</a>
+      <a href="/quote">Quote</a>
+      <a href="/invoice-templates">Templates</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Free <span class="grad">AI invoice generator</span></h1>
+    <p class="tagline">Type "8 hours of drywall repair at $55 an hour plus $120 of materials for Marisol Vega, net 15" and get a finished invoice. Or describe a change to one you already have, and it edits it.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/free-invoice-generator?prompt=8%20hours%20of%20drywall%20repair%20at%20%2455%2Fhr%20plus%20%24120%20of%20materials%20for%20Marisol%20Vega%2C%20net%2015">Try it with this example</a>
+      <a class="btn btn-lg" href="/free-invoice-generator">Open the free generator</a>
+    </div>
+    <p class="reassure">Free · No account · Undo any AI change · The app does the maths, not the model</p>
+  </section>
+
+  <main class="page">
+    <section>
+      <h2>One box that writes or rewrites</h2>
+      <p class="lede">The same box does both jobs, and it works out which one you meant from whether the form already has anything in it.</p>
+      <p><b>On an empty form</b> it drafts the whole invoice: your business, the client, itemised
+         lines with quantities and rates, the tax rate, and the terms you described. Nothing needs
+         to be filled in first.</p>
+      <p><b>On an invoice you already have</b> it edits in place. "Add two more hours to the second
+         line", "change the due date to net 30", "drop the discount and add 8.25% sales tax" — it
+         changes what you asked about and leaves the rest alone.</p>
+    </section>
+
+    <div class="ad-slot"></div>
+
+    <section>
+      <h2>Why the numbers are trustworthy</h2>
+      <p class="lede">The usual objection to an AI invoice is that language models are bad at arithmetic. That objection does not apply here, by design.</p>
+      <p><b>The model is never allowed to do the maths.</b> It returns a tax
+         <em>rate</em> — never a tax amount, never a subtotal, never a total. Every figure on the
+         finished invoice is computed by the app from the line items, in integer minor units, the
+         same code path as an invoice you typed by hand. A model that is bad at multiplication
+         cannot produce a wrong total here, because it is never asked for one.</p>
+      <p>You also get a plain-language summary of exactly what changed — "Added a line item",
+         "Changed the due date" — generated by diffing the invoice before and after, not by asking
+         the model what it says it did. And an <b>Undo</b> button that restores the previous
+         version exactly, including the styling.</p>
+    </section>
+
+    <section class="explainer">
+      <h2>What gets sent, and when</h2>
+      <div class="explainer-grid">
+        <div class="explainer-card">
+          <div class="ico">🔒</div>
+          <p>Only the text you type in the AI box, and only at the moment you click <b>Ask AI</b>. It
+          goes to our gateway, a model drafts or edits the invoice, and the result comes straight
+          back — none of it is stored. The rest of the app never contacts a server: editing,
+          saving, sharing, PDF export and the client's view of the invoice all happen in the
+          browser. The AI is entirely optional, and the form works exactly the same without it.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="ad-slot"></div>
+
+    <section id="faq">
+      <h2>Questions</h2>
+      <div class="faq">
+        <details><summary>Can the AI get my totals wrong?</summary><p>It cannot produce the totals at all. The model returns line items and a tax rate; the app computes every subtotal, discount, tax amount and total itself in integer minor units. Arithmetic never passes through the model.</p></details>
+        <details><summary>Do I need an account to use the AI invoice generator?</summary><p>No. There is no signup and no email address for any part of the app, the AI included. It is free and there is no cap on how many invoices you draft.</p></details>
+        <details><summary>Is my invoice sent to a server when I use AI?</summary><p>The text you type in the AI box is sent when you click Ask AI, and only then, so a model can draft or edit the invoice. Nothing is stored. If you do not use the AI box, nothing you type ever leaves your browser.</p></details>
+        <details><summary>Can it edit an invoice I already started?</summary><p>Yes. Describe the change in the same box — &quot;add two hours to the second line&quot;, &quot;make it net 30&quot; — and it edits that invoice rather than starting over. A summary shows what changed and Undo restores the previous version.</p></details>
+        <details><summary>What should I type to get a good invoice?</summary><p>Plain English works. Say who it is for, what the work was, the quantities and rates, and the terms: &quot;12 hours of finish carpentry at $65/hr plus $180 of materials for Ana Fields, due in 14 days&quot;. Missing details you can just fill in on the form afterwards.</p></details>
+        <details><summary>Does the AI work for receipts, quotes and bills of sale too?</summary><p>Yes — the receipt, quote and bill of sale generators each have the same box, with the same rules about the app doing the arithmetic and Undo restoring the previous version.</p></details>
+      </div>
+    </section>
+
+    <section class="related">
+      <h2>More</h2>
+      <nav class="related-links">
+        <a href="/invoice-generator-no-signup">Invoice generator with no signup</a>
+        <a href="/invoice-templates">Invoice templates by trade →</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/quote">Quote generator</a>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice, quote &amp; receipt maker. Everything is saved in your browser or shared as a link — no signup, no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/free-invoice-generator">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+        <a href="/quote">Quote generator</a>
+        <a href="/ai-invoice-generator">AI invoice generator</a>
+        <a href="/invoice-generator-no-signup">Invoice generator, no signup</a>
+      </div>
+      <div class="footer-col">
+        <h4>Templates</h4>
+        <a href="/invoice-templates">Invoice templates</a>
+        <a href="/quote-templates">Quote templates</a>
+        <a href="/receipt-templates">Receipt templates</a>
+        <a href="/bill-of-sale-templates">Bill of sale templates</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+    <p class="footer-legal">Saved documents live in your browser, not on any server. Share via link or download as PDF — no signup, ever.</p>
+  </footer>
+  <script type="module" src="ads.js"></script>
+</body>
+</html>
