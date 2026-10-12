@@ -9,7 +9,7 @@
  *
  * Bump CACHE on each deploy to invalidate the old shell. */
 
-const CACHE = 'invoiceiguana-v1';
+const CACHE = 'invoiceiguana-v2';
 
 // Both clean and .html forms are listed because production serves both and we
 // don't know which a given navigation used. Missing entries (files added later)
