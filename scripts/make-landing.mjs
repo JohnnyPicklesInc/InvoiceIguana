@@ -19,6 +19,20 @@ import { billsOfSale } from './bill-of-sale.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_DIR = join(ROOT, 'site');
 
+// --- what stays in search ---------------------------------------------------
+// After three months at ~position 73 with 0 clicks, the 67 near-identical variants
+// (same intro/3 lines/3 FAQs skeleton, ~140 unique words each) were cut back to the
+// few with real demand, a beatable SERP or distinct content. Everything else stays
+// on the site for visitors but is noindexed and left out of sitemap.xml; hubs too.
+const INDEXED = new Set([
+  'general-contractor-invoice-template',
+  'roofing-quote-template',
+  'rent-receipt-template',
+  'donation-receipt-template',
+  'car-bill-of-sale',
+]);
+const ROBOTS_NOINDEX = '\n  <meta name="robots" content="noindex, follow">';
+
 // --- helpers ---------------------------------------------------------------
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -81,7 +95,7 @@ const footer = `  <footer class="site-footer">
   </footer>
   <script type="module" src="ads.js"></script>`;
 
-const headMeta = ({ title, desc, url, ogTitle }) => `  <meta charset="utf-8">
+const headMeta = ({ title, desc, url, ogTitle, noindex = false }) => `  <meta charset="utf-8">${noindex ? ROBOTS_NOINDEX : ''}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(desc)}">
@@ -262,7 +276,7 @@ function page(kind, entry) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-${headMeta({ title, desc, url, ogTitle })}
+${headMeta({ title, desc, url, ogTitle, noindex: !INDEXED.has(slug) })}
   <script type="application/ld+json">
 ${ld(appLd)}
   </script>
@@ -335,7 +349,7 @@ function hub(kind, kindKey) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-${headMeta({ title, desc, url, ogTitle })}
+${headMeta({ title, desc, url, ogTitle, noindex: true })}
   <script type="application/ld+json">
 ${ld(itemListLd)}
   </script>
@@ -569,10 +583,13 @@ function sitemap() {
   add(`${SITE}/quote`, 'monthly', '0.8');
   add(`${SITE}/bill-of-sale`, 'monthly', '0.9');
   add(`${SITE}/privacy`, 'yearly', '0.3');
-  for (const h of HUBS) add(`${SITE}/${h.slug}`, 'monthly', '0.8');
   for (const e of STANDALONE) add(`${SITE}/${e.slug}`, 'monthly', '0.8');
+  // Hubs and all but the INDEXED variants are noindexed, so they stay out of here.
   for (const key of Object.keys(KINDS)) {
-    for (const e of KINDS[key].data) add(`${SITE}/${e.slug}-${KINDS[key].suffix}`, 'monthly', '0.7');
+    for (const e of KINDS[key].data) {
+      const slug = `${e.slug}-${KINDS[key].suffix}`;
+      if (INDEXED.has(slug)) add(`${SITE}/${slug}`, 'monthly', '0.7');
+    }
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows.join('\n')}\n</urlset>\n`;
 }

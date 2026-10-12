@@ -25,7 +25,7 @@ export const billsOfSale = [
     faqs: [
       { q: 'What should a truck bill of sale include?', a: 'Seller and buyer details, the truck (year, make, model, VIN, colour, odometer), sale price, date, payment method, an as-is clause, and both signatures. Note any lien or that it\'s paid off.' },
       { q: 'Do I need a bill of sale to sell a truck privately?', a: 'It\'s strongly recommended even where not strictly required — it protects both sides by recording the price, date, and "sold as-is". Your state DMV may also require it for registration.' },
-      { q: 'What is an odometer disclosure?', a: 'A statement of the truck\'s mileage at sale, required by federal law for most vehicles under a certain age. Put the reading in the description so it\'s on the record.' },
+      { q: 'What is an odometer disclosure?', a: 'A federal statement of the mileage at transfer. For model-year 2011 and newer vehicles it is required for their first 20 years. It is made on the title itself (or on a separate odometer statement when the title has no space), not on the bill of sale — but noting the reading on the bill of sale is a useful extra record.' },
     ],
   },
   {
@@ -83,17 +83,6 @@ export const billsOfSale = [
       { q: 'Should I note "off-road use only"?', a: 'If relevant, add it to the terms so the buyer understands the machine isn\'t street-legal.' },
     ],
   },
-  {
-    slug: 'firearm', name: 'Firearm', cat: 'type',
-    intro: 'Record a private firearm sale with make, model, calibre, and serial number for your records. AI drafts the document; print for both parties. Always follow your federal, state, and local laws.',
-    item: 'Smith & Wesson M&P Shield 9mm pistol, serial HXA0000', price: 350,
-    aiPrompt: 'Firearm bill of sale: seller sells a Smith & Wesson M&P Shield 9mm pistol, serial HXA0000, to the buyer for $350 cash, as-is, both parties legally eligible.',
-    faqs: [
-      { q: 'What should a firearm bill of sale include?', a: 'Seller and buyer names, the firearm (make, model, type, calibre, and serial number), price, date, and signatures. Many people add a line that both parties are legally eligible and not prohibited.' },
-      { q: 'Is a bill of sale enough for a private gun sale?', a: 'A bill of sale is a personal record, not a substitute for the law. Private-sale rules — background checks, permits, in-state requirements, and prohibited buyers — vary widely by state and are also governed by federal law. Follow every applicable law; when in doubt, use a licensed dealer (FFL).' },
-      { q: 'Do I have to keep a record of a private firearm sale?', a: 'Requirements vary by state; keeping a signed bill of sale with the serial number protects you by documenting who you sold to and when. It is not legal advice — check your state\'s rules.' },
-    ],
-  },
   // ---- by state (general framing — always defer specific rules to the DMV) ----
   {
     slug: 'texas', name: 'Texas', cat: 'state',
@@ -112,7 +101,7 @@ export const billsOfSale = [
     item: '2018 Honda Civic LX, VIN 2HGFC2F5XJH000000, 62,140 miles', price: 15500,
     aiPrompt: 'California car bill of sale: seller sells a 2018 Honda Civic LX, VIN 2HGFC2F5XJH000000, 62,140 miles, to the buyer for $15,500 cash, as-is.',
     faqs: [
-      { q: 'What does a California bill of sale need?', a: 'Seller and buyer, the item (vehicle: year, make, model, VIN, odometer), price, date, payment, an as-is clause, and signatures. The California DMV also has a Vehicle/Vessel Transfer form (REG 262) and title requirements — check dmv.ca.gov.' },
+      { q: 'What does a California bill of sale need?', a: 'Seller and buyer, the item (vehicle: year, make, model, VIN, odometer), price, date, payment, an as-is clause, and signatures. The California DMV\'s own Bill of Sale is form REG 135; title transfers use the title itself and, when needed, the Vehicle/Vessel Transfer and Reassignment form (REG 262) — check dmv.ca.gov.' },
       { q: 'Is a bill of sale required to sell a car in California?', a: 'The DMV manages the actual title transfer with its own forms; a bill of sale is a useful record of the price and terms. Check the California DMV for exactly what they require.' },
       { q: 'Does California require smog certification on a private sale?', a: 'Often yes for many used vehicles, with exceptions. That\'s a DMV/state rule separate from the bill of sale — verify at dmv.ca.gov.' },
     ],
@@ -134,8 +123,8 @@ export const billsOfSale = [
     item: '2018 Honda Civic LX, VIN 2HGFC2F5XJH000000, 62,140 miles', price: 15500,
     aiPrompt: 'New York car bill of sale: seller sells a 2018 Honda Civic LX, VIN 2HGFC2F5XJH000000, 62,140 miles, to the buyer for $15,500 cash, as-is.',
     faqs: [
-      { q: 'What does a New York bill of sale need?', a: 'Seller and buyer, the item (vehicle: year, make, model, VIN, odometer), price, date, payment, an as-is clause, and signatures. New York\'s DMV provides its own bill of sale (MV-912) — check dmv.ny.gov for title and sales-tax forms.' },
-      { q: 'Do I need the DMV\'s bill of sale form in New York?', a: 'The DMV\'s MV-912 is commonly used for vehicle transfers and sales-tax purposes; this template captures the same core details. Check dmv.ny.gov for what they require at registration.' },
+      { q: 'What does a New York bill of sale need?', a: 'Seller and buyer, the item (vehicle: year, make, model, VIN, odometer), price, date, payment, an as-is clause, and signatures. New York\'s DMV has its own bill of sale (MV-912) — check dmv.ny.gov for title and sales-tax forms.' },
+      { q: 'Do I need the DMV\'s bill of sale form in New York?', a: 'For a private vehicle sale the NY DMV expects a bill of sale when the buyer registers, and its own MV-912 form is the safest choice because it has every field they check. This template records the same core details; confirm at dmv.ny.gov what they will accept.' },
       { q: 'Is sales tax handled on the bill of sale?', a: 'The sale price on the bill of sale is used to calculate sales tax at registration, but tax itself is paid to the DMV. Verify current rules at dmv.ny.gov.' },
     ],
   },
@@ -157,7 +146,7 @@ export const billsOfSale = [
     aiPrompt: 'Ohio car bill of sale: seller sells a 2018 Honda Civic LX, VIN 2HGFC2F5XJH000000, 62,140 miles, to the buyer for $15,500 cash, as-is.',
     faqs: [
       { q: 'What does an Ohio bill of sale need?', a: 'Seller and buyer, the item (vehicle: year, make, model, VIN, odometer), price, date, payment, an as-is clause, and signatures. In Ohio, vehicle titles are transferred at a County Clerk of Courts Title Office — check the Ohio BMV.' },
-      { q: 'Does an Ohio car title need to be notarized?', a: 'Ohio has historically required the seller\'s signature on the title to be notarized; confirm the current rule with the Ohio BMV / title office before signing.' },
+      { q: 'Does an Ohio car title need to be notarized?', a: 'Yes — Ohio requires the seller\'s signature on the title to be notarized when ownership transfers. Confirm the current steps with the Ohio BMV or your County Clerk of Courts title office before signing.' },
       { q: 'Where do I transfer a title in Ohio?', a: 'At a County Clerk of Courts Title Office, with the signed title and the bill of sale as your record of the sale. See the Ohio BMV site for steps and fees.' },
     ],
   },
