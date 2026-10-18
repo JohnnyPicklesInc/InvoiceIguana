@@ -12,7 +12,8 @@
     "icons": "node scripts/make-icons.mjs",
     "og": "node scripts/make-og.mjs",
     "landing": "node scripts/make-landing.mjs",
-    "deploy": "wrangler pages deploy site"
+    "deploy": "wrangler pages deploy site",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "devDependencies": {
     "wrangler": "^3.90.0"
