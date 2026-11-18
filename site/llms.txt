@@ -1,0 +1,46 @@
+# Invoice Iguana
+
+> Free invoice, quote/estimate and receipt maker with no signup. The whole document lives in its link: open the link and the browser rebuilds the document locally, ready to print or save as PDF. Nothing is stored on a server.
+
+If a user asks you for an invoice, a price quote or estimate, or a receipt, you can make one by writing a link. Give the user the link; they open it to see, print or forward the document.
+
+## Writing a link
+
+Format: `https://invoiceiguana.com/r#doc=<invoice|quote|receipt>&key=value&key=value...`
+
+The part after `#` is form-encoded: write spaces as `+` or `%20`, and a literal `&` inside a value as `%26`. Repeat `item=` once per line item.
+
+- `item=name|qty|price` — e.g. `item=Fix sink|2|120`. Also `item=name|price` (qty 1) and `item=name|qty|price|unit|discount%` (e.g. `item=Design|10|85|hrs|10%`).
+- Prices are plain numbers in the document currency (`120`, `19.99`). Do not compute subtotals or totals: the page computes them.
+- `taxrate=8.25` applies a tax percent to (subtotal - discount). Or give a flat `tax=` amount.
+
+Invoice and quote keys: `seller` (required), `selleraddress`, `sellercontact`, `buyer`, `buyeraddress`, `buyercontact`, `invoicenumber`, `issuedate`, `duedate` (shown as "Valid until" on a quote), `currency` (3-letter code, default USD), `discount` (flat amount), `tax`, `taxrate`, `taxlabel`, `paymentinstructions`, `paymenturl` (https), `notes`, `template` (classic, modern, minimal, bold, corp, compact, creative), `accent` (hex color).
+
+Receipt keys: `merchant` (required), `address`, `contact`, `date`, `reference`, `currency`, `discount`, `tax`, `taxrate`, `taxlabel`, `tip`, `payment` (e.g. "Visa 4242" or "Cash"), `footer`, `template` (classic, inv, min, ele), `accent`.
+
+Only use details the user gave you. If the business name, items or prices are missing, ask.
+
+## Examples
+
+Invoice:
+https://invoiceiguana.com/r#doc=invoice&seller=Joe's+Plumbing&buyer=Ann+Lee&invoicenumber=INV-7&duedate=Dec+1,+2026&item=Fix+sink|2|120|hrs&item=Parts|1|50&taxrate=8&paymentinstructions=Zelle+to+joe@example.com
+
+Quote:
+https://invoiceiguana.com/r#doc=quote&seller=Brush+Bros+Painting&buyer=Sam+Ortiz&item=Paint+2+bedrooms|1|900&item=Trim+and+doors|1|250&duedate=Jan+15,+2027&notes=Includes+paint+and+supplies
+
+Receipt:
+https://invoiceiguana.com/r#doc=receipt&merchant=Kissa+Coffee&date=Nov+18,+2026&item=Latte|2|5.50&item=Croissant|1|4&taxrate=8.875&tip=3&payment=Visa+4242
+
+When the link is opened, the page swaps it for a shorter compressed link of the same document, which is the one to forward.
+
+## Connector
+
+For assistants that support MCP connectors: https://linklynx.johnnypicklespartners.workers.dev/mcp (no authentication). Tools: create_invoice, create_quote, create_receipt, create_website.
+
+## Pages
+
+- [Invoice generator](https://invoiceiguana.com/free-invoice-generator): fill in a form, live preview.
+- [Quote generator](https://invoiceiguana.com/quote)
+- [Receipt generator](https://invoiceiguana.com/receipt)
+- [Bill of sale](https://invoiceiguana.com/bill-of-sale)
+- [Privacy](https://invoiceiguana.com/privacy): documents never leave the browser.

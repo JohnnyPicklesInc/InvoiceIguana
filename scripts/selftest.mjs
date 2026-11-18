@@ -21,6 +21,7 @@ import { TEMPLATES as INVOICE_TEMPLATES } from '../site/shared/invoice-templates
 import { encodeInvoice, decodeInvoice, DOC_INVOICE } from '../site/shared/invoice-codec.js';
 import { encodeQuote, decodeQuote, DOC_QUOTE } from '../site/shared/quote-codec.js';
 import { parseInvoice } from '../site/shared/invoice-parse.js';
+import { isReadableFragment, readableToPayload, readableToRaw } from '../site/shared/readable.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 let passed = 0;
@@ -643,6 +644,55 @@ await test('quote: round-trips, carries the "q" doc type, and is cross-type isol
   // A quote payload must not decode as an invoice/receipt and vice versa.
   await expectThrow(decodeInvoice(payload), BadPayload);
   await expectThrow(decodeQuote(await encodeInvoice(quote)), BadPayload);
+});
+
+
+// ---- readable links (hand/AI-written #doc=...) ------------------------------
+
+await test('readable: invoice with items, units, tax rate and style', async () => {
+  const frag = "doc=invoice&seller=Joe's+Plumbing&buyer=Ann%20Lee&item=Fix sink|2|120|hrs&item=Parts|$50&taxrate=8&template=modern&accent=%232456A6&duedate=Dec+1,+2026";
+  ok(isReadableFragment(frag));
+  const r = await readableToPayload(frag);
+  ok(r.payload, JSON.stringify(r.errors));
+  ok(r.payload.startsWith('1i'));
+  const inv = await decodeInvoice(r.payload);
+  strictEqual(inv.seller.name, "Joe's Plumbing");
+  strictEqual(inv.buyer.name, 'Ann Lee');
+  strictEqual(inv.items[0].unit, 'hrs');
+  strictEqual(inv.items[1].priceMinor, 5000);
+  strictEqual(inv.subtotalMinor, 29000);
+  strictEqual(inv.taxMinor, 2320);
+  strictEqual(inv.totalMinor, 31320);
+  strictEqual(inv.taxLabel, 'Tax (8%)');
+  strictEqual(inv.template, 'modern');
+  strictEqual(inv.accent, '2456a6');
+  strictEqual(inv.dueDate, 'Dec 1, 2026');
+});
+
+await test('readable: quote and receipt doc types; tax=8% means a rate', async () => {
+  const q = await readableToPayload('doc=quote&from=Brush+Bros&item=Paint|1|1,200&tax=8%25');
+  ok(q.payload.startsWith('1q'));
+  const quote = await decodeQuote(q.payload);
+  strictEqual(quote.seller.name, 'Brush Bros');
+  strictEqual(quote.totalMinor, 129600);
+  const r = await readableToPayload('doc=receipt&seller=Kissa&currency=JPY&item=Coffee|2|600&tip=100&payment=Cash');
+  ok(r.payload.startsWith('1r'));
+  const rc = await decodeReceipt(r.payload);
+  strictEqual(rc.merchant, 'Kissa');
+  strictEqual(rc.totalMinor, 1300);
+});
+
+await test('readable: totals in the link are ignored, errors are reported', async () => {
+  ok(!('total' in readableToRaw('doc=invoice&seller=X&item=A|1|10&total=999999').raw));
+  const r = await readableToPayload('doc=invoice&seller=X&item=A|1|10&total=999999&subtotal=5');
+  const inv = await decodeInvoice(r.payload);
+  strictEqual(inv.subtotalMinor, 1000);
+  strictEqual(inv.totalMinor, 1000);
+  const bad = await readableToPayload('doc=invoice&item=A|1|10');
+  ok(!bad.payload && bad.errors.some((e) => /seller/.test(e)), JSON.stringify(bad));
+  const badKind = await readableToPayload('doc=memo&seller=X&item=A|1|1');
+  ok(!badKind.payload && /doc/.test(badKind.errors[0]));
+  ok(!isReadableFragment('1iq1bKVbJS8spPVdJRylSyio5Wcsus'), 'compact payloads are not readable links');
 });
 
 // ---- summary ------------------------------------------------------------------

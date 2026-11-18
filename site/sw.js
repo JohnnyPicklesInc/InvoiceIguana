@@ -9,7 +9,7 @@
  *
  * Bump CACHE on each deploy to invalidate the old shell. */
 
-const CACHE = 'invoiceiguana-v3';
+const CACHE = 'invoiceiguana-v4';
 
 // Both clean and .html forms are listed because production serves both and we
 // don't know which a given navigation used. Missing entries (files added later)
@@ -17,7 +17,6 @@ const CACHE = 'invoiceiguana-v3';
 const PRECACHE = [
   '/', '/index.html',
   '/free-invoice-generator', '/free-invoice-generator.html',
-  '/free-quote-generator', '/free-quote-generator.html',
   '/receipt', '/receipt.html',
   '/quote', '/quote.html',
   '/privacy', '/privacy.html',
@@ -33,7 +32,7 @@ const PRECACHE = [
   '/shared/invoice-render.js', '/shared/invoice-templates.js', '/shared/line-math.js',
   '/shared/logo-embed.js', '/shared/parse.js', '/shared/qr.js', '/shared/qrcodegen.js',
   '/shared/render.js', '/shared/share-links.js', '/shared/style.js', '/shared/templates.js',
-  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-parse.js', '/shared/quote-render.js',
+  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-render.js', '/shared/readable.js',
   '/shared/invoice.css', '/shared/receipt.css', '/shared/templates.css',
   '/icons/icon16.png', '/icons/icon48.png', '/icons/icon128.png',
   '/icons/icon192.png', '/icons/icon512.png',

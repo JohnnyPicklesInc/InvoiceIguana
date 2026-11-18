@@ -13,7 +13,8 @@ import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQuoteInto } from './shared/quote-render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
-import { viewerLink } from './shared/durable-link.js';
+import { viewerLink, durableLink } from './shared/durable-link.js';
+import { isReadableFragment, readableToPayload } from './shared/readable.js';
 import { shareLinks } from './shared/share-links.js';
 
 const $ = (id) => document.getElementById(id);
@@ -35,7 +36,20 @@ function fail(msg) {
 }
 
 async function main() {
-  const payload = location.hash.slice(1);
+  let payload = location.hash.slice(1);
+  // A hand-written / AI-written readable link (#doc=invoice&seller=...):
+  // build the document with the app's own parser, then swap the address to
+  // the normal compact link so anything shared onward is the short form.
+  if (isReadableFragment(decodeURIComponentSafe(payload))) {
+    let r;
+    try { r = await readableToPayload(decodeURIComponentSafe(payload)); } catch (e) { r = { errors: [e.message] }; }
+    if (!r.payload) {
+      fail(`This link couldn't be turned into a document: ${r.errors.join('; ')}.`);
+      return;
+    }
+    payload = r.payload;
+    history.replaceState(null, '', `${location.pathname}${location.search}#${payload}`);
+  }
   current = null;
   currentDocType = null;
   currentPayload = payload;
@@ -104,6 +118,13 @@ async function main() {
       ? 'This link was made with a newer version than this page understands.'
       : "This link doesn't contain a valid document.");
   }
+}
+
+/** Some chat apps percent-encode the whole fragment (doc%3Dinvoice%26...);
+ *  undo that once so URLSearchParams sees real & and = separators. */
+function decodeURIComponentSafe(s) {
+  if (/(^|&)doc=/.test(s)) return s;
+  try { return decodeURIComponent(s); } catch { return s; }
 }
 
 function wireShareLinks(link, name) {
