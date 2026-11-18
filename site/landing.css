@@ -74,3 +74,7 @@
 /* Bill-of-sale example card (on the [type/state] bill of sale landing pages) */
 .bos-ex-title { font-weight: 800; letter-spacing: 0.12em; text-align: center; color: var(--brand); margin: 0 0 0.7rem; }
 .example-invoice .bos-ex-item { border-left: 3px solid var(--brand); padding-left: 0.7rem; margin: 0.3rem 0 0.7rem; }
+
+/* "Using an AI assistant?" note on generated template pages */
+.ai-note code { overflow-wrap: anywhere; }
+.ai-note .ai-link { margin: 0.4rem 0 0.9rem; }

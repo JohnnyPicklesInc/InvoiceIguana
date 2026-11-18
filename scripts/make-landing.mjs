@@ -203,6 +203,45 @@ function exampleBillOfSale(entry) {
   </div>`;
 }
 
+
+// --- "Using an AI assistant?" ---------------------------------------------
+// Each page's own example as a readable link (site/shared/readable.js, format in
+// site/llms.txt): something an AI assistant can copy the shape of, and a live
+// preview for people. Values are encoded with URLSearchParams rules.
+const enc = (v) => encodeURIComponent(String(v)).replace(/%20/g, '+').replace(/%7C/gi, '|').replace(/%2C/gi, ',');
+const itemParam = (it) => `item=${enc([it.name, it.qty, it.price, ...(it.unit ? [it.unit] : [])].join('|'))}`;
+
+function readableExample(kindKey, entry) {
+  if (kindKey === 'billofsale') return null;
+  const parts = [`doc=${kindKey}`];
+  if (kindKey === 'receipt') {
+    parts.push(`merchant=${enc(entry.merchant)}`);
+    parts.push(...entry.items.map(itemParam));
+    if (entry.taxrate > 0) parts.push(`taxrate=${entry.taxrate}`);
+    if (entry.tip > 0) parts.push(`tip=${entry.tip}`);
+    if (entry.payment) parts.push(`payment=${enc(entry.payment)}`);
+  } else {
+    parts.push(`seller=${enc(`Your ${entry.name} Business`)}`);
+    parts.push(...entry.items.map(itemParam));
+    if (entry.taxrate > 0) parts.push(`taxrate=${entry.taxrate}`);
+  }
+  return `${SITE}/r#${parts.join('&')}`;
+}
+
+const DOC_PHRASE = { invoice: 'an invoice', quote: 'a quote', receipt: 'a receipt', billofsale: 'a bill of sale' };
+
+function aiSection(noun, link) {
+  const how = link
+    ? `      <p>Ask ChatGPT, Claude or Gemini for ${esc(noun)} and it can hand you a finished link: the whole document goes in the link, and the page works out the totals. The example above as a link:</p>
+      <p class="ai-link"><a href="${esc(link)}"><code>${esc(link)}</code></a></p>
+      <p>Assistants: the full link format is in <a href="/llms.txt">/llms.txt</a>. With an MCP connector, use <code>https://linklynx.johnnypicklespartners.workers.dev/mcp</code>.</p>`
+    : `      <p>AI assistants can make invoices, quotes and receipts here as shareable links — see <a href="/llms.txt">/llms.txt</a> for the format.</p>`;
+  return `    <section class="ai-note">
+      <h2>Using an AI assistant?</h2>
+${how}
+    </section>`;
+}
+
 // --- doc-type configs ------------------------------------------------------
 const KINDS = {
   invoice: {
@@ -258,7 +297,7 @@ const relatedIn = (kind, entry) => {
 };
 
 // --- a single landing page -------------------------------------------------
-function page(kind, entry) {
+function page(kind, entry, kindKey) {
   const slug = `${entry.slug}-${kind.suffix}`;
   const url = `${SITE}/${slug}`;
   // Raw "&" — headMeta() escapes it once. (No pre-escaping, or it double-escapes.)
@@ -307,6 +346,8 @@ ${kind.example(entry)}
         <a class="btn btn-primary btn-lg" href="${cta}">${kind.ctaLabel(entry)} →</a>
       </p>
     </section>
+
+${aiSection(DOC_PHRASE[kindKey], readableExample(kindKey, entry))}
 
     <div class="ad-slot"></div>
 
@@ -538,6 +579,8 @@ ${header()}
   <main class="page">
 ${body}
 
+${aiSection('an invoice', `${SITE}/r#doc=invoice&seller=Bright+Path+Tutoring&buyer=Ann+Lee&item=Tutoring|10|40|hrs&duedate=Dec+1,+2026`)}
+
     <section class="explainer">
       <h2>${entry.honest.h}</h2>
       <div class="explainer-grid">
@@ -600,7 +643,7 @@ let total = 0;
 for (const key of Object.keys(KINDS)) {
   const kind = KINDS[key];
   for (const entry of kind.data) {
-    await writeFile(join(SITE_DIR, `${entry.slug}-${kind.suffix}.html`), page(kind, entry), 'utf8');
+    await writeFile(join(SITE_DIR, `${entry.slug}-${kind.suffix}.html`), page(kind, entry, key), 'utf8');
     total++;
   }
   await writeFile(join(SITE_DIR, `${kind.hub}.html`), hub(kind, key), 'utf8');
