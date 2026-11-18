@@ -1,6 +1,6 @@
 /**
  * Readable links — a document format a person or an AI assistant can write by
- * hand, no compression needed:
+ * hand, no compression needed (split links: see readableSplitRaw):
  *
  *   /r#doc=invoice&seller=Joe's Plumbing&buyer=Ann Lee&item=Fix sink|2|120&taxrate=8
  *
@@ -22,11 +22,12 @@ import { encodeInvoice } from './invoice-codec.js';
 import { encodeQuote } from './quote-codec.js';
 import { encodeReceipt, fromMinor } from './codec.js';
 import { ACCENT_RE } from './wire.js';
+import { parseSplit, encodeSplit } from './split.js';
 
 export const INVOICE_TEMPLATES = ['classic', 'modern', 'minimal', 'bold', 'corp', 'compact', 'creative'];
 export const RECEIPT_TEMPLATES = ['classic', 'inv', 'min', 'ele'];
 
-const DOC_KINDS = ['invoice', 'quote', 'receipt'];
+const DOC_KINDS = ['invoice', 'quote', 'receipt', 'split'];
 
 /** A compact payload is base64url after a 2-char header, so it never has '='. */
 export function isReadableFragment(fragment) {
@@ -119,9 +120,34 @@ export function encodeDoc(kind, doc) {
  * Readable fragment -> { payload, kind, doc, warnings } or { errors }.
  * `payload` is the normal compact link payload (what /r# and the generators use).
  */
+/** Split links: `item=name|price|who` (who = comma list of people, blank =
+ *  everyone); the other keys go straight to parseSplit. */
+export function readableSplitRaw(fragment) {
+  const params = new URLSearchParams(String(fragment || '').replace(/^#?\??/, ''));
+  const raw = { items: [] };
+  for (const [k0, v] of params) {
+    const k = k0.trim().toLowerCase();
+    if (k === 'doc' || k === 'total' || k === 'subtotal') continue;
+    if (k === 'item') {
+      const [name, price, who] = v.split('|').map((x) => x.trim());
+      raw.items.push({ name, price, who: who || '' });
+    } else if (k === 'person') {
+      raw.people = [...(Array.isArray(raw.people) ? raw.people : []), v];
+    } else {
+      raw[k] = v;
+    }
+  }
+  return raw;
+}
+
 export async function readableToPayload(fragment) {
   const { kind, raw, taxrate, style } = readableToRaw(fragment);
-  if (!kind) return { errors: ['"doc" must be invoice, quote or receipt'] };
+  if (!kind) return { errors: ['"doc" must be invoice, quote, receipt or split'] };
+  if (kind === 'split') {
+    const res = parseSplit(readableSplitRaw(fragment));
+    if (!res.split) return { errors: res.errors };
+    return { payload: await encodeSplit(res.split), kind, doc: res.split, warnings: res.warnings };
+  }
   const res = parseWithTaxRate(kind, raw, taxrate);
   const doc = res.invoice || res.receipt;
   if (!doc) return { errors: res.errors };

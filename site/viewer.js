@@ -11,6 +11,8 @@ import { decodeQuote, DOC_QUOTE } from './shared/quote-codec.js';
 import { renderReceiptInto } from './shared/render.js';
 import { renderInvoiceInto } from './shared/invoice-render.js';
 import { renderQuoteInto } from './shared/quote-render.js';
+import { decodeSplit, DOC_SPLIT } from './shared/split.js';
+import { renderSplitInto } from './shared/split-render.js';
 import { renderQrInto } from './shared/qr.js';
 import { downloadReceiptPng } from './shared/export-png.js';
 import { viewerLink, durableLink } from './shared/durable-link.js';
@@ -24,8 +26,8 @@ let currentDocType = null;
 let currentPayload = '';
 
 function show(section) {
-  for (const id of ['receipt', 'invoice', 'quote', 'empty', 'error']) $(id).hidden = id !== section;
-  $('actions').hidden = section !== 'receipt' && section !== 'invoice' && section !== 'quote';
+  for (const id of ['receipt', 'invoice', 'quote', 'split', 'empty', 'error']) $(id).hidden = id !== section;
+  $('actions').hidden = !['receipt', 'invoice', 'quote', 'split'].includes(section);
   // PNG export is receipt-only for v1 — invoices' canvas layout doesn't exist yet.
   $('downloadPng').hidden = section !== 'receipt';
   $('acceptQuote').hidden = section !== 'quote';
@@ -111,6 +113,14 @@ async function main() {
         accept.hidden = true;
         accept.removeAttribute('href');
       }
+    } else if (docType === DOC_SPLIT) {
+      const split = await decodeSplit(payload);
+      document.title = `${split.title || 'Bill split'} — who owes what`;
+      renderSplitInto($('split'), split);
+      wireShareLinks(viewerLink(payload), split.title || 'our bill');
+      current = split;
+      currentDocType = docType;
+      show('split');
     } else {
       fail("This link holds a document type this page doesn't know yet — it may be from a newer tool in the family.");
     }

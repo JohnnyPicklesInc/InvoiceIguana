@@ -23,6 +23,7 @@ import { encodeQuote, decodeQuote, DOC_QUOTE } from '../site/shared/quote-codec.
 import { parseInvoice } from '../site/shared/invoice-parse.js';
 import { isReadableFragment, readableToPayload, readableToRaw } from '../site/shared/readable.js';
 import { perUnit } from '../site/shared/line-math.js';
+import { parseSplit, splitShares, encodeSplit, decodeSplit, payLinks } from '../site/shared/split.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 let passed = 0;
@@ -708,6 +709,65 @@ await test('readable: payment link becomes the Pay button URL; $ encoded as %24'
 await test('perUnit: singular after a price for common units only', async () => {
   deepStrictEqual(['hrs', 'Hours', 'days', 'boxes', 'each', 'sq ft', 'gas', 'classes'].map(perUnit),
     ['hr', 'Hour', 'day', 'box', 'each', 'sq ft', 'gas', 'class']);
+});
+
+// ---- bill split ------------------------------------------------------------------
+
+const dinner = {
+  title: 'Dinner at Lupa', people: 'Sam, Ann, Joe, Lee, Kim', paidby: 'Sam',
+  items: [{ name: 'Pasta', price: 24, who: 'Ann' }, { name: 'Wine', price: 60, who: 'Sam,Ann' },
+    { name: 'Pizzas', price: 80 }, { name: 'Tiramisu', price: 10, who: 'Joe, Lee, Kim' }],
+  taxrate: 8.875, tip: '20%', cashapp: '$sam', paypal: 'samr',
+};
+
+await test('split: itemized shares, proportional tax/tip, exact rounding', async () => {
+  const { split, errors } = parseSplit(dinner);
+  deepStrictEqual(errors, []);
+  const r = splitShares(split);
+  strictEqual(r.subtotalMinor, 17400);
+  strictEqual(r.taxMinor, 1544);
+  strictEqual(r.tipMinor, 3480);
+  strictEqual(r.totalMinor, 22424);
+  deepStrictEqual(r.shares.map((x) => x.minor), [5928, 9021, 2492, 2492, 2491]);
+  strictEqual(r.shares.reduce((a, x) => a + x.minor, 0), r.totalMinor);
+  ok(r.shares[0].isPayer);
+});
+
+await test('split: even split, remainders, JPY', async () => {
+  deepStrictEqual(splitShares(parseSplit({ people: 'A,B,C', amount: 100 }).split).shares.map((x) => x.minor), [3334, 3333, 3333]);
+  const yen = parseSplit({ people: 'A,B,C', amount: 1000, currency: 'jpy' }).split;
+  strictEqual(yen.currency, 'JPY');
+  deepStrictEqual(splitShares(yen).shares.map((x) => x.minor), [334, 333, 333]);
+});
+
+await test('split: round-trips through the codec and carries the "s" doc type', async () => {
+  const { split } = parseSplit(dinner);
+  const payload = await encodeSplit(split);
+  ok(payload.startsWith('1s'));
+  deepStrictEqual(await decodeSplit(payload), split);
+  await expectThrow(decodeInvoice(payload), BadPayload);
+  await expectThrow(decodeSplit(await encodeInvoice(parseInvoice(JSON.stringify(invoiceRaw), 'json').invoice)), BadPayload);
+});
+
+await test('split: readable link matches the object form', async () => {
+  const r = await readableToPayload('doc=split&title=Dinner+at+Lupa&people=Sam,Ann,Joe,Lee,Kim&paidby=Sam&item=Pasta|24|Ann&item=Wine|60|Sam,Ann&item=Pizzas|80|&item=Tiramisu|10|Joe,Lee,Kim&taxrate=8.875&tip=20%25&cashapp=sam&paypal=samr');
+  ok(r.payload, JSON.stringify(r.errors));
+  deepStrictEqual(await decodeSplit(r.payload), parseSplit(dinner).split);
+});
+
+await test('split: pay links carry each amount; only valid handles', async () => {
+  const { split } = parseSplit(dinner);
+  deepStrictEqual(payLinks(split, 9021).map((l) => l.href), ['https://paypal.me/samr/90.21', 'https://cash.app/$sam/90.21']);
+  ok(parseSplit({ ...dinner, venmo: 'not a handle!' }).errors.some((e) => /venmo/.test(e)));
+  ok(parseSplit({ ...dinner, paymenturl: 'http://x' }).errors.some((e) => /https/.test(e)));
+});
+
+await test('split: bad input is reported, not guessed', async () => {
+  ok(parseSplit({ people: 'Solo', amount: 5 }).errors.some((e) => /two people/.test(e)));
+  ok(parseSplit({ people: 'A,B' }).errors.some((e) => /items|amount/.test(e)));
+  ok(parseSplit({ people: 'A,B', paidby: 'Zed', amount: 5 }).errors.some((e) => /paidby/.test(e)));
+  ok(parseSplit({ people: 'A,B', items: [{ name: 'X', price: 5, who: 'Zed' }] }).errors.some((e) => /Zed/.test(e)));
+  ok(parseSplit({ people: 'A,B', items: [{ name: 'X', price: -5 }] }).errors.length);
 });
 
 // ---- summary ------------------------------------------------------------------

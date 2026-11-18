@@ -9,7 +9,7 @@
  *
  * Bump CACHE on each deploy to invalidate the old shell. */
 
-const CACHE = 'invoiceiguana-v5';
+const CACHE = 'invoiceiguana-v6';
 
 // Both clean and .html forms are listed because production serves both and we
 // don't know which a given navigation used. Missing entries (files added later)
@@ -21,6 +21,7 @@ const PRECACHE = [
   '/quote', '/quote.html',
   '/privacy', '/privacy.html',
   '/r', '/r.html',
+  '/split', '/split.html', '/split.js',
   '/404.html',
   '/theme.css', '/generator.css', '/viewer.css',
   '/generator.js', '/receipt.js', '/quote.js', '/viewer.js',
@@ -32,7 +33,7 @@ const PRECACHE = [
   '/shared/invoice-render.js', '/shared/invoice-templates.js', '/shared/line-math.js',
   '/shared/logo-embed.js', '/shared/parse.js', '/shared/qr.js', '/shared/qrcodegen.js',
   '/shared/render.js', '/shared/share-links.js', '/shared/style.js', '/shared/templates.js',
-  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-render.js', '/shared/readable.js', '/shared/arrival.js',
+  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-render.js', '/shared/readable.js', '/shared/arrival.js', '/shared/split.js', '/shared/split-render.js', '/shared/split.css',
   '/shared/invoice.css', '/shared/receipt.css', '/shared/templates.css',
   '/icons/icon16.png', '/icons/icon48.png', '/icons/icon128.png',
   '/icons/icon192.png', '/icons/icon512.png',

@@ -59,6 +59,7 @@ const header = (current = '') => `  <header class="site-header">
       <a href="/free-invoice-generator">Invoice</a>
       <a href="/receipt">Receipt</a>
       <a href="/quote">Quote</a>
+      <a href="/split">Split a bill</a>
       <a href="/invoice-templates"${current === 'templates' ? ' aria-current="page"' : ''}>Templates</a>
     </nav>
   </header>`;
@@ -74,6 +75,8 @@ const footer = `  <footer class="site-footer">
         <a href="/free-invoice-generator">Invoice generator</a>
         <a href="/receipt">Receipt generator</a>
         <a href="/quote">Quote generator</a>
+        <a href="/split">Split a bill</a>
+        <a href="/make-an-invoice-with-chatgpt">Make an invoice with ChatGPT</a>
         <a href="/ai-invoice-generator">AI invoice generator</a>
         <a href="/invoice-generator-no-signup">Invoice generator, no signup</a>
       </div>
@@ -507,6 +510,56 @@ const STANDALONE = [
     ],
   },
   {
+    slug: 'make-an-invoice-with-chatgpt',
+    linkLabel: 'Make an invoice with ChatGPT',
+    title: 'Make an Invoice With ChatGPT — Get a Link You Can Send or Save as PDF',
+    desc: 'Ask ChatGPT, Claude or Gemini for an invoice and get back a real, sendable link — opens on any phone, prints to PDF, and can carry a Pay button. The page does the math, not the AI. Free, no signup.',
+    h1: 'Make an invoice <span class="grad">with ChatGPT</span>',
+    tagline: 'ChatGPT can write an invoice, but what comes back is text in a chat. Point it at Invoice Iguana and it hands you a finished invoice as a link: send it, print it to PDF, or let your client pay from it.',
+    reassure: 'Free · No account · Works with ChatGPT, Claude and Gemini · Totals worked out by the page',
+    ctaHref: `https://chatgpt.com/?q=${encodeURIComponent(`Read ${SITE}/llms.txt, then make me an invoice as an Invoice Iguana link. Ask me for anything you need first: my business name, who it's for, the items and prices, tax, and how I want to get paid.`)}`,
+    ctaLabel: 'Open ChatGPT with the prompt',
+    ctaPrompt: '',
+    appName: 'Invoice Iguana for ChatGPT',
+    sections: [
+      { h2: 'The prompt', lede: 'Paste this into ChatGPT, Claude or Gemini — or use the buttons below, which open the assistant with it already typed.',
+        body: `      <pre class="prompt-box"><code>Read ${SITE}/llms.txt, then make me an invoice as an Invoice Iguana link. Ask me for anything you need first: my business name, who it's for, the items and prices, tax, and how I want to get paid.</code></pre>
+      <p>Then answer its questions in plain English — “10 hours of tutoring at $40 for Ann Lee, due
+         December 1, PayPal.me/brightpath”. It replies with a link like
+         <code>invoiceiguana.com/r#doc=invoice&amp;seller=…</code>. Open it and the invoice is there.</p>` },
+      { h2: 'What the link gives you that a chat reply doesn’t', grid: [
+        ['📄', 'A real document', 'A clean invoice page, not a table in a chat. Print it or choose <em>Save as PDF</em> to get a file.'],
+        ['🔗', 'Something to send', 'Text, email or WhatsApp the link. Your client opens it on any phone, no app or account.'],
+        ['💳', 'A Pay button', 'Give your PayPal, Cash App or Venmo and the invoice gets a button with the amount filled in.'],
+        ['🧮', 'Totals you can trust', 'The assistant only passes along items and prices. The page computes subtotal, tax and total itself.'],
+        ['✏️', 'Easy changes', 'Open the invoice generator from the link to tweak anything, or ask the assistant for a new version.'],
+        ['🔒', 'Nothing stored', 'The whole invoice lives in the link. There is no account and no database to leak.'],
+      ] },
+      { h2: 'Claude, Gemini and other assistants', lede: 'The same prompt works anywhere the assistant can read a web page.',
+        body: `      <p><b>Claude</b> and <b>Gemini</b>: paste the prompt above. If the assistant can't open web
+         pages in your plan, it can still follow the format if you paste the contents of
+         <a href="/llms.txt">/llms.txt</a> into the chat.</p>
+      <p><b>Use it often?</b> Add the free connector
+         <code>https://linklynx.johnnypicklespartners.workers.dev/mcp</code> to Claude, ChatGPT
+         (developer mode) or Gemini, and just ask for “an invoice for…” without the prompt.
+         The same connector makes quotes, receipts and bill splits.</p>` },
+    ],
+    honest: {
+      h: 'What the assistant sees',
+      p: `The assistant sees what you tell it in the chat, under its own privacy policy. Invoice
+          Iguana never sees the conversation: the invoice details travel inside the link, in the part
+          after the <code>#</code> that browsers never send to a server, and the page rebuilds the
+          invoice in your browser.`,
+    },
+    faqs: [
+      { q: 'Can ChatGPT make an invoice PDF?', a: 'Not directly as a reliable file, but with this it does not need to: open the link ChatGPT gives you, tap Print / Save as PDF, and choose Save as PDF. You get a clean one-page invoice with no chat around it.' },
+      { q: 'Do I need a ChatGPT account?', a: 'No account is needed for Invoice Iguana. ChatGPT itself has worked for us without logging in, but logged-in ChatGPT is more reliable at reading web pages. Claude and Gemini work the same way.' },
+      { q: 'Can the AI get the total wrong?', a: 'The assistant only writes the items, quantities, prices and tax rate into the link. The invoice page computes every subtotal, tax amount and total itself, so arithmetic never comes from the AI.' },
+      { q: 'How do I get paid from the invoice?', a: 'Tell the assistant your PayPal.me name, $Cashtag or Venmo username, or paste a Stripe or Square payment link. The invoice shows a Pay this invoice button. You can also add Zelle or bank details as payment instructions.' },
+      { q: 'Can it make quotes, receipts or split a bill?', a: 'Yes. Ask for a quote or estimate, a receipt, or to split a restaurant bill — the same page explains each format to the assistant.' },
+    ],
+  },
+  {
     slug: 'ai-invoice-generator',
     linkLabel: 'AI invoice generator',
     title: 'AI Invoice Generator — Describe the Job, Get an Invoice',
@@ -558,7 +611,7 @@ const STANDALONE = [
 function standalone(entry) {
   const url = `${SITE}/${entry.slug}`;
   const title = `${entry.title} | InvoiceIguana`;
-  const cta = `/free-invoice-generator?prompt=${encodeURIComponent(entry.ctaPrompt)}`;
+  const cta = entry.ctaHref || `/free-invoice-generator?prompt=${encodeURIComponent(entry.ctaPrompt)}`;
   const appLd = {
     '@context': 'https://schema.org', '@type': 'WebApplication', name: entry.appName, url,
     applicationCategory: 'BusinessApplication', operatingSystem: 'Web', description: entry.desc,
@@ -648,6 +701,7 @@ function sitemap() {
   add(`${SITE}/free-invoice-generator`, 'monthly', '0.9');
   add(`${SITE}/quote`, 'monthly', '0.8');
   add(`${SITE}/bill-of-sale`, 'monthly', '0.9');
+  add(`${SITE}/split`, 'monthly', '0.8');
   add(`${SITE}/privacy`, 'yearly', '0.3');
   for (const e of STANDALONE) add(`${SITE}/${e.slug}`, 'monthly', '0.8');
   // Hubs and all but the INDEXED variants are noindexed, so they stay out of here.

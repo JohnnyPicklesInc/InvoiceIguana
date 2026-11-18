@@ -1,12 +1,12 @@
 # Invoice Iguana
 
-> Free invoice, quote/estimate and receipt maker with no signup. The whole document lives in its link: open the link and the browser rebuilds the document locally, ready to print or save as PDF. Nothing is stored on a server.
+> Free invoice, quote/estimate, receipt and bill-splitting maker with no signup. The whole document lives in its link: open the link and the browser rebuilds the document locally, ready to print or save as PDF. Nothing is stored on a server.
 
-If a user asks you for an invoice, a price quote or estimate, or a receipt, you can make one by writing a link. Give the user the link; they open it to see, print or forward the document.
+If a user asks you for an invoice, a price quote or estimate, a receipt, or to split a bill between friends, you can make one by writing a link. Give the user the link; they open it to see, print or forward the document.
 
 ## Writing a link
 
-Format: `https://invoiceiguana.com/r#doc=<invoice|quote|receipt>&key=value&key=value...`
+Format: `https://invoiceiguana.com/r#doc=<invoice|quote|receipt|split>&key=value&key=value...`
 
 The part after `#` is form-encoded: write spaces as `+` or `%20`, and a literal `&` inside a value as `%26`. Repeat `item=` once per line item.
 
@@ -31,6 +31,16 @@ An invoice with `paymenturl` shows a "Pay this invoice" button, so the client ca
 
 Put free-text instructions (Zelle email, bank details, check address) in `paymentinstructions`; both can be used together. In a link, encode `$` as `%24`: `paymenturl=https://cash.app/%24brightpath/400`.
 
+## Splitting a bill
+
+`doc=split` makes one link that shows each person what they owe, with buttons to pay back whoever paid. The page divides shared items, spreads tax and tip in proportion to what each person had, and rounds so the shares add up exactly.
+
+- `people=Sam,Ann,Joe` (required, at least two) and `paidby=Sam` (who covered the bill).
+- Either `amount=186` to split evenly, or one `item=name|price|who` per item, where `who` is a comma list of people who shared it; leave it blank for everyone. Example: `item=Wine|60|Sam,Ann`, `item=Pizzas|80|`.
+- `tax=8.875%` (or `taxrate=8.875`) or a flat `tax=16.50`; `tip=20%` or a flat `tip=35` (write `%` as `%25` in the link).
+- The payer's handles, so each person gets pay buttons with their amount: `paypal=<paypal.me name>`, `cashapp=<cashtag>`, `venmo=<username>`, or `paymenturl=<https link>`. Never guess a handle.
+- Optional: `title`, `date`, `currency`, `note`.
+
 ## Examples
 
 Invoice:
@@ -42,16 +52,21 @@ https://invoiceiguana.com/r#doc=quote&seller=Brush+Bros+Painting&buyer=Sam+Ortiz
 Receipt:
 https://invoiceiguana.com/r#doc=receipt&merchant=Kissa+Coffee&date=Nov+18,+2026&item=Latte|2|5.50&item=Croissant|1|4&taxrate=8.875&tip=3&payment=Visa+4242
 
+Split:
+https://invoiceiguana.com/r#doc=split&title=Dinner+at+Lupa&people=Sam,Ann,Joe,Lee&paidby=Sam&item=Pasta|24|Ann&item=Wine|60|Sam,Ann&item=Pizzas|80|&taxrate=8.875&tip=20%25&cashapp=sam
+
 When the link is opened, the page swaps it for a shorter compressed link of the same document, which is the one to forward.
 
 ## Connector
 
-For assistants that support MCP connectors: https://linklynx.johnnypicklespartners.workers.dev/mcp (no authentication). Tools: create_invoice, create_quote, create_receipt, create_website.
+For assistants that support MCP connectors: https://linklynx.johnnypicklespartners.workers.dev/mcp (no authentication). Tools: create_invoice, create_quote, create_receipt, create_split, create_website.
 
 ## Pages
 
 - [Invoice generator](https://invoiceiguana.com/free-invoice-generator): fill in a form, live preview.
 - [Quote generator](https://invoiceiguana.com/quote)
 - [Receipt generator](https://invoiceiguana.com/receipt)
+- [Split a bill](https://invoiceiguana.com/split)
 - [Bill of sale](https://invoiceiguana.com/bill-of-sale)
+- [Make an invoice with ChatGPT](https://invoiceiguana.com/make-an-invoice-with-chatgpt)
 - [Privacy](https://invoiceiguana.com/privacy): documents never leave the browser.

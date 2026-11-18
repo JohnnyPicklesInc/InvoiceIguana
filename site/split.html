@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Split the Bill — Who Owes What, With Pay Links | InvoiceIguana</title>
+  <meta name="description" content="Split a restaurant bill or group expense fairly: itemize who had what, share tax and tip, and send one link that shows each person what they owe with PayPal, Cash App or Venmo buttons. Free, no signup.">
+  <link rel="canonical" href="https://invoiceiguana.com/split">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InvoiceIguana">
+  <meta property="og:url" content="https://invoiceiguana.com/split">
+  <meta property="og:title" content="Split the bill — one link, everyone sees what they owe">
+  <meta property="og:description" content="Itemize who had what, share tax and tip, and send one link with pay buttons. Free, no signup.">
+  <meta property="og:image" content="https://invoiceiguana.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#12a06a">
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="apple-touch-icon" href="icons/icon192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script type="module" src="register-sw.js"></script>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="shared/invoice.css">
+  <link rel="stylesheet" href="shared/split.css">
+  <link rel="stylesheet" href="generator.css">
+  <script type="module" src="split.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+    <nav>
+      <label class="type-switch">Document
+        <select id="docTypeNav">
+          <option value="/free-invoice-generator">Invoice</option>
+          <option value="/receipt">Receipt</option>
+          <option value="/quote">Quote</option>
+          <option value="/split" selected>Split a bill</option>
+          <option value="/bill-of-sale">Bill of sale</option>
+        </select>
+      </label>
+      <a href="/">How it works</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <div class="app-intro">
+    <h1>Split the bill</h1>
+    <p>Who had what, tax and tip shared fairly, and one link that shows everyone what they owe — with buttons to pay back whoever covered it. Nothing is stored: the split lives in the link.</p>
+    <p class="hero-actions ai-ask">
+      <a class="btn" href="https://chatgpt.com/?q=Read%20https%3A%2F%2Finvoiceiguana.com%2Fllms.txt%2C%20then%20split%20our%20bill%20as%20an%20Invoice%20Iguana%20split%20link.%20Ask%20me%20who%20was%20there%2C%20what%20each%20person%20had%20(or%20the%20total%20to%20split%20evenly)%2C%20tax%20and%20tip%2C%20who%20paid%2C%20and%20their%20PayPal%2C%20Cash%20App%20or%20Venmo." target="_blank" rel="noopener">Split it with ChatGPT</a>
+      <a class="btn" href="https://claude.ai/new?q=Read%20https%3A%2F%2Finvoiceiguana.com%2Fllms.txt%2C%20then%20split%20our%20bill%20as%20an%20Invoice%20Iguana%20split%20link.%20Ask%20me%20who%20was%20there%2C%20what%20each%20person%20had%20(or%20the%20total%20to%20split%20evenly)%2C%20tax%20and%20tip%2C%20who%20paid%2C%20and%20their%20PayPal%2C%20Cash%20App%20or%20Venmo." target="_blank" rel="noopener">Split it with Claude</a>
+    </p>
+  </div>
+
+  <main>
+    <section class="editor">
+      <form id="form" autocomplete="off">
+        <section class="form-section">
+          <h3 class="section-head">The bill</h3>
+          <div class="grid2">
+            <label>What for<input id="fTitle" type="text" placeholder="Dinner at Lupa" maxlength="80"></label>
+            <label>Date<input id="fDate" type="text" placeholder="Nov 18" maxlength="40"></label>
+          </div>
+          <label>Who was there<input id="fPeople" type="text" placeholder="Sam, Ann, Joe, Lee" maxlength="600"></label>
+          <p class="linkmeta">Names separated by commas.</p>
+          <label>Who paid<select id="fPaidBy"><option value="">Nobody yet</option></select></label>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">Split</h3>
+          <div class="grid2">
+            <label class="inline"><input type="radio" name="mode" value="even" checked> Evenly</label>
+            <label class="inline"><input type="radio" name="mode" value="items"> By what each person had</label>
+          </div>
+          <div id="evenBox">
+            <label>Bill before tax and tip<input id="fAmount" type="text" inputmode="decimal" placeholder="186.00"></label>
+          </div>
+          <div id="itemsBox" hidden>
+            <p class="linkmeta">For each item, list who shared it. Leave "who" blank for everyone.</p>
+            <div id="itemRows"></div>
+            <button id="addItem" type="button" class="ghost">+ Add item</button>
+          </div>
+          <div class="grid2">
+            <label>Tax<input id="fTax" type="text" placeholder="8.875% or 16.50"></label>
+            <label>Tip<input id="fTip" type="text" placeholder="20% or 35"></label>
+          </div>
+          <label>Currency<input id="fCurrency" type="text" value="USD" maxlength="3"></label>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-head">How to pay them back</h3>
+          <p class="linkmeta">The payer's usernames. Each person gets buttons with their amount filled in (PayPal and Cash App; Venmo opens the profile).</p>
+          <div class="grid2">
+            <label>PayPal.me<input id="fPaypal" type="text" placeholder="samr"></label>
+            <label>Cash App<input id="fCashapp" type="text" placeholder="$sam"></label>
+            <label>Venmo<input id="fVenmo" type="text" placeholder="@sam"></label>
+            <label>Other payment link<input id="fPayUrl" type="url" placeholder="https://..."></label>
+          </div>
+          <label>Note<input id="fNote" type="text" placeholder="Pay me back by Friday" maxlength="300"></label>
+        </section>
+      </form>
+
+      <ul id="errors" class="errors" hidden></ul>
+      <ul id="warnings" class="warnings" hidden></ul>
+
+      <div id="result" class="result" hidden>
+        <p class="result-status">Your split is ready — send this link to the group.</p>
+        <div class="linkrow">
+          <input id="linkInput" type="text" readonly aria-label="Share link">
+          <button id="copyLink" type="button">Copy</button>
+        </div>
+        <p class="linkmeta"><a id="openLink" href="#" target="_blank" rel="noopener">Open it</a> · <a id="waLink" href="#" target="_blank" rel="noopener">Send on WhatsApp</a> · <a id="smsLink" href="#">Text it</a></p>
+        <label for="editLinkInput" class="linkmeta-strong">Edit link — reopens this form</label>
+        <div class="linkrow">
+          <input id="editLinkInput" type="text" readonly aria-label="Edit link">
+          <button id="copyEdit" type="button">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-pane">
+      <p class="preview-label">Live preview — what the group sees</p>
+      <div id="preview" class="invoice split">
+        <header>
+          <h1 data-f="title"></h1>
+          <p data-f="meta"></p>
+          <p data-f="paidby" hidden></p>
+        </header>
+        <ul data-f="shares" class="shares"></ul>
+        <table class="split-totals"><tbody data-f="totals"></tbody></table>
+        <p data-f="note" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="wordmark" href="/"><span class="lizard">🦎</span><span class="name">InvoiceIguana</span></a>
+        <p>The free invoice &amp; receipt maker. Everything is saved in your browser or shared as a link
+           — no signup, no server, no expiry.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Create</h4>
+        <a href="/free-invoice-generator">Invoice generator</a>
+        <a href="/receipt">Receipt generator</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/">How it works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="mailto:JohnnyPicklespartners@gmail.com?subject=InvoiceIguana%20problem%20report&amp;body=What%20went%20wrong%3A%0A%0A%0AWhich%20page%2C%20and%20what%20device%20and%20browser%3A%0A">Report a problem</a>
+      </div>
+    </div>
+    <p class="footer-legal">Saved invoices live in your browser, not on any server. Share via
+       link or download as PDF — no signup, ever.</p>
+  </footer>
+
+</body>
+</html>

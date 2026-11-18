@@ -4,13 +4,13 @@
  * under /e/, and Cloudflare's per-path request counts are the tally. No cookies,
  * no IDs, nothing about the document.
  *
- *   ?ref=credit-invoice|credit-quote|credit-receipt  -> clicked a document's "make your own" credit
+ *   ?ref=credit-invoice|credit-quote|credit-receipt|credit-split -> clicked a document's "make your own" credit
  *   ?utm_source=chatgpt.com                           -> opened a link ChatGPT showed
  *
  * The tags are then dropped from the address (the #fragment is kept), so a
  * reload, bookmark or forwarded link doesn't count again.
  */
-const EVENTS = new Set(['credit-invoice', 'credit-quote', 'credit-receipt']);
+const EVENTS = new Set(['credit-invoice', 'credit-quote', 'credit-receipt', 'credit-split']);
 
 export function countArrival() {
   const params = new URLSearchParams(location.search);

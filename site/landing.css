@@ -78,3 +78,6 @@
 /* "Using an AI assistant?" note on generated template pages */
 .ai-note code { overflow-wrap: anywhere; }
 .ai-note .ai-link { margin: 0.4rem 0 0.9rem; }
+
+/* Copyable prompt on the "make an invoice with ChatGPT" guide */
+.prompt-box { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--card, #fff); border: 1px solid var(--border, #ddd); border-radius: 10px; padding: 0.9rem 1rem; font-size: 0.92rem; line-height: 1.5; user-select: all; }

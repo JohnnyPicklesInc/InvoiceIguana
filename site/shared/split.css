@@ -1,0 +1,29 @@
+/* Bill split — a phone-first "who owes what" card. Shares the invoice paper
+   (.invoice) look; everything specific lives under .split. */
+.split header { display: block; }
+.split [data-f="title"] { font-size: 1.35rem; margin: 0; }
+.split [data-f="meta"] { color: #666; margin: 0.25rem 0 0; }
+.split [data-f="paidby"] { margin: 0.6rem 0 0; font-weight: 600; }
+.split .shares { list-style: none; padding: 0; margin: 1.25rem 0; display: grid; gap: 0.6rem; }
+.split .share { border: 1px solid #e3e3e3; border-radius: 10px; padding: 0.75rem 0.9rem; }
+.split .share.is-payer { background: #f6f8fb; }
+.split .share-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.split .share-name { font-weight: 600; font-size: 1.02rem; }
+.split .share-amt { font-weight: 700; font-size: 1.15rem; color: var(--accent); white-space: nowrap; }
+.split .share-lines { list-style: none; padding: 0; margin: 0.3rem 0 0; color: #666; font-size: 0.82rem; display: flex; flex-wrap: wrap; gap: 0.15rem 0.8rem; }
+.split .share-note { margin: 0.35rem 0 0; color: #666; font-size: 0.85rem; }
+.split .share-pay { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+.split .btn-pay-sm { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 8px; }
+.split .split-totals { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+.split .split-totals td { padding: 0.25rem 0; }
+.split .split-totals .num { text-align: right; }
+.split .split-total td { font-weight: 700; border-top: 2px solid var(--accent); padding-top: 0.5rem; }
+.split [data-f="note"] { margin: 1rem 0 0; color: #444; }
+@media (max-width: 560px) { .split.invoice { padding: 1.5rem 1.1rem; } }
+@media print { .split .share-pay { display: none; } }
+
+/* /split generator: item rows (name | price | who | remove) */
+.split-item { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 0.5rem; align-items: center; margin-top: 0.4rem; }
+.split-item input { margin-top: 0 !important; min-width: 0; }
+@media (max-width: 560px) { .split-item { grid-template-columns: 1fr 5.5rem; } .split-item .it-who { grid-column: 1 / 2; } }
+#fPaidBy { display: block; width: 100%; margin-top: 0.35rem; padding: 0.6rem 0.7rem; border: 1px solid var(--border, #d0d0d0); border-radius: 10px; background: var(--card, #fff); color: inherit; font: inherit; }
