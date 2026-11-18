@@ -22,6 +22,7 @@ import { encodeInvoice, decodeInvoice, DOC_INVOICE } from '../site/shared/invoic
 import { encodeQuote, decodeQuote, DOC_QUOTE } from '../site/shared/quote-codec.js';
 import { parseInvoice } from '../site/shared/invoice-parse.js';
 import { isReadableFragment, readableToPayload, readableToRaw } from '../site/shared/readable.js';
+import { perUnit } from '../site/shared/line-math.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 let passed = 0;
@@ -693,6 +694,20 @@ await test('readable: totals in the link are ignored, errors are reported', asyn
   const badKind = await readableToPayload('doc=memo&seller=X&item=A|1|1');
   ok(!badKind.payload && /doc/.test(badKind.errors[0]));
   ok(!isReadableFragment('1iq1bKVbJS8spPVdJRylSyio5Wcsus'), 'compact payloads are not readable links');
+});
+
+await test('readable: payment link becomes the Pay button URL; $ encoded as %24', async () => {
+  const r = await readableToPayload('doc=invoice&seller=X&item=A|1|400&paymenturl=https://cash.app/%24brightpath/400&paymentinstructions=Or+Zelle');
+  const inv = await decodeInvoice(r.payload);
+  strictEqual(inv.paymentUrl, 'https://cash.app/$brightpath/400');
+  strictEqual(inv.paymentInstructions, 'Or Zelle');
+  const http = await readableToPayload('doc=invoice&seller=X&item=A|1|1&paymenturl=http://insecure.example');
+  ok(!http.payload, 'non-https payment link is rejected');
+});
+
+await test('perUnit: singular after a price for common units only', async () => {
+  deepStrictEqual(['hrs', 'Hours', 'days', 'boxes', 'each', 'sq ft', 'gas', 'classes'].map(perUnit),
+    ['hr', 'Hour', 'day', 'box', 'each', 'sq ft', 'gas', 'class']);
 });
 
 // ---- summary ------------------------------------------------------------------

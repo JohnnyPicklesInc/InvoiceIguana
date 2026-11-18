@@ -127,7 +127,7 @@
 .invoice .qrbox { text-align: center; margin: 1.25rem 0 0; }
 .invoice .qrbox svg { width: 116px; height: 116px; }
 .invoice .brand { color: #999; font-size: 0.72rem; text-align: center; margin: 1.5rem 0 0; }
-.invoice .brand a { color: inherit; }
+.invoice .brand a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---- Premium invoice templates -------------------------------------------
    Each is scoped as .invoice.t-* and layered over the classic styles above.

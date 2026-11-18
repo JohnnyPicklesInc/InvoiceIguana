@@ -228,12 +228,34 @@ function readableExample(kindKey, entry) {
   return `${SITE}/r#${parts.join('&')}`;
 }
 
+// "a plumber invoice", "an HVAC quote", "a rent receipt"
+function topicPhrase(kindKey, entry) {
+  const name = /^[A-Z]{2,}$/.test(entry.name) ? entry.name : entry.name.toLowerCase();
+  const doc = { invoice: 'invoice', quote: 'quote', receipt: 'receipt' }[kindKey];
+  return `${/^[aeiou]/i.test(name) || /^[A-Z]{2,}$/.test(name) && /^[AEFHILMNORSX]/.test(name) ? 'an' : 'a'} ${name} ${doc}`;
+}
+
 const DOC_PHRASE = { invoice: 'an invoice', quote: 'a quote', receipt: 'a receipt', billofsale: 'a bill of sale' };
 
-function aiSection(noun, link) {
+// "Make it with ChatGPT / Claude": opens the assistant with a prompt that
+// points it at /llms.txt and has it ask for the details (never invent them).
+function askPrompt(what, kindKey) {
+  const pay = kindKey === 'invoice' ? ', and how I want to get paid' : '';
+  return `Read ${SITE}/llms.txt, then make me ${what} as an Invoice Iguana link. Ask me for anything you need first: my business name, who it's for, the items and prices, tax${pay}.`;
+}
+function askButtons(what, kindKey) {
+  const q = encodeURIComponent(askPrompt(what, kindKey));
+  return `      <p class="hero-actions ai-ask">
+        <a class="btn" href="https://chatgpt.com/?q=${q}" target="_blank" rel="noopener">Make it with ChatGPT</a>
+        <a class="btn" href="https://claude.ai/new?q=${q}" target="_blank" rel="noopener">Make it with Claude</a>
+      </p>`;
+}
+
+function aiSection(noun, link, what, kindKey = 'invoice') {
   const how = link
     ? `      <p>Ask ChatGPT, Claude or Gemini for ${esc(noun)} and it can hand you a finished link: the whole document goes in the link, and the page works out the totals. The example above as a link:</p>
       <p class="ai-link"><a href="${esc(link)}"><code>${esc(link)}</code></a></p>
+${askButtons(what || noun, kindKey)}
       <p>Assistants: the full link format is in <a href="/llms.txt">/llms.txt</a>. With an MCP connector, use <code>https://linklynx.johnnypicklespartners.workers.dev/mcp</code>.</p>`
     : `      <p>AI assistants can make invoices, quotes and receipts here as shareable links — see <a href="/llms.txt">/llms.txt</a> for the format.</p>`;
   return `    <section class="ai-note">
@@ -347,7 +369,7 @@ ${kind.example(entry)}
       </p>
     </section>
 
-${aiSection(DOC_PHRASE[kindKey], readableExample(kindKey, entry))}
+${aiSection(DOC_PHRASE[kindKey], readableExample(kindKey, entry), topicPhrase(kindKey, entry), kindKey)}
 
     <div class="ad-slot"></div>
 

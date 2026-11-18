@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /e/
 # Only the document viewer (/r#<payload>). A bare "Disallow: /r" also matched every
 # path starting with r — /receipt, /rent-receipt-template, /roofing-…, /rv-… — so
 # "$" anchors it to exactly /r (Google and Bing honour it).

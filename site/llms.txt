@@ -20,10 +20,21 @@ Receipt keys: `merchant` (required), `address`, `contact`, `date`, `reference`, 
 
 Only use details the user gave you. If the business name, items or prices are missing, ask.
 
+## Getting paid (invoices)
+
+An invoice with `paymenturl` shows a "Pay this invoice" button, so the client can pay from their phone. Ask the user how they want to be paid, and build the link from the handle they give you. Never guess a handle.
+
+- PayPal: `https://paypal.me/<name>/<amount>`, e.g. `https://paypal.me/brightpath/400`
+- Cash App: `https://cash.app/$<cashtag>/<amount>`, e.g. `https://cash.app/$brightpath/400`
+- Venmo: `https://venmo.com/u/<username>`
+- Stripe, Square or another processor: paste the payment link they give you (must be https).
+
+Put free-text instructions (Zelle email, bank details, check address) in `paymentinstructions`; both can be used together. In a link, encode `$` as `%24`: `paymenturl=https://cash.app/%24brightpath/400`.
+
 ## Examples
 
 Invoice:
-https://invoiceiguana.com/r#doc=invoice&seller=Joe's+Plumbing&buyer=Ann+Lee&invoicenumber=INV-7&duedate=Dec+1,+2026&item=Fix+sink|2|120|hrs&item=Parts|1|50&taxrate=8&paymentinstructions=Zelle+to+joe@example.com
+https://invoiceiguana.com/r#doc=invoice&seller=Joe's+Plumbing&buyer=Ann+Lee&invoicenumber=INV-7&duedate=Dec+1,+2026&item=Fix+sink|2|120|hrs&item=Parts|1|50&taxrate=8&paymenturl=https://paypal.me/joesplumbing/313.20&paymentinstructions=Or+Zelle+to+joe@example.com
 
 Quote:
 https://invoiceiguana.com/r#doc=quote&seller=Brush+Bros+Painting&buyer=Sam+Ortiz&item=Paint+2+bedrooms|1|900&item=Trim+and+doors|1|250&duedate=Jan+15,+2027&notes=Includes+paint+and+supplies

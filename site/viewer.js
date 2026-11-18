@@ -17,6 +17,7 @@ import { viewerLink, durableLink } from './shared/durable-link.js';
 import { isReadableFragment, readableToPayload } from './shared/readable.js';
 import { shareLinks } from './shared/share-links.js';
 
+import { countArrival } from './shared/arrival.js';
 const $ = (id) => document.getElementById(id);
 let current = null;
 let currentDocType = null;
@@ -139,5 +140,6 @@ $('downloadPng').addEventListener('click', () => {
   if (current && currentDocType === DOC_RECEIPT) downloadReceiptPng(current, { qrText: durableLink(currentPayload) });
 });
 
+countArrival();
 addEventListener('hashchange', main);
 main();

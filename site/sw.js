@@ -9,7 +9,7 @@
  *
  * Bump CACHE on each deploy to invalidate the old shell. */
 
-const CACHE = 'invoiceiguana-v4';
+const CACHE = 'invoiceiguana-v5';
 
 // Both clean and .html forms are listed because production serves both and we
 // don't know which a given navigation used. Missing entries (files added later)
@@ -32,7 +32,7 @@ const PRECACHE = [
   '/shared/invoice-render.js', '/shared/invoice-templates.js', '/shared/line-math.js',
   '/shared/logo-embed.js', '/shared/parse.js', '/shared/qr.js', '/shared/qrcodegen.js',
   '/shared/render.js', '/shared/share-links.js', '/shared/style.js', '/shared/templates.js',
-  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-render.js', '/shared/readable.js',
+  '/shared/wire.js', '/shared/quote-codec.js', '/shared/quote-render.js', '/shared/readable.js', '/shared/arrival.js',
   '/shared/invoice.css', '/shared/receipt.css', '/shared/templates.css',
   '/icons/icon16.png', '/icons/icon48.png', '/icons/icon128.png',
   '/icons/icon192.png', '/icons/icon512.png',
@@ -60,6 +60,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // leave cross-origin to the network
+  if (url.pathname.startsWith('/e/')) return; // arrival counters must reach the edge
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);

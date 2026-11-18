@@ -65,4 +65,4 @@
 .receipt footer { text-align: center; }
 .receipt [data-f="footer"] { margin: 0 0 0.75rem; overflow-wrap: anywhere; }
 .receipt .brand { color: #777; font-size: 0.7rem; margin: 0; }
-.receipt .brand a { color: inherit; }
+.receipt .brand a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

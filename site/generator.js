@@ -20,6 +20,10 @@ import { compressLogoImage } from './shared/logo-embed.js';
 import { isHttpsUrl } from './shared/wire.js';
 import { put, get, list, remove, exportAll, importAll, getMeta, setMeta } from './shared/db.js';
 
+import { countArrival } from './shared/arrival.js';
+
+// Count ?ref=credit-* arrivals first, before any awaits below.
+countArrival();
 const $ = (id) => document.getElementById(id);
 const URL_LENGTH_WARNING = 2000;
 
